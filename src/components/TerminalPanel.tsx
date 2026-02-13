@@ -90,7 +90,7 @@ export function TerminalPanel({ onCommand }: TerminalPanelProps) {
 
   return (
     <div className="flex flex-col h-full bg-zetta-card border border-zetta-border rounded-lg overflow-hidden">
-      <div className="px-4 py-2 border-b border-zetta-border bg-zetta-bg/50">
+      <div className="px-2 md:px-4 py-1.5 md:py-2 border-b border-zetta-border bg-zetta-bg/50">
         <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
           Terminal
         </span>
@@ -98,31 +98,31 @@ export function TerminalPanel({ onCommand }: TerminalPanelProps) {
       
       <div 
         ref={outputRef}
-        className="flex-1 p-4 overflow-y-auto font-mono text-sm space-y-1"
+        className="flex-1 p-2 md:p-4 overflow-y-auto font-mono text-xs md:text-sm space-y-0.5 md:space-y-1"
         onClick={() => inputRef.current?.focus()}
       >
         {history.map((line, i) => (
-          <div key={i} className={`${getLineColor(line.type)} whitespace-pre-wrap`}>
+          <div key={i} className={`${getLineColor(line.type)} whitespace-pre-wrap break-all`}>
             {line.content}
           </div>
         ))}
-        <div className="flex items-center gap-2 h-5">
+        <div className="flex items-center gap-1 md:gap-2 h-4 md:h-5">
           <span className="text-green-400 font-mono">$</span>
-          <span className="text-white font-mono text-sm">{input}</span>
-          <span className={`w-2 h-4 bg-green-400 ${isExecuting ? 'animate-pulse' : ''}`} />
+          <span className="text-white font-mono text-xs md:text-sm">{input}</span>
+          <span className={`w-1.5 md:w-2 h-3 md:h-4 bg-green-400 ${isExecuting ? 'animate-pulse' : ''}`} />
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="p-4 border-t border-zetta-border bg-zetta-bg/50">
-        <div className="flex items-center gap-2">
-          <span className="text-green-400 font-mono">$</span>
+      <form onSubmit={handleSubmit} className="p-2 md:p-4 border-t border-zetta-border bg-zetta-bg/50">
+        <div className="flex items-center gap-1 md:gap-2">
+          <span className="text-green-400 font-mono text-xs md:text-sm">$</span>
           <input
             ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="flex-1 bg-transparent text-white font-mono text-sm outline-none placeholder-gray-600"
+            className="flex-1 bg-transparent text-white font-mono text-xs md:text-sm outline-none placeholder-gray-600"
             placeholder="Enter command..."
             autoFocus
             disabled={isExecuting}

@@ -35,12 +35,12 @@ export function TimerPanel({ timer, glowColor, onStart, onPause, onResume, onSto
     ? ((timer.total_seconds - timer.remaining_seconds) / timer.total_seconds) * 100 
     : 0;
   
-  const circumference = 2 * Math.PI * 120;
+  const circumference = 2 * Math.PI * 90;
   const strokeDashoffset = circumference - (progress / 100) * circumference;
 
   return (
-    <div className="flex flex-col items-center justify-center p-6 bg-zetta-card border border-zetta-border rounded-lg">
-      <div className="flex items-center gap-2 mb-4">
+    <div className="flex flex-col items-center justify-center p-3 md:p-4 bg-zetta-card border border-zetta-border rounded-lg h-full">
+      <div className="flex items-center gap-2 mb-2 md:mb-3">
         <span 
           className="w-2 h-2 rounded-full"
           style={{ 
@@ -53,23 +53,23 @@ export function TimerPanel({ timer, glowColor, onStart, onPause, onResume, onSto
         </span>
       </div>
 
-      <div className="relative w-64 h-64 flex items-center justify-center">
-        <svg className="absolute w-full h-full -rotate-90" viewBox="0 0 260 260">
+      <div className="relative w-32 h-32 md:w-48 md:h-48 lg:w-56 lg:h-56 flex items-center justify-center">
+        <svg className="absolute w-full h-full -rotate-90" viewBox="0 0 200 200">
           <circle
-            cx="130"
-            cy="130"
-            r="120"
+            cx="100"
+            cy="100"
+            r="90"
             fill="none"
             stroke="#2a2f3a"
-            strokeWidth="8"
+            strokeWidth="6"
           />
           <circle
-            cx="130"
-            cy="130"
-            r="120"
+            cx="100"
+            cy="100"
+            r="90"
             fill="none"
             stroke={glowColor}
-            strokeWidth="8"
+            strokeWidth="6"
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
@@ -79,16 +79,16 @@ export function TimerPanel({ timer, glowColor, onStart, onPause, onResume, onSto
             }}
           />
         </svg>
-        <div className="text-5xl font-bold text-white tracking-tight">
+        <div className="text-3xl md:text-4xl lg:text-5xl font-bold text-white tracking-tight">
           {formatTime(timer.remaining_seconds)}
         </div>
       </div>
 
-      <div className="flex gap-3 mt-6">
+      <div className="flex gap-2 md:gap-3 mt-3 md:mt-4">
         {timer.status === 'idle' && (
           <button
             onClick={onStart}
-            className="px-6 py-2 text-sm font-medium text-white bg-zetta-border hover:bg-gray-600 rounded transition-colors"
+            className="px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium text-white bg-zetta-border hover:bg-gray-600 rounded transition-colors"
           >
             START
           </button>
@@ -96,7 +96,7 @@ export function TimerPanel({ timer, glowColor, onStart, onPause, onResume, onSto
         {timer.status === 'running' && (
           <button
             onClick={onPause}
-            className="px-6 py-2 text-sm font-medium text-white bg-zetta-border hover:bg-gray-600 rounded transition-colors"
+            className="px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium text-white bg-zetta-border hover:bg-gray-600 rounded transition-colors"
           >
             PAUSE
           </button>
@@ -105,13 +105,13 @@ export function TimerPanel({ timer, glowColor, onStart, onPause, onResume, onSto
           <>
             <button
               onClick={onResume}
-              className="px-6 py-2 text-sm font-medium text-white bg-zetta-border hover:bg-gray-600 rounded transition-colors"
+              className="px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium text-white bg-zetta-border hover:bg-gray-600 rounded transition-colors"
             >
               RESUME
             </button>
             <button
               onClick={onStop}
-              className="px-6 py-2 text-sm font-medium text-red-400 border border-red-400/30 hover:bg-red-400/10 rounded transition-colors"
+              className="px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium text-red-400 border border-red-400/30 hover:bg-red-400/10 rounded transition-colors"
             >
               STOP
             </button>
@@ -120,14 +120,14 @@ export function TimerPanel({ timer, glowColor, onStart, onPause, onResume, onSto
         {timer.status === 'completed' && (
           <button
             onClick={onStart}
-            className="px-6 py-2 text-sm font-medium text-white bg-zetta-border hover:bg-gray-600 rounded transition-colors"
+            className="px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium text-white bg-zetta-border hover:bg-gray-600 rounded transition-colors"
           >
             RESTART
           </button>
         )}
       </div>
 
-      <div className="mt-4 text-xs text-gray-500 uppercase tracking-wider">
+      <div className="mt-2 md:mt-3 text-xs text-gray-500 uppercase tracking-wider">
         {timer.session_type === 'focus' ? 'Focus Session' : 
          timer.session_type === 'short_break' ? 'Short Break' : 'Long Break'}
       </div>

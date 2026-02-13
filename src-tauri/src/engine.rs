@@ -120,21 +120,9 @@ impl Default for AppStats {
 
 impl AppStats {
     pub fn new() -> Self {
-        let mut sys = System::new_all();
-        sys.refresh_all();
-
-        // Get current process (the app itself)
-        let pid = sysinfo::Pid::from_u32(std::process::id());
-
-        let (cpu_usage, memory_used) = if let Some(process) = sys.process(pid) {
-            (process.cpu_usage(), process.memory() / 1024 / 1024)
-        } else {
-            (0.0, 0)
-        };
-
         Self {
-            cpu_usage,
-            memory_used,
+            cpu_usage: 0.0,
+            memory_used: 0,
         }
     }
 }
@@ -541,23 +529,33 @@ pub fn tick_system_stats(state: State<EngineState>, app_handle: AppHandle) -> Re
     let mut sys = System::new_all();
     sys.refresh_all();
     let cpus = sys.cpus();
+
+    // System CPU - average across all cores (each core returns 0-100%)
     let cpu_usage = if !cpus.is_empty() {
         cpus.iter().map(|c| c.cpu_usage()).sum::<f32>() / cpus.len() as f32
     } else {
         0.0
     };
+
     app_state.system_stats = SystemStats {
-        cpu_usage,
+        cpu_usage: cpu_usage.min(100.0),
         memory_used: sys.used_memory() / 1024 / 1024,
         memory_total: sys.total_memory() / 1024 / 1024,
     };
 
     // Get current process (the app itself)
+    sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
+
     let pid = sysinfo::Pid::from_u32(std::process::id());
     if let Some(process) = sys.process(pid) {
+        let memory_used = process.memory() / 1024 / 1024;
+
+        // CPU from sysinfo's process.cpu_usage() - this is percentage
+        let cpu_percent = process.cpu_usage();
+
         app_state.app_stats = AppStats {
-            cpu_usage: process.cpu_usage(),
-            memory_used: process.memory() / 1024 / 1024,
+            cpu_usage: cpu_percent.min(100.0),
+            memory_used,
         };
     }
 

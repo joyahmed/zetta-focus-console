@@ -143,9 +143,9 @@ function App() {
         onSettingsClick={() => setSettingsOpen(true)}
       />
       
-      <main className="flex-1 p-6 overflow-hidden">
-        <div className="h-full grid grid-cols-2 grid-rows-2 gap-6">
-          <div className="row-span-1">
+      <main className="flex-1 p-3 md:p-6 overflow-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 min-w-0">
+          <div className="min-h-0">
             <TimerPanel 
               timer={appState.timer}
               glowColor={appState.active_profile.glow_color}
@@ -156,7 +156,7 @@ function App() {
             />
           </div>
           
-          <div className="row-span-1">
+          <div className="min-h-0">
             <ProfilePanel 
               profile={appState.active_profile}
               profiles={appState.profiles}
@@ -164,11 +164,11 @@ function App() {
             />
           </div>
           
-          <div className="row-span-1">
+          <div className="min-h-0">
             <TerminalPanel key={terminalKey} onCommand={processCommand} />
           </div>
           
-          <div className="row-span-1">
+          <div className="min-h-0">
             <StatsPanel stats={appState.stats} systemStats={appState.system_stats} appStats={appState.app_stats} />
           </div>
         </div>

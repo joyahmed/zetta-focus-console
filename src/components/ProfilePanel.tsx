@@ -48,25 +48,25 @@ export function ProfilePanel({ profile, profiles, onProfileSwitch }: ProfilePane
   const otherProfiles = profiles.filter(p => p.id !== profile.id);
 
   return (
-    <div className="p-6 bg-zetta-card border border-zetta-border rounded-lg">
-      <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-4">
+    <div className="p-3 md:p-4 lg:p-6 bg-zetta-card border border-zetta-border rounded-lg h-full overflow-auto">
+      <h2 className="text-xs md:text-sm font-medium text-gray-400 uppercase tracking-wider mb-2 md:mb-4">
         Active Profile
       </h2>
       
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-4">
         <div 
-          className="w-10 h-10 rounded-lg flex items-center justify-center text-xl"
+          className="w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center text-base md:text-xl"
           style={{ backgroundColor: `${profile.glow_color}20` }}
         >
           {getSeasonEmoji(profile.season)}
         </div>
         <div>
-          <div className="text-lg font-semibold text-white">{profile.name}</div>
-          <div className="text-xs text-gray-500">ID: {profile.id}</div>
+          <div className="text-sm md:text-lg font-semibold text-white">{profile.name}</div>
+          <div className="text-[10px] md:text-xs text-gray-500">ID: {profile.id}</div>
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-2 md:space-y-4">
         <div>
           <div className="flex justify-between text-xs mb-1">
             <span className="text-gray-400">Season</span>
@@ -102,7 +102,7 @@ export function ProfilePanel({ profile, profiles, onProfileSwitch }: ProfilePane
         </div>
 
         <div className="pt-2 border-t border-zetta-border">
-          <div className="grid grid-cols-3 gap-2 text-xs">
+          <div className="grid grid-cols-3 gap-1 md:gap-2 text-xs">
             <div>
               <div className="text-gray-500">Focus</div>
               <div className="text-white">{profile.focus_duration / 60}m</div>
@@ -120,14 +120,14 @@ export function ProfilePanel({ profile, profiles, onProfileSwitch }: ProfilePane
       </div>
 
       {otherProfiles.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-zetta-border">
-          <div className="text-xs text-gray-500 mb-2">Quick Switch</div>
+        <div className="mt-2 md:mt-4 pt-2 md:pt-4 border-t border-zetta-border">
+          <div className="text-xs text-gray-500 mb-1 md:mb-2">Quick Switch</div>
           <div className="flex flex-wrap gap-1">
             {otherProfiles.map(p => (
               <button
                 key={p.id}
                 onClick={() => onProfileSwitch(p.id)}
-                className="px-2 py-1 text-xs bg-zetta-bg border border-zetta-border rounded hover:border-gray-500 transition-colors text-gray-300"
+                className="px-1.5 md:px-2 py-0.5 md:py-1 text-[10px] md:text-xs bg-zetta-bg border border-zetta-border rounded hover:border-gray-500 transition-colors text-gray-300"
               >
                 {p.name}
               </button>
