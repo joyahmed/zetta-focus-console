@@ -118,6 +118,10 @@ Implement in order:
 4.  Persistence
 5.  System info commands
 6.  Background system
+7.  System info
+8.  Memory usage
+9.  CPU usage
+
 
 ------------------------------------------------------------------------
 

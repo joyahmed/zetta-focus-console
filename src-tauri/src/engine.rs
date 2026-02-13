@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
+use sysinfo::System;
 use tauri::{AppHandle, Emitter, State};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -215,6 +216,9 @@ fn process_command(app_state: &mut AppState, cmd: &str, args: &[&str]) -> String
   config show            - Show current configuration
   stats                  - Show detailed statistics
   devmode on/off         - Toggle developer mode
+  system                 - Show system information
+  memory                 - Show memory usage
+  cpu                    - Show CPU usage
   clear                  - Clear terminal
   help                   - Show this help message"
             .to_string(),
@@ -366,6 +370,62 @@ fn process_command(app_state: &mut AppState, cmd: &str, args: &[&str]) -> String
             }
             _ => "Error: Usage: devmode on | off".to_string(),
         },
+
+        "system" | "sysinfo" => {
+            let mut sys = System::new_all();
+            sys.refresh_all();
+            format!(
+                "System Information:
+  OS: {}
+  Kernel: {}
+  Hostname: {}
+  CPU Cores: {}
+  Total Memory: {} MB
+  Used Memory: {} MB",
+                System::name().unwrap_or_else(|| "Unknown".to_string()),
+                System::kernel_version().unwrap_or_else(|| "Unknown".to_string()),
+                System::host_name().unwrap_or_else(|| "Unknown".to_string()),
+                sys.cpus().len(),
+                sys.total_memory() / 1024 / 1024,
+                sys.used_memory() / 1024 / 1024
+            )
+        }
+
+        "memory" => {
+            let mut sys = System::new_all();
+            sys.refresh_memory();
+            format!(
+                "Memory Usage:
+  Total: {} MB
+  Used: {} MB
+  Available: {} MB
+  Usage: {:.1}%",
+                sys.total_memory() / 1024 / 1024,
+                sys.used_memory() / 1024 / 1024,
+                sys.available_memory() / 1024 / 1024,
+                (sys.used_memory() as f64 / sys.total_memory() as f64) * 100.0
+            )
+        }
+
+        "cpu" => {
+            let mut sys = System::new_all();
+            sys.refresh_cpu_all();
+            let cpus = sys.cpus();
+            let avg_usage: f32 =
+                cpus.iter().map(|c| c.cpu_usage()).sum::<f32>() / cpus.len() as f32;
+            format!(
+                "CPU Usage:
+  Cores: {}
+  Average Usage: {:.1}%
+  Per Core:{}",
+                cpus.len(),
+                avg_usage,
+                cpus.iter()
+                    .enumerate()
+                    .map(|(i, c)| format!("\n    Core {}: {:.1}%", i, c.cpu_usage()))
+                    .collect::<String>()
+            )
+        }
 
         "clear" => "__CLEAR__".to_string(),
 
