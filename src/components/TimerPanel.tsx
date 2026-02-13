@@ -1,4 +1,9 @@
-import { TimerState } from '../state';
+interface TimerState {
+  remaining_seconds: number;
+  total_seconds: number;
+  status: 'idle' | 'running' | 'paused' | 'completed';
+  session_type: 'focus' | 'short_break' | 'long_break';
+}
 
 interface TimerPanelProps {
   timer: TimerState;
@@ -26,8 +31,8 @@ function getStatusLabel(status: TimerState['status']): string {
 }
 
 export function TimerPanel({ timer, glowColor, onStart, onPause, onResume, onStop }: TimerPanelProps) {
-  const progress = timer.totalSeconds > 0 
-    ? ((timer.totalSeconds - timer.remainingSeconds) / timer.totalSeconds) * 100 
+  const progress = timer.total_seconds > 0 
+    ? ((timer.total_seconds - timer.remaining_seconds) / timer.total_seconds) * 100 
     : 0;
   
   const circumference = 2 * Math.PI * 120;
@@ -75,7 +80,7 @@ export function TimerPanel({ timer, glowColor, onStart, onPause, onResume, onSto
           />
         </svg>
         <div className="text-5xl font-bold text-white tracking-tight">
-          {formatTime(timer.remainingSeconds)}
+          {formatTime(timer.remaining_seconds)}
         </div>
       </div>
 
@@ -123,8 +128,8 @@ export function TimerPanel({ timer, glowColor, onStart, onPause, onResume, onSto
       </div>
 
       <div className="mt-4 text-xs text-gray-500 uppercase tracking-wider">
-        {timer.sessionType === 'focus' ? 'Focus Session' : 
-         timer.sessionType === 'short_break' ? 'Short Break' : 'Long Break'}
+        {timer.session_type === 'focus' ? 'Focus Session' : 
+         timer.session_type === 'short_break' ? 'Short Break' : 'Long Break'}
       </div>
     </div>
   );

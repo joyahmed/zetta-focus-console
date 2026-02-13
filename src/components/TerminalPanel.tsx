@@ -6,7 +6,7 @@ interface TerminalLine {
 }
 
 interface TerminalPanelProps {
-  onCommand: (command: string) => string;
+  onCommand: (command: string) => Promise<string>;
 }
 
 export function TerminalPanel({ onCommand }: TerminalPanelProps) {
@@ -17,6 +17,7 @@ export function TerminalPanel({ onCommand }: TerminalPanelProps) {
   const [input, setInput] = useState('');
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [isExecuting, setIsExecuting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const outputRef = useRef<HTMLDivElement>(null);
 
@@ -26,25 +27,34 @@ export function TerminalPanel({ onCommand }: TerminalPanelProps) {
     }
   }, [history]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || isExecuting) return;
 
     const cmd = input.trim();
     setHistory(prev => [...prev, { type: 'input', content: `$ ${cmd}` }]);
     setCommandHistory(prev => [...prev, cmd]);
     setHistoryIndex(-1);
+    setIsExecuting(true);
 
-    const result = onCommand(cmd);
-    if (result) {
-      const isError = result.startsWith('Error:');
+    try {
+      const result = await onCommand(cmd);
+      if (result) {
+        const isError = result.startsWith('Error:');
+        setHistory(prev => [...prev, { 
+          type: isError ? 'error' : 'success', 
+          content: result 
+        }]);
+      }
+    } catch (error) {
       setHistory(prev => [...prev, { 
-        type: isError ? 'error' : 'success', 
-        content: result 
+        type: 'error', 
+        content: `Error: ${error}` 
       }]);
     }
 
     setInput('');
+    setIsExecuting(false);
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -99,7 +109,7 @@ export function TerminalPanel({ onCommand }: TerminalPanelProps) {
         <div className="flex items-center gap-2 h-5">
           <span className="text-green-400 font-mono">$</span>
           <span className="text-white font-mono text-sm">{input}</span>
-          <span className="w-2 h-4 bg-green-400 animate-pulse" />
+          <span className={`w-2 h-4 bg-green-400 ${isExecuting ? 'animate-pulse' : ''}`} />
         </div>
       </div>
 
@@ -115,6 +125,7 @@ export function TerminalPanel({ onCommand }: TerminalPanelProps) {
             className="flex-1 bg-transparent text-white font-mono text-sm outline-none placeholder-gray-600"
             placeholder="Enter command..."
             autoFocus
+            disabled={isExecuting}
           />
         </div>
       </form>

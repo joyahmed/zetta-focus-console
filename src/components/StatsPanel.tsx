@@ -1,4 +1,9 @@
-import { Stats } from '../state';
+interface Stats {
+  sessions_today: number;
+  total_focus_minutes: number;
+  current_streak: number;
+  last_session_duration: number;
+}
 
 interface StatsPanelProps {
   stats: Stats;
@@ -13,22 +18,22 @@ export function StatsPanel({ stats }: StatsPanelProps) {
       
       <div className="grid grid-cols-2 gap-4">
         <div className="p-4 bg-zetta-bg rounded-lg border border-zetta-border hover:border-gray-500 transition-all duration-200 hover:shadow-lg hover:shadow-black/20 group cursor-default">
-          <div className="text-2xl font-bold text-white group-hover:text-blue-400 transition-colors">{stats.sessionsToday}</div>
+          <div className="text-2xl font-bold text-white group-hover:text-blue-400 transition-colors">{stats.sessions_today}</div>
           <div className="text-xs text-gray-500 mt-1">Sessions Today</div>
         </div>
         
         <div className="p-4 bg-zetta-bg rounded-lg border border-zetta-border hover:border-gray-500 transition-all duration-200 hover:shadow-lg hover:shadow-black/20 group cursor-default">
-          <div className="text-2xl font-bold text-white group-hover:text-green-400 transition-colors">{stats.totalFocusMinutes}</div>
+          <div className="text-2xl font-bold text-white group-hover:text-green-400 transition-colors">{stats.total_focus_minutes}</div>
           <div className="text-xs text-gray-500 mt-1">Total Focus (min)</div>
         </div>
         
         <div className="p-4 bg-zetta-bg rounded-lg border border-zetta-border hover:border-gray-500 transition-all duration-200 hover:shadow-lg hover:shadow-black/20 group cursor-default">
-          <div className="text-2xl font-bold text-white group-hover:text-yellow-400 transition-colors">{stats.currentStreak}</div>
+          <div className="text-2xl font-bold text-white group-hover:text-yellow-400 transition-colors">{stats.current_streak}</div>
           <div className="text-xs text-gray-500 mt-1">Current Streak</div>
         </div>
         
         <div className="p-4 bg-zetta-bg rounded-lg border border-zetta-border hover:border-gray-500 transition-all duration-200 hover:shadow-lg hover:shadow-black/20 group cursor-default">
-          <div className="text-2xl font-bold text-white group-hover:text-purple-400 transition-colors">{stats.lastSessionDuration}</div>
+          <div className="text-2xl font-bold text-white group-hover:text-purple-400 transition-colors">{stats.last_session_duration}</div>
           <div className="text-xs text-gray-500 mt-1">Last Session (min)</div>
         </div>
       </div>

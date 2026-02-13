@@ -1,142 +1,125 @@
 import { useState, useEffect, useCallback } from 'react';
+import { listen } from '@tauri-apps/api/event';
+import { invoke } from '@tauri-apps/api/core';
 import { Header } from './components/Header';
 import { TimerPanel } from './components/TimerPanel';
 import { ProfilePanel } from './components/ProfilePanel';
 import { TerminalPanel } from './components/TerminalPanel';
 import { StatsPanel } from './components/StatsPanel';
 import { SettingsPanel } from './components/SettingsPanel';
-import { AppState, mockState } from './state';
-import { handleCommand } from './commands';
+
+interface TimerState {
+  remaining_seconds: number;
+  total_seconds: number;
+  status: 'idle' | 'running' | 'paused' | 'completed';
+  session_type: 'focus' | 'short_break' | 'long_break';
+}
+
+interface Profile {
+  id: string;
+  name: string;
+  season: 'spring' | 'summer' | 'autumn' | 'winter';
+  motion_intensity: 'low' | 'medium' | 'high';
+  background_type: 'gradient' | 'particles' | 'custom';
+  focus_duration: number;
+  short_break_duration: number;
+  long_break_duration: number;
+  glow_color: string;
+}
+
+interface Stats {
+  sessions_today: number;
+  total_focus_minutes: number;
+  current_streak: number;
+  last_session_duration: number;
+}
+
+interface AppState {
+  timer: TimerState;
+  active_profile: Profile;
+  profiles: Profile[];
+  stats: Stats;
+  dev_mode: boolean;
+}
+
+interface StateEvent {
+  state: AppState;
+}
 
 function App() {
-  const [appState, setAppState] = useState<AppState>(mockState);
+  const [appState, setAppState] = useState<AppState | null>(null);
   const [terminalKey, setTerminalKey] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const processCommand = useCallback((command: string): string => {
+  useEffect(() => {
+    invoke<AppState>('get_state').then((state) => {
+      setAppState(state);
+    }).catch(console.error);
+
+    const unlisten = listen<StateEvent>('state-updated', (event) => {
+      setAppState(event.payload.state);
+    });
+
+    return () => {
+      unlisten.then(fn => fn());
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!appState) return;
+    
+    const interval = setInterval(() => {
+      invoke('tick_timer').catch(console.error);
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [appState?.timer.status]);
+
+  const processCommand = useCallback(async (command: string): Promise<string> => {
     if (command === 'clear') {
       setTerminalKey(k => k + 1);
       return '';
     }
     
-    const result = handleCommand(command, appState);
-    
-    if (result.includes('Switched to profile:')) {
-      const parts = command.split(' ');
-      const profileId = parts[1];
-      const profile = mockState.profiles.find(p => p.id === profileId);
-      if (profile) {
-        setAppState(prev => ({ ...prev, activeProfile: profile }));
-      }
-    }
-    
-    if (result.includes('focus start')) {
-      const parts = command.split(' ');
-      const minutes = parts[2] ? parseInt(parts[2]) : 25;
-      const totalSeconds = minutes * 60;
-      setAppState(prev => ({
-        ...prev,
-        timer: {
-          ...prev.timer,
-          remainingSeconds: totalSeconds,
-          totalSeconds: totalSeconds,
-          status: 'running',
-        }
-      }));
-    }
-    
-    if (command === 'focus stop') {
-      setAppState(prev => ({
-        ...prev,
-        timer: {
-          ...prev.timer,
-          status: 'idle',
-          remainingSeconds: prev.activeProfile.focusDuration,
-        }
-      }));
-    }
-    
-    if (command === 'focus pause') {
-      setAppState(prev => ({
-        ...prev,
-        timer: {
-          ...prev.timer,
-          status: 'paused',
-        }
-      }));
-    }
-    
-    if (command === 'focus resume') {
-      setAppState(prev => ({
-        ...prev,
-        timer: {
-          ...prev.timer,
-          status: 'running',
-        }
-      }));
-    }
-    
-    if (command.includes('devmode on')) {
-      setAppState(prev => ({ ...prev, devMode: true }));
-    }
-    
-    if (command.includes('devmode off')) {
-      setAppState(prev => ({ ...prev, devMode: false }));
-    }
-    
-    return result;
-  }, [appState]);
-
-  const handleProfileSwitch = useCallback((profileId: string) => {
-    const profile = mockState.profiles.find(p => p.id === profileId);
-    if (profile) {
-      setAppState(prev => ({ ...prev, activeProfile: profile }));
+    try {
+      const result = await invoke<string>('execute_command', { command });
+      return result;
+    } catch (error) {
+      return `Error: ${error}`;
     }
   }, []);
 
-  const handleDevModeToggle = useCallback(() => {
-    setAppState(prev => ({ ...prev, devMode: !prev.devMode }));
+  const handleProfileSwitch = useCallback(async (profileId: string) => {
+    try {
+      await invoke('execute_command', { command: `profile ${profileId}` });
+    } catch (error) {
+      console.error(error);
+    }
   }, []);
 
-  useEffect(() => {
-    if (appState.timer.status !== 'running') return;
-    
-    const interval = setInterval(() => {
-      setAppState(prev => {
-        if (prev.timer.remainingSeconds <= 0) {
-          return {
-            ...prev,
-            timer: {
-              ...prev.timer,
-              status: 'completed',
-              remainingSeconds: 0,
-            },
-            stats: {
-              ...prev.stats,
-              sessionsToday: prev.stats.sessionsToday + 1,
-              totalFocusMinutes: prev.stats.totalFocusMinutes + Math.floor(prev.timer.totalSeconds / 60),
-              lastSessionDuration: Math.floor(prev.timer.totalSeconds / 60),
-            }
-          };
-        }
-        return {
-          ...prev,
-          timer: {
-            ...prev.timer,
-            remainingSeconds: prev.timer.remainingSeconds - 1,
-          }
-        };
-      });
-    }, 1000);
-    
-    return () => clearInterval(interval);
-  }, [appState.timer.status]);
+  const handleDevModeToggle = useCallback(async () => {
+    if (!appState) return;
+    const cmd = appState.dev_mode ? 'devmode off' : 'devmode on';
+    try {
+      await invoke('execute_command', { command: cmd });
+    } catch (error) {
+      console.error(error);
+    }
+  }, [appState?.dev_mode]);
+
+  if (!appState) {
+    return (
+      <div className="h-screen w-screen bg-zetta-bg flex items-center justify-center">
+        <div className="text-gray-400">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen w-screen bg-zetta-bg flex flex-col overflow-hidden">
       <Header 
-        activeProfileName={appState.activeProfile.name}
-        devMode={appState.devMode}
+        activeProfileName={appState.active_profile.name}
+        devMode={appState.dev_mode}
         onSettingsClick={() => setSettingsOpen(true)}
       />
       
@@ -145,7 +128,7 @@ function App() {
           <div className="row-span-1">
             <TimerPanel 
               timer={appState.timer}
-              glowColor={appState.activeProfile.glowColor}
+              glowColor={appState.active_profile.glow_color}
               onStart={() => processCommand('focus start 25')}
               onPause={() => processCommand('focus pause')}
               onResume={() => processCommand('focus resume')}
@@ -155,7 +138,8 @@ function App() {
           
           <div className="row-span-1">
             <ProfilePanel 
-              profile={appState.activeProfile} 
+              profile={appState.active_profile}
+              profiles={appState.profiles}
               onProfileSwitch={handleProfileSwitch}
             />
           </div>
@@ -173,7 +157,7 @@ function App() {
       <SettingsPanel 
         isOpen={settingsOpen}
         onClose={() => setSettingsOpen(false)}
-        devMode={appState.devMode}
+        devMode={appState.dev_mode}
         onDevModeToggle={handleDevModeToggle}
       />
     </div>
