@@ -34,11 +34,24 @@ interface Stats {
   last_session_duration: number;
 }
 
+interface SystemStats {
+  cpu_usage: number;
+  memory_used: number;
+  memory_total: number;
+}
+
+interface AppStats {
+  cpu_usage: number;
+  memory_used: number;
+}
+
 interface AppState {
   timer: TimerState;
   active_profile: Profile;
   profiles: Profile[];
   stats: Stats;
+  system_stats: SystemStats;
+  app_stats: AppStats;
   dev_mode: boolean;
 }
 
@@ -68,11 +81,18 @@ function App() {
   useEffect(() => {
     if (!appState) return;
     
-    const interval = setInterval(() => {
+    const timerInterval = setInterval(() => {
       invoke('tick_timer').catch(console.error);
     }, 1000);
     
-    return () => clearInterval(interval);
+    const systemInterval = setInterval(() => {
+      invoke('tick_system_stats').catch(console.error);
+    }, 5000);
+    
+    return () => {
+      clearInterval(timerInterval);
+      clearInterval(systemInterval);
+    };
   }, [appState?.timer.status]);
 
   const processCommand = useCallback(async (command: string): Promise<string> => {
@@ -149,7 +169,7 @@ function App() {
           </div>
           
           <div className="row-span-1">
-            <StatsPanel stats={appState.stats} />
+            <StatsPanel stats={appState.stats} systemStats={appState.system_stats} appStats={appState.app_stats} />
           </div>
         </div>
       </main>

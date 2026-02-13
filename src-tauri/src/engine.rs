@@ -75,11 +75,78 @@ pub struct Stats {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SystemStats {
+    pub cpu_usage: f32,
+    pub memory_used: u64,
+    pub memory_total: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AppStats {
+    pub cpu_usage: f32,
+    pub memory_used: u64,
+}
+
+impl Default for SystemStats {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl SystemStats {
+    pub fn new() -> Self {
+        let mut sys = System::new_all();
+        sys.refresh_all();
+        let cpus = sys.cpus();
+        let cpu_usage = if !cpus.is_empty() {
+            cpus.iter().map(|c| c.cpu_usage()).sum::<f32>() / cpus.len() as f32
+        } else {
+            0.0
+        };
+
+        Self {
+            cpu_usage,
+            memory_used: sys.used_memory() / 1024 / 1024,
+            memory_total: sys.total_memory() / 1024 / 1024,
+        }
+    }
+}
+
+impl Default for AppStats {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl AppStats {
+    pub fn new() -> Self {
+        let mut sys = System::new_all();
+        sys.refresh_all();
+
+        // Get current process (the app itself)
+        let pid = sysinfo::Pid::from_u32(std::process::id());
+
+        let (cpu_usage, memory_used) = if let Some(process) = sys.process(pid) {
+            (process.cpu_usage(), process.memory() / 1024 / 1024)
+        } else {
+            (0.0, 0)
+        };
+
+        Self {
+            cpu_usage,
+            memory_used,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppState {
     pub timer: TimerState,
     pub active_profile: Profile,
     pub profiles: Vec<Profile>,
     pub stats: Stats,
+    pub system_stats: SystemStats,
+    pub app_stats: AppStats,
     pub dev_mode: bool,
 }
 
@@ -155,6 +222,8 @@ impl AppState {
                 current_streak: 7,
                 last_session_duration: 25,
             },
+            system_stats: SystemStats::new(),
+            app_stats: AppStats::new(),
             dev_mode: false,
         }
     }
@@ -461,6 +530,43 @@ pub fn tick_timer(state: State<EngineState>, app_handle: AppHandle) -> Result<()
             },
         );
     }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn tick_system_stats(state: State<EngineState>, app_handle: AppHandle) -> Result<(), String> {
+    let mut app_state = state.0.lock().map_err(|e| e.to_string())?;
+
+    let mut sys = System::new_all();
+    sys.refresh_all();
+    let cpus = sys.cpus();
+    let cpu_usage = if !cpus.is_empty() {
+        cpus.iter().map(|c| c.cpu_usage()).sum::<f32>() / cpus.len() as f32
+    } else {
+        0.0
+    };
+    app_state.system_stats = SystemStats {
+        cpu_usage,
+        memory_used: sys.used_memory() / 1024 / 1024,
+        memory_total: sys.total_memory() / 1024 / 1024,
+    };
+
+    // Get current process (the app itself)
+    let pid = sysinfo::Pid::from_u32(std::process::id());
+    if let Some(process) = sys.process(pid) {
+        app_state.app_stats = AppStats {
+            cpu_usage: process.cpu_usage(),
+            memory_used: process.memory() / 1024 / 1024,
+        };
+    }
+
+    let _ = app_handle.emit(
+        "state-updated",
+        StateEvent {
+            state: app_state.clone(),
+        },
+    );
 
     Ok(())
 }
