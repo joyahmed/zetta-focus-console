@@ -96,6 +96,11 @@ export function TerminalPanel({ onCommand }: TerminalPanelProps) {
             {line.content}
           </div>
         ))}
+        <div className="flex items-center gap-2 h-5">
+          <span className="text-green-400 font-mono">$</span>
+          <span className="text-white font-mono text-sm">{input}</span>
+          <span className="w-2 h-4 bg-green-400 animate-pulse" />
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="p-4 border-t border-zetta-border bg-zetta-bg/50">

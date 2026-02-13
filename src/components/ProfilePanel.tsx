@@ -1,7 +1,8 @@
-import { Profile } from '../state';
+import { Profile, mockProfiles } from '../state';
 
 interface ProfilePanelProps {
   profile: Profile;
+  onProfileSwitch: (profileId: string) => void;
 }
 
 function getSeasonEmoji(season: Profile['season']): string {
@@ -32,7 +33,9 @@ function getMotionBar(intensity: Profile['motionIntensity']): number {
   }
 }
 
-export function ProfilePanel({ profile }: ProfilePanelProps) {
+export function ProfilePanel({ profile, onProfileSwitch }: ProfilePanelProps) {
+  const otherProfiles = mockProfiles.filter(p => p.id !== profile.id);
+
   return (
     <div className="p-6 bg-zetta-card border border-zetta-border rounded-lg">
       <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-4">
@@ -105,11 +108,22 @@ export function ProfilePanel({ profile }: ProfilePanelProps) {
         </div>
       </div>
 
-      <div className="mt-4 pt-4 border-t border-zetta-border">
-        <div className="text-xs text-gray-500">
-          Switch profile via terminal: <code className="text-zetta-border bg-zetta-bg px-1 py-0.5 rounded">profile [name]</code>
+      {otherProfiles.length > 0 && (
+        <div className="mt-4 pt-4 border-t border-zetta-border">
+          <div className="text-xs text-gray-500 mb-2">Quick Switch</div>
+          <div className="flex flex-wrap gap-1">
+            {otherProfiles.map(p => (
+              <button
+                key={p.id}
+                onClick={() => onProfileSwitch(p.id)}
+                className="px-2 py-1 text-xs bg-zetta-bg border border-zetta-border rounded hover:border-gray-500 transition-colors text-gray-300"
+              >
+                {p.name}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

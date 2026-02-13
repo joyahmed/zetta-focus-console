@@ -4,12 +4,14 @@ import { TimerPanel } from './components/TimerPanel';
 import { ProfilePanel } from './components/ProfilePanel';
 import { TerminalPanel } from './components/TerminalPanel';
 import { StatsPanel } from './components/StatsPanel';
+import { SettingsPanel } from './components/SettingsPanel';
 import { AppState, mockState } from './state';
 import { handleCommand } from './commands';
 
 function App() {
   const [appState, setAppState] = useState<AppState>(mockState);
   const [terminalKey, setTerminalKey] = useState(0);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const processCommand = useCallback((command: string): string => {
     if (command === 'clear') {
@@ -85,6 +87,17 @@ function App() {
     return result;
   }, [appState]);
 
+  const handleProfileSwitch = useCallback((profileId: string) => {
+    const profile = mockState.profiles.find(p => p.id === profileId);
+    if (profile) {
+      setAppState(prev => ({ ...prev, activeProfile: profile }));
+    }
+  }, []);
+
+  const handleDevModeToggle = useCallback(() => {
+    setAppState(prev => ({ ...prev, devMode: !prev.devMode }));
+  }, []);
+
   useEffect(() => {
     if (appState.timer.status !== 'running') return;
     
@@ -124,6 +137,7 @@ function App() {
       <Header 
         activeProfileName={appState.activeProfile.name}
         devMode={appState.devMode}
+        onSettingsClick={() => setSettingsOpen(true)}
       />
       
       <main className="flex-1 p-6 overflow-hidden">
@@ -140,7 +154,10 @@ function App() {
           </div>
           
           <div className="row-span-1">
-            <ProfilePanel profile={appState.activeProfile} />
+            <ProfilePanel 
+              profile={appState.activeProfile} 
+              onProfileSwitch={handleProfileSwitch}
+            />
           </div>
           
           <div className="row-span-1">
@@ -152,6 +169,13 @@ function App() {
           </div>
         </div>
       </main>
+
+      <SettingsPanel 
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        devMode={appState.devMode}
+        onDevModeToggle={handleDevModeToggle}
+      />
     </div>
   );
 }
