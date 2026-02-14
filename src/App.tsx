@@ -55,6 +55,12 @@ interface SoundState {
 	is_muted: boolean;
 }
 
+interface SessionOverride {
+	focus_duration: number | null;
+	break_duration: number | null;
+	loop_count: number | null;
+}
+
 interface AppState {
 	timer: TimerState;
 	active_profile: Profile;
@@ -64,6 +70,7 @@ interface AppState {
 	app_stats: AppStats;
 	dev_mode: boolean;
 	sound_state: SoundState;
+	session_override: SessionOverride | null;
 }
 
 interface StateEvent {
@@ -172,10 +179,11 @@ function App() {
 						<TimerPanel
 							timer={appState.timer}
 							glowColor={appState.active_profile.glow_color}
-							onStart={() => processCommand('focus start 25')}
+							sessionOverride={appState.session_override}
+							onStart={() => processCommand('start')}
 							onPause={() => processCommand('focus pause')}
 							onResume={() => processCommand('focus resume')}
-							onStop={() => processCommand('focus stop')}
+							onStop={() => processCommand('stop')}
 						/>
 					</div>
 

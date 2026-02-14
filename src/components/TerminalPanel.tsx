@@ -27,6 +27,13 @@ export function TerminalPanel({ onCommand }: TerminalPanelProps) {
     }
   }, [history]);
 
+  // Refocus input after command execution completes
+  useEffect(() => {
+    if (!isExecuting) {
+      inputRef.current?.focus();
+    }
+  }, [isExecuting]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isExecuting) return;
@@ -41,15 +48,15 @@ export function TerminalPanel({ onCommand }: TerminalPanelProps) {
       const result = await onCommand(cmd);
       if (result) {
         const isError = result.startsWith('Error:');
-        setHistory(prev => [...prev, { 
-          type: isError ? 'error' : 'success', 
-          content: result 
+        setHistory(prev => [...prev, {
+          type: isError ? 'error' : 'success',
+          content: result
         }]);
       }
     } catch (error) {
-      setHistory(prev => [...prev, { 
-        type: 'error', 
-        content: `Error: ${error}` 
+      setHistory(prev => [...prev, {
+        type: 'error',
+        content: `Error: ${error}`
       }]);
     }
 
@@ -95,8 +102,8 @@ export function TerminalPanel({ onCommand }: TerminalPanelProps) {
           Terminal
         </span>
       </div>
-      
-      <div 
+
+      <div
         ref={outputRef}
         className="flex-1 p-2 md:p-4 overflow-y-auto font-mono text-xs md:text-sm space-y-0.5 md:space-y-1"
         onClick={() => inputRef.current?.focus()}

@@ -18,6 +18,48 @@ fn get_sound_data(sound_file: &str) -> &'static [u8] {
     }
 }
 
+/// Parse duration string like "1m", "30s", "2m30s" into seconds
+fn parse_duration(input: &str) -> Result<u32, String> {
+    let input = input.to_lowercase();
+    let mut total_seconds: u32 = 0;
+    let mut current_number = String::new();
+
+    for c in input.chars() {
+        if c.is_ascii_digit() {
+            current_number.push(c);
+        } else if c == 'm' {
+            let minutes: u32 = current_number.parse().map_err(|_| "Invalid number")?;
+            total_seconds += minutes * 60;
+            current_number.clear();
+        } else if c == 's' {
+            let seconds: u32 = current_number.parse().map_err(|_| "Invalid number")?;
+            total_seconds += seconds;
+            current_number.clear();
+        } else {
+            return Err(format!("Invalid character '{}' in duration", c));
+        }
+    }
+
+    // If there's a number without unit, treat as minutes
+    if !current_number.is_empty() {
+        let minutes: u32 = current_number.parse().map_err(|_| "Invalid number")?;
+        total_seconds += minutes * 60;
+    }
+
+    if total_seconds == 0 {
+        return Err("Duration cannot be zero".to_string());
+    }
+
+    Ok(total_seconds)
+}
+
+/// Format seconds into MM:SS display
+fn format_time(seconds: u32) -> String {
+    let mins = seconds / 60;
+    let secs = seconds % 60;
+    format!("{:02}:{:02}", mins, secs)
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimerState {
     pub remaining_seconds: u32,
@@ -126,6 +168,62 @@ impl SoundState {
             is_playing: false,
             is_muted: false,
         }
+    }
+}
+
+/// Session override for runtime configuration without modifying profiles
+/// Override applies only to current session and clears automatically
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionOverride {
+    pub focus_duration: Option<u32>, // in seconds
+    pub break_duration: Option<u32>, // in seconds
+    pub loop_count: Option<u32>,
+}
+
+impl SessionOverride {
+    pub fn new() -> Self {
+        Self {
+            focus_duration: None,
+            break_duration: None,
+            loop_count: None,
+        }
+    }
+
+    /// Check if any override is active
+    pub fn is_active(&self) -> bool {
+        self.focus_duration.is_some() || self.break_duration.is_some() || self.loop_count.is_some()
+    }
+
+    /// Validate override values
+    pub fn validate(&self) -> Result<(), String> {
+        // Focus duration: 5s -- 180m (10800s)
+        if let Some(focus) = self.focus_duration {
+            if focus < 5 || focus > 10800 {
+                return Err("Focus duration must be between 5 seconds and 180 minutes".to_string());
+            }
+        }
+
+        // Break duration: 1s -- 60m (3600s)
+        if let Some(break_dur) = self.break_duration {
+            if break_dur < 1 || break_dur > 3600 {
+                return Err("Break duration must be between 1 second and 60 minutes".to_string());
+            }
+        }
+
+        // Loop count: 1 -- 100
+        if let Some(loops) = self.loop_count {
+            if loops < 1 || loops > 100 {
+                return Err("Loop count must be between 1 and 100".to_string());
+            }
+        }
+
+        Ok(())
+    }
+}
+
+impl Default for SessionOverride {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -277,6 +375,7 @@ pub struct AppState {
     pub app_stats: AppStats,
     pub dev_mode: bool,
     pub sound_state: SoundState,
+    pub session_override: Option<SessionOverride>,
 }
 
 impl Default for AppState {
@@ -363,6 +462,7 @@ impl AppState {
             app_stats: AppStats::new(),
             dev_mode: false,
             sound_state: SoundState::new(),
+            session_override: None,
         }
     }
 }
@@ -426,11 +526,16 @@ fn process_command(
 ) -> String {
     match cmd {
         "help" => "Available commands:
-  focus start [minutes]  - Start a focus session (default: 25 min)
-  focus stop             - Stop current session
-  focus pause            - Pause current session
-  focus resume           - Resume paused session
-  profile [name]        - Switch to a profile
+  start                  - Start session (uses override if set, else profile defaults)
+  stop                   - Stop current session (override preserved)
+  pause                  - Pause current session
+  resume                 - Resume paused session
+  status                 - Show current session status
+  timer [duration]       - Set focus duration (e.g., timer 1m, timer 30s)
+  break [duration]       - Set break duration (e.g., break 30s, break 5m)
+  loop [count]           - Set loop count (1-100)
+  override clear         - Clear session override
+  profile [name]         - Switch to a profile
   profile list           - List all available profiles
   season [name]          - Change season (spring/summer/autumn/winter)
   config show            - Show current configuration
@@ -510,6 +615,302 @@ fn process_command(
                     .to_string()
             }
         },
+
+        // Runtime override commands
+        "timer" => {
+            // Safety: Can't override while session is running
+            if app_state.timer.status == TimerStatus::Running {
+                return "Stop current session before applying override.".to_string();
+            }
+
+            if let Some(duration_str) = args.first() {
+                match parse_duration(duration_str) {
+                    Ok(seconds) => {
+                        // Validate: 5s -- 180m (10800s)
+                        if seconds < 5 || seconds > 10800 {
+                            return "Error: Focus duration must be between 5 seconds and 180 minutes.".to_string();
+                        }
+                        let override_state = app_state
+                            .session_override
+                            .get_or_insert(SessionOverride::new());
+                        override_state.focus_duration = Some(seconds);
+                        if let Err(e) = override_state.validate() {
+                            return format!("Error: {}", e);
+                        }
+
+                        // Build feedback message
+                        let mut info = vec![];
+                        if let Some(f) = override_state.focus_duration {
+                            info.push(format!("Focus: {}s", f));
+                        }
+                        if let Some(b) = override_state.break_duration {
+                            info.push(format!("Break: {}s", b));
+                        }
+                        if let Some(l) = override_state.loop_count {
+                            info.push(format!("Loops: {}", l));
+                        }
+
+                        format!(
+                            "Override set:\n  - {}\n\nRun `start` to begin session.",
+                            info.join("\n  - ")
+                        )
+                    }
+                    Err(e) => format!("Error: {}", e),
+                }
+            } else {
+                "Error: Missing duration. Usage: timer 1m | timer 30s | timer 2m".to_string()
+            }
+        }
+
+        "break" => {
+            // Safety: Can't override while session is running
+            if app_state.timer.status == TimerStatus::Running {
+                return "Stop current session before applying override.".to_string();
+            }
+
+            if let Some(duration_str) = args.first() {
+                match parse_duration(duration_str) {
+                    Ok(seconds) => {
+                        // Validate: 1s -- 60m (3600s)
+                        if seconds < 1 || seconds > 3600 {
+                            return "Error: Break duration must be between 1 second and 60 minutes.".to_string();
+                        }
+                        let override_state = app_state
+                            .session_override
+                            .get_or_insert(SessionOverride::new());
+                        override_state.break_duration = Some(seconds);
+                        if let Err(e) = override_state.validate() {
+                            return format!("Error: {}", e);
+                        }
+
+                        // Build feedback message
+                        let mut info = vec![];
+                        if let Some(f) = override_state.focus_duration {
+                            info.push(format!("Focus: {}s", f));
+                        }
+                        if let Some(b) = override_state.break_duration {
+                            info.push(format!("Break: {}s", b));
+                        }
+                        if let Some(l) = override_state.loop_count {
+                            info.push(format!("Loops: {}", l));
+                        }
+
+                        format!(
+                            "Override set:\n  - {}\n\nRun `start` to begin session.",
+                            info.join("\n  - ")
+                        )
+                    }
+                    Err(e) => format!("Error: {}", e),
+                }
+            } else {
+                "Error: Missing duration. Usage: break 30s | break 5m".to_string()
+            }
+        }
+
+        "loop" => {
+            // Safety: Can't override while session is running
+            if app_state.timer.status == TimerStatus::Running {
+                return "Stop current session before applying override.".to_string();
+            }
+
+            if let Some(count_str) = args.first() {
+                match count_str.parse::<u32>() {
+                    Ok(count) => {
+                        // Validate: 1 -- 100
+                        if count < 1 || count > 100 {
+                            return "Error: Loop count must be between 1 and 100.".to_string();
+                        }
+                        let override_state = app_state
+                            .session_override
+                            .get_or_insert(SessionOverride::new());
+                        override_state.loop_count = Some(count);
+
+                        // Build feedback message
+                        let mut info = vec![];
+                        if let Some(f) = override_state.focus_duration {
+                            info.push(format!("Focus: {}s", f));
+                        }
+                        if let Some(b) = override_state.break_duration {
+                            info.push(format!("Break: {}s", b));
+                        }
+                        if let Some(l) = override_state.loop_count {
+                            info.push(format!("Loops: {}", l));
+                        }
+
+                        format!(
+                            "Override set:\n  - {}\n\nRun `start` to begin session.",
+                            info.join("\n  - ")
+                        )
+                    }
+                    Err(_) => {
+                        "Error: Invalid loop count. Must be a number between 1 and 100.".to_string()
+                    }
+                }
+            } else {
+                "Error: Missing count. Usage: loop 4".to_string()
+            }
+        }
+
+        "start" => {
+            // Case 2: Session already running
+            if app_state.timer.status == TimerStatus::Running {
+                return "Session already running. Use `stop` before restarting.".to_string();
+            }
+
+            // Get effective focus duration from override or profile
+            let focus_seconds = app_state
+                .session_override
+                .as_ref()
+                .and_then(|o| o.focus_duration)
+                .unwrap_or(app_state.active_profile.focus_duration);
+
+            app_state.timer = TimerState {
+                remaining_seconds: focus_seconds,
+                total_seconds: focus_seconds,
+                status: TimerStatus::Running,
+                session_type: SessionType::Focus,
+            };
+
+            // Auto-play sound when timer starts (if not muted)
+            if !app_state.sound_state.is_muted && !app_state.sound_state.is_playing {
+                let sound_file = &app_state.active_profile.sound_file;
+                let sound_data: &'static [u8] = get_sound_data(sound_file);
+                app_state.sound_state.current_sound = Some(sound_file.clone());
+                app_state.sound_state.is_playing = true;
+                app_state.sound_state.volume = app_state.active_profile.default_volume;
+                let _ = sound_manager.play(sound_data, app_state.sound_state.volume);
+            }
+
+            let override_info = if let Some(ref override_state) = app_state.session_override {
+                if override_state.is_active() {
+                    let mut info = vec![];
+                    if let Some(f) = override_state.focus_duration {
+                        info.push(format!("focus: {}s", f));
+                    }
+                    if let Some(b) = override_state.break_duration {
+                        info.push(format!("break: {}s", b));
+                    }
+                    if let Some(l) = override_state.loop_count {
+                        info.push(format!("loops: {}", l));
+                    }
+                    format!(" [Override: {}]", info.join(", "))
+                } else {
+                    String::new()
+                }
+            } else {
+                String::new()
+            };
+
+            format!("Starting session...{}", override_info)
+        }
+
+        "stop" => {
+            if app_state.timer.status == TimerStatus::Idle {
+                return "Error: No active session to stop.".to_string();
+            }
+            // Auto-pause sound when timer stops
+            if app_state.sound_state.is_playing && !app_state.sound_state.is_muted {
+                sound_manager.pause();
+            }
+            // Override persists after manual stop (per revision plan)
+            app_state.timer.status = TimerStatus::Idle;
+            app_state.timer.remaining_seconds = app_state.active_profile.focus_duration;
+
+            let override_msg = if app_state.session_override.is_some() {
+                " Override preserved."
+            } else {
+                ""
+            };
+            format!("Session stopped.{}", override_msg)
+        }
+
+        "override" => match args.first() {
+            Some(&"clear") => {
+                app_state.session_override = None;
+                "Override cleared.".to_string()
+            }
+            _ => {
+                if let Some(ref override_state) = app_state.session_override {
+                    if override_state.is_active() {
+                        let mut info = vec![];
+                        if let Some(f) = override_state.focus_duration {
+                            info.push(format!("Focus: {}s", f));
+                        }
+                        if let Some(b) = override_state.break_duration {
+                            info.push(format!("Break: {}s", b));
+                        }
+                        if let Some(l) = override_state.loop_count {
+                            info.push(format!("Loops: {}", l));
+                        }
+                        format!("Current override:\n  - {}", info.join("\n  - "))
+                    } else {
+                        "No override active.".to_string()
+                    }
+                } else {
+                    "No override active.".to_string()
+                }
+            }
+        },
+
+        "status" => {
+            let timer_status = match app_state.timer.status {
+                TimerStatus::Idle => "Idle",
+                TimerStatus::Running => "Running",
+                TimerStatus::Paused => "Paused",
+                TimerStatus::Completed => "Completed",
+            };
+
+            let mut info = vec![
+                format!(
+                    "Timer: {} ({})",
+                    timer_status,
+                    format_time(app_state.timer.remaining_seconds)
+                ),
+                format!("Profile: {}", app_state.active_profile.name),
+            ];
+
+            if let Some(ref override_state) = app_state.session_override {
+                if override_state.is_active() {
+                    let mut override_info = vec![];
+                    if let Some(f) = override_state.focus_duration {
+                        override_info.push(format!("focus {}s", f));
+                    }
+                    if let Some(b) = override_state.break_duration {
+                        override_info.push(format!("break {}s", b));
+                    }
+                    if let Some(l) = override_state.loop_count {
+                        override_info.push(format!("{} loops", l));
+                    }
+                    info.push(format!("Override: {}", override_info.join(", ")));
+                }
+            }
+
+            info.join("\n")
+        }
+
+        "pause" => {
+            if app_state.timer.status != TimerStatus::Running {
+                return "Error: No running session to pause.".to_string();
+            }
+            // Auto-pause sound when timer pauses
+            if app_state.sound_state.is_playing && !app_state.sound_state.is_muted {
+                sound_manager.pause();
+            }
+            app_state.timer.status = TimerStatus::Paused;
+            "Session paused.".to_string()
+        }
+
+        "resume" => {
+            if app_state.timer.status != TimerStatus::Paused {
+                return "Error: No paused session to resume.".to_string();
+            }
+            // Auto-resume sound when timer resumes
+            if app_state.sound_state.is_playing && !app_state.sound_state.is_muted {
+                sound_manager.resume();
+            }
+            app_state.timer.status = TimerStatus::Running;
+            "Session resumed.".to_string()
+        }
 
         "profile" => match args.first() {
             Some(&"list") => {
@@ -765,6 +1166,8 @@ pub fn tick_timer(state: State<EngineState>, app_handle: AppHandle) -> Result<()
             app_state.stats.sessions_today += 1;
             app_state.stats.total_focus_minutes += app_state.timer.total_seconds / 60;
             app_state.stats.last_session_duration = app_state.timer.total_seconds / 60;
+            // Clear override when session completes naturally
+            app_state.session_override = None;
         }
 
         let _ = app_handle.emit(

@@ -5,9 +5,16 @@ interface TimerState {
   session_type: 'focus' | 'short_break' | 'long_break';
 }
 
+interface SessionOverride {
+  focus_duration: number | null;
+  break_duration: number | null;
+  loop_count: number | null;
+}
+
 interface TimerPanelProps {
   timer: TimerState;
   glowColor: string;
+  sessionOverride?: SessionOverride | null;
   onStart: () => void;
   onPause: () => void;
   onResume: () => void;
@@ -30,20 +37,35 @@ function getStatusLabel(status: TimerState['status']): string {
   }
 }
 
-export function TimerPanel({ timer, glowColor, onStart, onPause, onResume, onStop }: TimerPanelProps) {
-  const progress = timer.total_seconds > 0 
-    ? ((timer.total_seconds - timer.remaining_seconds) / timer.total_seconds) * 100 
+function isOverrideActive(override: SessionOverride | null | undefined): boolean {
+  return override !== null && override !== undefined &&
+    (override.focus_duration !== null || override.break_duration !== null || override.loop_count !== null);
+}
+
+export function TimerPanel({ timer, glowColor, sessionOverride, onStart, onPause, onResume, onStop }: TimerPanelProps) {
+  const progress = timer.total_seconds > 0
+    ? ((timer.total_seconds - timer.remaining_seconds) / timer.total_seconds) * 100
     : 0;
-  
+
   const circumference = 2 * Math.PI * 90;
   const strokeDashoffset = circumference - (progress / 100) * circumference;
+  const hasOverride = isOverrideActive(sessionOverride);
 
   return (
     <div className="flex flex-col items-center justify-center p-3 md:p-4 bg-zetta-card border border-zetta-border rounded-lg h-full">
+      {/* Override Indicator */}
+      {hasOverride && (
+        <div className="mb-2 px-3 py-1 bg-amber-500/20 border border-amber-500/40 rounded-full">
+          <span className="text-xs font-medium text-amber-400 uppercase tracking-wider">
+            ⚡ Override Active
+          </span>
+        </div>
+      )}
+
       <div className="flex items-center gap-2 mb-2 md:mb-3">
-        <span 
+        <span
           className="w-2 h-2 rounded-full"
-          style={{ 
+          style={{
             backgroundColor: timer.status === 'running' ? glowColor : '#6b7280',
             boxShadow: timer.status === 'running' ? `0 0 8px ${glowColor}` : 'none'
           }}
@@ -128,7 +150,7 @@ export function TimerPanel({ timer, glowColor, onStart, onPause, onResume, onSto
       </div>
 
       <div className="mt-2 md:mt-3 text-xs text-gray-500 uppercase tracking-wider">
-        {timer.session_type === 'focus' ? 'Focus Session' : 
+        {timer.session_type === 'focus' ? 'Focus Session' :
          timer.session_type === 'short_break' ? 'Short Break' : 'Long Break'}
       </div>
     </div>
