@@ -14,5 +14,6 @@ pub use timer::{
 };
 
 pub use settings::{
-    activate_strict_mode, check_strict_mode_failure, deactivate_strict_mode, get_license,
+    activate_key, activate_strict_mode, check_strict_mode_failure, deactivate_strict_mode,
+    get_license, get_trial_days_remaining, is_pro,
 };
