@@ -1,19 +1,8 @@
+import { invoke } from '@tauri-apps/api/core';
+import { useEffect, useState } from 'react';
 import Logo from '../assets/icon.png';
 
-interface HeaderProps {
-	activeProfileName: string;
-	devMode: boolean;
-	onSettingsClick: () => void;
-	onTerminalClick: () => void;
-	volume: number;
-	isMuted: boolean;
-	onVolumeChange: (volume: number) => void;
-	onMuteToggle: () => void;
-	theme: string;
-	onThemeChange: (theme: string) => void;
-}
-
-export function Header({
+const Header = ({
 	activeProfileName,
 	devMode,
 	onSettingsClick,
@@ -23,9 +12,23 @@ export function Header({
 	onVolumeChange,
 	onMuteToggle,
 	theme,
-	onThemeChange
-}: HeaderProps) {
+	onThemeChange,
+	licenseState: propLicenseState,
+	trialDaysRemaining: _trialDaysRemaining,
+	onLicenseChange
+}: HeaderProps) => {
 	const isLight = theme === 'light';
+	const [devLicenseOpen, setDevLicenseOpen] = useState(false);
+	const [currentOverride, setCurrentOverride] =
+		useState<string>('none');
+	const [message, setMessage] = useState<string>('');
+	const [internalLicenseState, setInternalLicenseState] =
+		useState<LicenseState | null>(null);
+
+	// Use prop if provided, otherwise use internal state
+	const licenseState = propLicenseState || internalLicenseState;
+	// _trialDaysRemaining is available from props but not currently used in Header
+	// It's used in ProfilePanel instead
 
 	const toggleTheme = () => {
 		const themes = ['dark', 'light', 'system'];
@@ -37,8 +40,158 @@ export function Header({
 	// Check if running in dev build
 	const isDevBuild = import.meta.env.DEV;
 
+	// Fetch current license state on mount (only if no prop provided)
+	useEffect(() => {
+		if (!propLicenseState) {
+			fetchLicenseState();
+		}
+	}, []);
+
+	const fetchLicenseState = async () => {
+		try {
+			const state = await invoke<LicenseState>('get_license');
+			setInternalLicenseState(state);
+		} catch (error) {
+			console.error('Failed to fetch license state:', error);
+		}
+	};
+
+	const handleOverrideChange = async (overrideMode: string) => {
+		try {
+			if (overrideMode === 'none') {
+				const result = await invoke<string>(
+					'clear_debug_license_override'
+				);
+				setMessage(result);
+				setCurrentOverride('none');
+			} else {
+				const result = await invoke<string>(
+					'set_debug_license_override',
+					{
+						overrideMode
+					}
+				);
+				setMessage(result);
+				setCurrentOverride(overrideMode);
+			}
+			// Refresh license state after override change
+			await fetchLicenseState();
+			// Notify parent to refresh its license state
+			if (onLicenseChange) {
+				onLicenseChange();
+			}
+		} catch (error) {
+			setMessage(`Error: ${error}`);
+		}
+	};
+
+	const handleClearLicenseStorage = async () => {
+		try {
+			const result = await invoke<string>('clear_license_storage');
+			setMessage(result);
+			await fetchLicenseState();
+			// Notify parent to refresh its license state
+			if (onLicenseChange) {
+				onLicenseChange();
+			}
+		} catch (error) {
+			setMessage(`Error: ${error}`);
+		}
+	};
+
+	// Close popover when clicking outside
+	const closeDevLicense = () => setDevLicenseOpen(false);
+
+	const debugOptions = [
+		{ value: 'none', label: 'None (Use Real License)' },
+		{ value: 'force_free', label: 'Force Free' },
+		{ value: 'force_trial', label: 'Force Trial' },
+		{ value: 'force_pro', label: 'Force Pro' },
+		{ value: 'force_founder', label: 'Force Founder' },
+		{
+			value: 'simulate_expired_trial',
+			label: 'Simulate Expired Trial'
+		}
+	];
+
+	// Calculate effective license type (considering override)
+	const effectiveLicenseType =
+		currentOverride !== 'none'
+			? currentOverride
+					.replace('force_', '')
+					.replace('simulate_expired_trial', 'Trial')
+			: licenseState?.license_type || 'Free';
+
+	// Format display name
+	const displayLicenseName =
+		effectiveLicenseType.charAt(0).toUpperCase() +
+		effectiveLicenseType.slice(1);
+
+	// License badge logic - calm engineer tool tone
+	// const days = trialDaysRemaining ?? null;
+	// const isExpiring = days !== null && days <= 3;
+	// const isWarning = days !== null && days > 3 && days <= 7;
+
+	// const getLicenseBadge = () => {
+	// 	const type = licenseState?.license_type || 'Free';
+
+	// 	// Trial: calm amber/orange when ≤3 days (not red, not flashing)
+	// 	if (type === 'Trial' && days !== null) {
+	// 		if (isExpiring) {
+	// 			return {
+	// 				label: `${days}d left`,
+	// 				bg: 'rgba(245, 158, 11, 0.15)',
+	// 				text: '#f59e0b',
+	// 				border: 'rgba(245, 158, 11, 0.3)'
+	// 			};
+	// 		}
+	// 		if (isWarning) {
+	// 			return {
+	// 				label: `${days}d left`,
+	// 				bg: 'rgba(234, 179, 8, 0.15)',
+	// 				text: '#ca8a04',
+	// 				border: 'rgba(234, 179, 8, 0.3)'
+	// 			};
+	// 		}
+	// 		return {
+	// 			label: `${days}d`,
+	// 			bg: 'rgba(34, 197, 94, 0.15)',
+	// 			text: '#22c55e',
+	// 			border: 'rgba(34, 197, 94, 0.3)'
+	// 		};
+	// 	}
+
+	// 	const badges: Record<
+	// 		string,
+	// 		{ label: string; bg: string; text: string; border: string }
+	// 	> = {
+	// 		Pro: {
+	// 			label: 'Pro',
+	// 			bg: 'rgba(59, 130, 246, 0.15)',
+	// 			text: '#3b82f6',
+	// 			border: 'rgba(59, 130, 246, 0.3)'
+	// 		},
+	// 		Founder: {
+	// 			label: 'Founder',
+	// 			bg: 'rgba(168, 85, 247, 0.15)',
+	// 			text: '#a855f7',
+	// 			border: 'rgba(168, 85, 247, 0.3)'
+	// 		},
+	// 		Free: {
+	// 			label: 'Free',
+	// 			bg: 'rgba(107, 114, 128, 0.1)',
+	// 			text: '#6b7280',
+	// 			border: 'rgba(107, 114, 128, 0.2)'
+	// 		}
+	// 	};
+
+	// 	return badges[type] || badges.Free;
+	// };
+
+	// const badge = getLicenseBadge();
+
 	return (
-		<header className='flex items-center justify-between  pt-4  w-full px-4 mx-auto'>
+		<header className='flex items-center justify-between pt-4 w-full px-4 mx-auto'>
 			<div
 				className='flex items-center justify-between w-full mx-auto rounded-md p-2 shadow'
 				style={{
@@ -59,20 +212,6 @@ export function Header({
 						>
 							DEV
 						</span>
-					)}
-					{isDevBuild && (
-						<div className='relative group'>
-							<button
-								className='px-1.5 py-0.5 text-[10px] font-medium bg-purple-500/20 border border-purple-500/30 rounded cursor-help'
-								style={{ color: '#a855f7' }}
-							>
-								🔐 DEV
-							</button>
-							{/* Tooltip - shows on hover, closes when clicking outside */}
-							<div className='absolute top-full left-0 mt-1 px-2 py-1 bg-gray-900 border border-gray-700 rounded text-xs text-white whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50'>
-								Dev Build - License overrides active
-							</div>
-						</div>
 					)}
 				</div>
 
@@ -174,15 +313,28 @@ export function Header({
 						</span>
 					</button>
 
-					{/* Profile Name */}
-					<span
-						className='text-xs'
-						style={{ color: 'var(--text-secondary)' }}
-					>
-						<span style={{ color: 'var(--text-primary)' }}>
-							{activeProfileName}
+					{/* Profile Name with License Badge */}
+					<div className='flex items-center gap-2'>
+						<span
+							className='text-xs'
+							style={{ color: 'var(--text-secondary)' }}
+						>
+							<span style={{ color: 'var(--text-primary)' }}>
+								{activeProfileName}
+							</span>
 						</span>
-					</span>
+						{/* License Badge */}
+						{/* <span
+							className='px-2 py-0.5 text-[10px] font-medium rounded border'
+							style={{
+								backgroundColor: badge.bg,
+								color: badge.text,
+								borderColor: badge.border,
+							}}
+						>
+							{badge.label}
+						</span> */}
+					</div>
 
 					{/* Volume Control - Micro */}
 					<div className='flex items-center gap-2'>
@@ -237,11 +389,16 @@ export function Header({
 								height='16'
 								viewBox='0 0 48 16'
 								className='cursor-pointer'
-								onClick={(e) => {
-									const rect = e.currentTarget.getBoundingClientRect();
+								onClick={e => {
+									const rect =
+										e.currentTarget.getBoundingClientRect();
 									const x = e.clientX - rect.left;
-									const newVolume = Math.round((x / rect.width) * 100);
-									onVolumeChange(Math.max(0, Math.min(100, newVolume)));
+									const newVolume = Math.round(
+										(x / rect.width) * 100
+									);
+									onVolumeChange(
+										Math.max(0, Math.min(100, newVolume))
+									);
 								}}
 							>
 								{/* Track */}
@@ -257,14 +414,14 @@ export function Header({
 								<rect
 									x='0'
 									y='6'
-									width={(isMuted ? 0 : volume) / 100 * 48}
+									width={((isMuted ? 0 : volume) / 100) * 48}
 									height='4'
 									rx='2'
 									fill='var(--color-accent)'
 								/>
 								{/* Thumb */}
 								<circle
-									cx={(isMuted ? 0 : volume) / 100 * 48}
+									cx={((isMuted ? 0 : volume) / 100) * 48}
 									cy='8'
 									r='6'
 									fill={isLight ? '#1d4ed8' : '#f97316'}
@@ -274,6 +431,169 @@ export function Header({
 							</svg>
 						</div>
 					</div>
+
+					{/* Dev License Popover - Right side near settings */}
+					{isDevBuild && (
+						<div className='relative'>
+							{/* License Icon Button */}
+							<button
+								onClick={() => setDevLicenseOpen(!devLicenseOpen)}
+								className='flex items-center gap-1 px-2 py-1 text-[10px] font-medium bg-purple-500/20 border border-purple-500/30 rounded hover:bg-purple-500/30 transition-colors'
+								style={{ color: '#a855f7' }}
+								title='Dev License'
+							>
+								<svg
+									xmlns='http://www.w3.org/2000/svg'
+									className='h-3 w-3'
+									fill='none'
+									viewBox='0 0 24 24'
+									stroke='currentColor'
+								>
+									<path
+										strokeLinecap='round'
+										strokeLinejoin='round'
+										strokeWidth={2}
+										d='M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z'
+									/>
+								</svg>
+								<svg
+									xmlns='http://www.w3.org/2000/svg'
+									className={`h-3 w-3 transition-transform ${devLicenseOpen ? 'rotate-180' : ''}`}
+									fill='none'
+									viewBox='0 0 24 24'
+									stroke='currentColor'
+								>
+									<path
+										strokeLinecap='round'
+										strokeLinejoin='round'
+										strokeWidth={2}
+										d='M19 9l-7 7-7-7'
+									/>
+								</svg>
+							</button>
+
+							{/* Popover - shows when clicked, closes when clicking outside */}
+							{devLicenseOpen && (
+								<>
+									{/* Backdrop to close on click outside */}
+									<div
+										className='fixed inset-0 z-40'
+										onClick={closeDevLicense}
+									/>
+									<div
+										className='absolute top-full right-0 mt-2 w-72 rounded-lg shadow-xl z-50 overflow-hidden border'
+										style={{
+											backgroundColor: 'var(--bg-card)',
+											borderColor: 'var(--border-color)'
+										}}
+									>
+										{/* Active License Display */}
+										<div
+											className='p-3 border-b'
+											style={{ borderColor: 'var(--border-color)' }}
+										>
+											<div
+												className='text-xs mb-1'
+												style={{ color: 'var(--text-muted)' }}
+											>
+												Active License
+											</div>
+											<div
+												className='text-base font-semibold'
+												style={{ color: 'var(--text-primary)' }}
+											>
+												{displayLicenseName}
+											</div>
+											{(licenseState as LicenseState | null)
+												?.signature && (
+												<div
+													className='text-xs mt-1 truncate'
+													style={{ color: 'var(--text-muted)' }}
+												>
+													Key:{' '}
+													{
+														(licenseState as LicenseState | null)
+															?.signature
+													}
+												</div>
+											)}
+										</div>
+
+										<div className='p-3'>
+											<h3
+												className='font-semibold mb-2 text-sm'
+												style={{ color: 'var(--text-primary)' }}
+											>
+												License State Simulator
+											</h3>
+
+											<div className='space-y-1.5 mb-3'>
+												{debugOptions.map(option => (
+													<label
+														key={option.value}
+														className='flex items-center gap-2 cursor-pointer rounded px-2 py-1.5 transition-colors'
+														style={{ color: 'var(--text-secondary)' }}
+													>
+														<input
+															type='radio'
+															name='license_override'
+															value={option.value}
+															checked={
+																currentOverride === option.value
+															}
+															onChange={() =>
+																handleOverrideChange(option.value)
+															}
+															className='accent-purple-500'
+														/>
+														<span className='text-xs'>
+															{option.label}
+														</span>
+													</label>
+												))}
+											</div>
+
+											<div
+												className='border-t pt-3'
+												style={{ borderColor: 'var(--border-color)' }}
+											>
+												<button
+													onClick={handleClearLicenseStorage}
+													className='w-full px-3 py-1.5 rounded text-xs transition-colors border'
+													style={{
+														backgroundColor: 'rgba(239, 68, 68, 0.1)',
+														color: '#ef4444',
+														borderColor: 'rgba(239, 68, 68, 0.3)'
+													}}
+												>
+													Clear License Storage
+												</button>
+											</div>
+
+											{message && (
+												<div
+													className='mt-3 text-xs p-2 rounded'
+													style={{
+														color: 'var(--text-muted)',
+														backgroundColor: 'var(--bg-secondary)'
+													}}
+												>
+													{message}
+												</div>
+											)}
+
+											<div
+												className='mt-3 text-[10px]'
+												style={{ color: 'var(--text-muted)' }}
+											>
+												Debug only - Not included in release
+											</div>
+										</div>
+									</div>
+								</>
+							)}
+						</div>
+					)}
 
 					{/* Settings Button */}
 					<button
@@ -307,4 +627,6 @@ export function Header({
 			</div>
 		</header>
 	);
-}
+};
+
+export default Header;

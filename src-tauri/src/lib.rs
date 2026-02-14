@@ -6,10 +6,9 @@ mod storage;
 mod types;
 
 use engine::{
-    activate_key, execute_command, get_license, get_state, get_theme, is_pro,
-    set_theme, tick_system_stats, tick_timer, get_trial_days_remaining, EngineState,
-    set_debug_license_override, clear_debug_license_override, clear_license_storage,
-    can_create_profile,
+    activate_key, can_create_profile, clear_debug_license_override, clear_license_storage,
+    execute_command, get_license, get_state, get_theme, get_trial_days_remaining, get_trial_status,
+    is_pro, set_debug_license_override, set_theme, tick_system_stats, tick_timer, EngineState,
 };
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -28,6 +27,7 @@ pub fn run() {
             activate_key,
             is_pro,
             get_trial_days_remaining,
+            get_trial_status,
             set_debug_license_override,
             clear_debug_license_override,
             clear_license_storage,

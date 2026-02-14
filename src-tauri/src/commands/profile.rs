@@ -29,7 +29,11 @@ fn list_profiles(app_state: &AppState) -> String {
         .profiles
         .iter()
         .map(|p| {
-            let preset_tag = if p.is_preset { " [preset]" } else { " [custom]" };
+            let preset_tag = if p.is_preset {
+                " [preset]"
+            } else {
+                " [custom]"
+            };
             format!("  {} - {}{}", p.id, p.name, preset_tag)
         })
         .collect();
@@ -160,11 +164,13 @@ fn delete_profile(args: &[&str], app_state: &mut AppState) -> String {
 
     if let Some(profile) = app_state.profiles.iter().find(|p| p.id == profile_id) {
         if profile.is_preset {
-            return "Error: Cannot delete preset profiles. Only custom profiles can be deleted.".to_string();
+            return "Error: Cannot delete preset profiles. Only custom profiles can be deleted."
+                .to_string();
         }
 
         if app_state.active_profile.id == profile_id {
-            return "Error: Cannot delete the active profile. Switch to another profile first.".to_string();
+            return "Error: Cannot delete the active profile. Switch to another profile first."
+                .to_string();
         }
 
         app_state.profiles.retain(|p| p.id != profile_id);
@@ -195,7 +201,8 @@ fn edit_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String
         return format!("Error: Profile '{}' not found.", profile_id);
     }
     if profile_ref.unwrap().is_preset {
-        return "Error: Cannot edit preset profiles. Only custom profiles can be edited.".to_string();
+        return "Error: Cannot edit preset profiles. Only custom profiles can be edited."
+            .to_string();
     }
 
     if app_state
@@ -253,7 +260,8 @@ fn edit_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String
         profile.glow_color = glow_color;
         profile.sound_file = sound_file;
 
-        if app_state.active_profile.id == profile_id && app_state.timer.status == TimerStatus::Idle {
+        if app_state.active_profile.id == profile_id && app_state.timer.status == TimerStatus::Idle
+        {
             app_state.timer.remaining_seconds = focus_min;
             app_state.timer.total_seconds = focus_min;
         }
@@ -297,7 +305,11 @@ fn duplicate_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> S
     }
 }
 
-fn switch_profile(args: &[&str], app_state: &mut AppState, sound_manager: &mut SoundManager) -> String {
+fn switch_profile(
+    args: &[&str],
+    app_state: &mut AppState,
+    sound_manager: &mut SoundManager,
+) -> String {
     if args.len() < 2 {
         return "Usage: profile switch <id>".to_string();
     }
@@ -309,7 +321,11 @@ fn switch_profile_internal(
     app_state: &mut AppState,
     sound_manager: &mut SoundManager,
 ) -> String {
-    if let Some(profile) = app_state.profiles.iter().find(|p| p.id.as_str() == profile_id) {
+    if let Some(profile) = app_state
+        .profiles
+        .iter()
+        .find(|p| p.id.as_str() == profile_id)
+    {
         app_state.active_profile = profile.clone();
         if app_state.timer.status == TimerStatus::Idle {
             app_state.timer.remaining_seconds = profile.focus_duration;
@@ -323,6 +339,9 @@ fn switch_profile_internal(
         }
         format!("Switched to profile: {}", profile.name)
     } else {
-        format!("Error: Profile \"{}\" not found. Use \"profile list\" to see available profiles.", profile_id)
+        format!(
+            "Error: Profile \"{}\" not found. Use \"profile list\" to see available profiles.",
+            profile_id
+        )
     }
 }

@@ -1,30 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
-interface AmbientPanelProps {
-	season: 'spring' | 'summer' | 'autumn' | 'winter';
-	motionIntensity: 'low' | 'medium' | 'high';
-	backgroundType: 'gradient' | 'particles' | 'custom';
-	glowColor: string;
-	isRunning: boolean;
-	isEnabled: boolean;
-	theme?: string;
-}
-
-interface Particle {
-	id: number;
-	x: number;
-	size: number;
-	delay: number;
-	duration: number;
-	opacity: number;
-}
-
-interface Leaf extends Particle {
-	rotation: number;
-	rotationDuration: number;
-}
-
-export function AmbientPanel({
+const AmbientPanel = ({
 	season,
 	motionIntensity,
 	backgroundType,
@@ -32,7 +8,7 @@ export function AmbientPanel({
 	isRunning,
 	isEnabled,
 	theme = 'dark'
-}: AmbientPanelProps) {
+}: AmbientPanelProps) => {
 	const [isPaused, setIsPaused] = useState(false);
 	const isLight = theme === 'light';
 
@@ -459,3 +435,5 @@ export function AmbientPanel({
 		</div>
 	);
 }
+
+export default AmbientPanel

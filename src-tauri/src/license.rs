@@ -12,6 +12,62 @@ use std::time::{SystemTime, UNIX_EPOCH};
 /// Trial duration in seconds (14 days)
 const TRIAL_DURATION_SECS: u64 = 14 * 24 * 60 * 60;
 
+/// Get the trial marker file path
+fn get_trial_marker_path() -> PathBuf {
+    let base_dir = dirs::data_dir().unwrap_or_else(|| PathBuf::from("."));
+    base_dir.join(".zetta_focus").join(".trial_marker")
+}
+
+/// Check if trial marker exists (for trial resilience)
+fn trial_marker_exists() -> bool {
+    get_trial_marker_path().exists()
+}
+
+/// Create trial marker file with hashed timestamp
+fn create_trial_marker(trial_start: u64) -> Result<(), String> {
+    let path = get_trial_marker_path();
+
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
+
+    let mut hasher = DefaultHasher::new();
+    trial_start.hash(&mut hasher);
+    let hash = hasher.finish();
+
+    fs::write(&path, format!("{}", hash)).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+/// Get trial marker hash if exists
+fn get_trial_marker_hash() -> Option<u64> {
+    let path = get_trial_marker_path();
+    if !path.exists() {
+        return None;
+    }
+
+    fs::read_to_string(&path).ok()?.trim().parse().ok()
+}
+
+/// Verify trial marker is valid (prevents simple trial reset)
+fn is_trial_marker_valid(trial_start: u64) -> bool {
+    if let Some(saved_hash) = get_trial_marker_hash() {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+
+        let mut hasher = DefaultHasher::new();
+        trial_start.hash(&mut hasher);
+        let current_hash = hasher.finish();
+
+        saved_hash == current_hash
+    } else {
+        false
+    }
+}
+
 // ============================================================================
 // DEV LICENSE OVERRIDES (Debug builds only)
 // ============================================================================
@@ -197,9 +253,32 @@ impl LicenseManager {
         // Check trial expiration on startup
         manager.check_trial_expiration();
 
-        // If no license file existed, initialize trial
+        // If no license file exists:
         if !Self::license_file_exists() {
-            manager.initialize_trial();
+            // Trial resilience: if marker exists but license doesn't, fail-safe to Free
+            // This prevents users from resetting trial by deleting license file
+            if trial_marker_exists() {
+                // Marker exists but license was deleted - restore to Free (trial was previously used)
+                // Keep marker as-is so they can't restart trial
+                manager.tier = LicenseTier::Free;
+                manager.trial_start_timestamp = None;
+                manager.persist().ok();
+            } else {
+                // No license and no marker - initialize fresh trial
+                manager.initialize_trial();
+            }
+        } else {
+            // License file exists - validate marker for Trial state
+            if manager.tier == LicenseTier::Trial {
+                if let Some(ts) = manager.trial_start_timestamp {
+                    if !is_trial_marker_valid(ts) {
+                        // Marker invalid - restore to Free (fail-safe)
+                        manager.tier = LicenseTier::Free;
+                        manager.trial_start_timestamp = None;
+                        manager.persist().ok();
+                    }
+                }
+            }
         }
 
         manager
@@ -344,6 +423,9 @@ impl LicenseManager {
         self.tier = LicenseTier::Trial;
         self.trial_start_timestamp = Some(now);
         self.signature = None;
+
+        // Create trial marker for resilience
+        let _ = create_trial_marker(now);
 
         // Persist the trial state
         let _ = self.persist();
@@ -526,4 +608,3 @@ pub fn get_license_state() -> crate::types::LicenseState {
 pub fn is_pro_enabled() -> bool {
     LicenseManager::new().is_pro_enabled()
 }
-
