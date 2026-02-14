@@ -17,6 +17,8 @@ interface ProfilePanelProps {
   onProfileSwitch: (profileId: string) => void;
   onCreateProfile?: () => void;
   onEditProfile?: () => void;
+  errorMessage?: string | null;
+  onErrorDismiss?: () => void;
 }
 
 function getSeasonEmoji(season: Profile['season']): string {
@@ -47,7 +49,7 @@ function getMotionBar(intensity: Profile['motion_intensity']): number {
   }
 }
 
-export function ProfilePanel({ profile, profiles, onProfileSwitch, onCreateProfile, onEditProfile }: ProfilePanelProps) {
+export function ProfilePanel({ profile, profiles, onProfileSwitch, onCreateProfile, onEditProfile, errorMessage, onErrorDismiss }: ProfilePanelProps) {
   const otherProfiles = profiles.filter(p => p.id !== profile.id);
 
   return (
@@ -150,6 +152,18 @@ export function ProfilePanel({ profile, profiles, onProfileSwitch, onCreateProfi
       {/* Create Profile Button */}
       {onCreateProfile && (
         <div className="mt-2 md:mt-4 pt-2 md:pt-4 border-t border-zetta-border">
+          {errorMessage && (
+            <div className="mb-2 p-2 bg-red-500/20 border border-red-500/30 rounded text-red-400 text-xs">
+              <div className="flex items-center justify-between">
+                <span>{errorMessage}</span>
+                {onErrorDismiss && (
+                  <button onClick={onErrorDismiss} className="text-red-400 hover:text-white">
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
           <button
             onClick={onCreateProfile}
             className="w-full px-3 py-2 text-xs bg-zetta-bg border border-zetta-border rounded hover:border-blue-500/50 hover:bg-blue-500/10 transition-colors flex items-center justify-center gap-2"

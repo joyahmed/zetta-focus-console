@@ -96,6 +96,7 @@ function App() {
 	const [sessionSummary, setSessionSummary] = useState<string | null>(
 		null
 	);
+	const [profileError, setProfileError] = useState<string | null>(null);
 
 	useEffect(() => {
 		invoke<AppState>('get_state')
@@ -338,9 +339,26 @@ function App() {
 		[processCommand]
 	);
 
-	const openCreateProfile = useCallback(() => {
-		setProfileModalMode('create');
-		setProfileModalOpen(true);
+	const openCreateProfile = useCallback(async () => {
+		try {
+			// Check if user can create profile based on license
+			const result = await invoke<{
+				can_create: boolean;
+				is_pro: boolean;
+				custom_profile_count: number;
+				message: string;
+			}>('can_create_profile');
+
+			if (!result.can_create) {
+				setProfileError(result.message);
+				return;
+			}
+			setProfileError(null);
+			setProfileModalMode('create');
+			setProfileModalOpen(true);
+		} catch (error) {
+			setProfileError(String(error));
+		}
 	}, []);
 
 	const openEditProfile = useCallback(() => {
@@ -399,6 +417,8 @@ function App() {
 							onProfileSwitch={handleProfileSwitch}
 							onCreateProfile={openCreateProfile}
 							onEditProfile={openEditProfile}
+							errorMessage={profileError}
+							onErrorDismiss={() => setProfileError(null)}
 						/>
 					</div>
 
@@ -503,3 +523,4 @@ function App() {
 }
 
 export default App;
+
