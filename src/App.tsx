@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useState } from 'react';
 import { AmbientPanel } from './components/AmbientPanel';
+import { DebugPanel } from './components/DebugPanel';
 import { Header } from './components/Header';
 import { HelpModal } from './components/HelpModal';
 import { ProfileModal } from './components/ProfileModal';
@@ -129,8 +130,13 @@ function App() {
 		const applyTheme = (theme: string) => {
 			if (theme === 'system') {
 				// Check system preference
-				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-				document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+				const prefersDark = window.matchMedia(
+					'(prefers-color-scheme: dark)'
+				).matches;
+				document.documentElement.setAttribute(
+					'data-theme',
+					prefersDark ? 'dark' : 'light'
+				);
 			} else {
 				document.documentElement.setAttribute('data-theme', theme);
 			}
@@ -139,14 +145,17 @@ function App() {
 		applyTheme(appState.theme);
 
 		// Listen for system theme changes
-		const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+		const mediaQuery = window.matchMedia(
+			'(prefers-color-scheme: dark)'
+		);
 		const handleChange = () => {
 			if (appState.theme === 'system') {
 				applyTheme('system');
 			}
 		};
 		mediaQuery.addEventListener('change', handleChange);
-		return () => mediaQuery.removeEventListener('change', handleChange);
+		return () =>
+			mediaQuery.removeEventListener('change', handleChange);
 	}, [appState?.theme]);
 
 	// Global keyboard shortcuts
@@ -486,6 +495,9 @@ function App() {
 				}
 				onSubmit={handleCreateProfile}
 			/>
+
+			{/* Debug Panel - Only visible in dev builds */}
+			{import.meta.env.DEV && <DebugPanel />}
 		</div>
 	);
 }

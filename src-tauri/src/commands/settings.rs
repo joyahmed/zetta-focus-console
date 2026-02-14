@@ -1,8 +1,11 @@
 //! Settings module - Settings and license commands
 
-use crate::license::get_license_state;
+use crate::license::{get_license_state, LicenseManager};
+#[cfg(debug_assertions)]
+use crate::license::{DevLicenseOverride, DevOverrides};
 use crate::types::{LicenseState, StateEvent, StrictModeState, TimerStatus};
 use crate::EngineState;
+use std::fs;
 use tauri::{AppHandle, Emitter, State};
 
 #[tauri::command]
@@ -31,6 +34,46 @@ pub fn is_pro(state: State<EngineState>) -> Result<bool, String> {
 pub fn get_trial_days_remaining(state: State<EngineState>) -> Result<u32, String> {
     let license_manager = state.license_manager.lock().map_err(|e| e.to_string())?;
     Ok(license_manager.get_trial_days_remaining())
+}
+
+// ============================================================================
+// DEBUG PANEL COMMANDS (Debug builds only)
+// ============================================================================
+
+#[cfg(debug_assertions)]
+#[tauri::command]
+pub fn set_debug_license_override(override_mode: String) -> Result<String, String> {
+    let mode = match override_mode.as_str() {
+        "force_free" => DevLicenseOverride::ForceFree,
+        "force_trial" => DevLicenseOverride::ForceTrial,
+        "force_pro" => DevLicenseOverride::ForcePro,
+        "force_founder" => DevLicenseOverride::ForceFounder,
+        "simulate_expired_trial" => DevLicenseOverride::SimulateExpiredTrial,
+        "none" => DevLicenseOverride::None,
+        _ => return Err(format!("Unknown override mode: {}", override_mode)),
+    };
+
+    DevOverrides::set_override(mode);
+    Ok(format!("Debug override set to: {}", override_mode))
+}
+
+#[cfg(debug_assertions)]
+#[tauri::command]
+pub fn clear_debug_license_override() -> Result<String, String> {
+    DevOverrides::clear();
+    Ok("Debug override cleared".to_string())
+}
+
+#[cfg(debug_assertions)]
+#[tauri::command]
+pub fn clear_license_storage() -> Result<String, String> {
+    let path = LicenseManager::get_license_path();
+    if path.exists() {
+        fs::remove_file(&path).map_err(|e| e.to_string())?;
+        Ok(format!("License storage cleared: {:?}", path))
+    } else {
+        Ok("No license file to clear".to_string())
+    }
 }
 
 #[tauri::command]

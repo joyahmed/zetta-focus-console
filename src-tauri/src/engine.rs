@@ -11,7 +11,8 @@ pub use crate::commands::{
     activate_key, activate_strict_mode, check_strict_mode_failure, deactivate_strict_mode,
     execute_command, format_time, get_license, get_state, get_theme,
     get_trial_days_remaining, is_pro, parse_command_with_quotes, parse_duration, process_command,
-    set_theme, tick_system_stats, tick_timer,
+    set_theme, tick_system_stats, tick_timer, set_debug_license_override,
+    clear_debug_license_override, clear_license_storage,
 };
 
 // Re-export types from crate root

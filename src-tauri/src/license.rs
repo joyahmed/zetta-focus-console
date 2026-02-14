@@ -12,6 +12,97 @@ use std::time::{SystemTime, UNIX_EPOCH};
 /// Trial duration in seconds (14 days)
 const TRIAL_DURATION_SECS: u64 = 14 * 24 * 60 * 60;
 
+// ============================================================================
+// DEV LICENSE OVERRIDES (Debug builds only)
+// ============================================================================
+
+/// Development license override enum - allows simulating different license states
+/// Only available in debug builds for testing purposes
+#[cfg(debug_assertions)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum DevLicenseOverride {
+    /// No override - use actual license state
+    #[default]
+    None,
+    /// Force license to appear as Free
+    ForceFree,
+    /// Force license to appear as Trial
+    ForceTrial,
+    /// Force license to appear as Pro
+    ForcePro,
+    /// Force license to appear as Founder
+    ForceFounder,
+    /// Simulate an expired trial (shows as Trial but is expired)
+    SimulateExpiredTrial,
+}
+
+/// Debug license state - stored in memory only, not persisted
+#[cfg(debug_assertions)]
+#[derive(Debug, Clone, Default)]
+pub struct DevLicenseState {
+    pub override_mode: DevLicenseOverride,
+    pub simulate_expired_trial: bool,
+}
+
+#[cfg(debug_assertions)]
+impl DevLicenseState {
+    /// Set the current override mode
+    pub fn set_override(&mut self, mode: DevLicenseOverride) {
+        self.override_mode = mode;
+        self.simulate_expired_trial = (mode == DevLicenseOverride::SimulateExpiredTrial);
+    }
+
+    /// Get the current override mode
+    pub fn get_override(&self) -> DevLicenseOverride {
+        self.override_mode
+    }
+
+    /// Clear all overrides
+    pub fn clear(&mut self) {
+        self.override_mode = DevLicenseOverride::None;
+        self.simulate_expired_trial = false;
+    }
+}
+
+/// Debug license overrides - compile-time config (for code-based testing)
+#[cfg(debug_assertions)]
+#[derive(Debug, Clone, Copy, Default)]
+pub struct DevOverrides {
+    /// Current override mode (runtime adjustable)
+    pub override_mode: DevLicenseOverride,
+}
+
+#[cfg(debug_assertions)]
+impl DevOverrides {
+    /// Get the current override mode from global state
+    /// Uses a simple static Mutex for thread safety
+    pub fn get() -> Self {
+        Self {
+            override_mode: DEBUG_LICENSE_STATE.lock().unwrap().override_mode,
+        }
+    }
+
+    /// Set the override mode at runtime
+    pub fn set_override(mode: DevLicenseOverride) {
+        DEBUG_LICENSE_STATE.lock().unwrap().set_override(mode);
+    }
+
+    /// Clear all overrides
+    pub fn clear() {
+        DEBUG_LICENSE_STATE.lock().unwrap().clear();
+    }
+}
+
+/// Initialize the debug license state - call once at startup
+#[cfg(debug_assertions)]
+static DEBUG_LICENSE_STATE: std::sync::LazyLock<std::sync::Mutex<DevLicenseState>> =
+    std::sync::LazyLock::new(|| {
+        std::sync::Mutex::new(DevLicenseState {
+            override_mode: DevLicenseOverride::None,
+            simulate_expired_trial: false,
+        })
+    });
+
 /// License tier enum - the internal representation of license state
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -120,19 +211,47 @@ impl LicenseManager {
     }
 
     /// Get license type as string (for UI display)
+    /// Respects dev overrides in debug builds
     pub fn get_license_type(&self) -> String {
-        self.tier.to_license_type()
+        self.effective_tier().to_license_type()
     }
 
     /// Check if Pro features are enabled
     /// Returns true if: Pro, Founder, or Trial (not expired)
     /// Returns false if: Free
+    ///
+    /// In debug builds, this respects DevOverrides for testing purposes.
     pub fn is_pro_enabled(&self) -> bool {
-        match self.tier {
+        let effective = self.effective_tier();
+        match effective {
             LicenseTier::Pro | LicenseTier::Founder => true,
             LicenseTier::Trial => !self.is_trial_expired(),
             LicenseTier::Free => false,
         }
+    }
+
+    /// Get the effective license tier, respecting dev overrides in debug builds
+    ///
+    /// In debug builds, this allows forcing Free/Trial/Pro/Founder for testing.
+    /// In release builds, this always returns the actual stored tier.
+    ///
+    /// Dev overrides do NOT modify stored license data.
+    pub fn effective_tier(&self) -> LicenseTier {
+        #[cfg(debug_assertions)]
+        {
+            let dev_overrides = DevOverrides::get();
+            match dev_overrides.override_mode {
+                DevLicenseOverride::ForceFree => return LicenseTier::Free,
+                DevLicenseOverride::ForceTrial => return LicenseTier::Trial,
+                DevLicenseOverride::ForcePro => return LicenseTier::Pro,
+                DevLicenseOverride::ForceFounder => return LicenseTier::Founder,
+                DevLicenseOverride::SimulateExpiredTrial => return LicenseTier::Trial,
+                DevLicenseOverride::None => {}
+            }
+        }
+
+        // In release builds, or when no overrides are active, return actual tier
+        self.tier
     }
 
     /// Check if the license is Founder (permanent status)
@@ -160,8 +279,11 @@ impl LicenseManager {
     }
 
     /// Get trial days remaining (0 if expired or not in trial)
+    /// Returns 0 if in debug mode with force_free override
     pub fn get_trial_days_remaining(&self) -> u32 {
-        if self.tier != LicenseTier::Trial {
+        let effective = self.effective_tier();
+
+        if effective != LicenseTier::Trial {
             return 0;
         }
 
@@ -181,8 +303,10 @@ impl LicenseManager {
     }
 
     /// Check if currently in trial period
+    /// Respects dev overrides in debug builds
     pub fn is_in_trial(&self) -> bool {
-        self.tier == LicenseTier::Trial && !self.is_trial_expired()
+        let effective = self.effective_tier();
+        effective == LicenseTier::Trial && !self.is_trial_expired()
     }
 
     /// Initialize trial on first launch
@@ -288,7 +412,7 @@ impl LicenseManager {
     }
 
     /// Get the license file path
-    fn get_license_path() -> PathBuf {
+    pub fn get_license_path() -> PathBuf {
         Self::get_license_dir().join("license.dat")
     }
 
@@ -374,4 +498,3 @@ pub fn get_license_state() -> crate::types::LicenseState {
 pub fn is_pro_enabled() -> bool {
     LicenseManager::new().is_pro_enabled()
 }
-

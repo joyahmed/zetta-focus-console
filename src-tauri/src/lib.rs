@@ -8,6 +8,7 @@ mod types;
 use engine::{
     activate_key, execute_command, get_license, get_state, get_theme, is_pro,
     set_theme, tick_system_stats, tick_timer, get_trial_days_remaining, EngineState,
+    set_debug_license_override, clear_debug_license_override, clear_license_storage,
 };
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -26,6 +27,9 @@ pub fn run() {
             activate_key,
             is_pro,
             get_trial_days_remaining,
+            set_debug_license_override,
+            clear_debug_license_override,
+            clear_license_storage,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
