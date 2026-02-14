@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
-export function AmbientPanel({
+const AmbientPanel = ({
 	season,
 	motionIntensity,
 	backgroundType,
@@ -8,7 +8,7 @@ export function AmbientPanel({
 	isRunning,
 	isEnabled,
 	theme = 'dark'
-}: AmbientPanelProps) {
+}: AmbientPanelProps) => {
 	const [isPaused, setIsPaused] = useState(false);
 	const isLight = theme === 'light';
 
@@ -435,3 +435,5 @@ export function AmbientPanel({
 		</div>
 	);
 }
+
+export default AmbientPanel

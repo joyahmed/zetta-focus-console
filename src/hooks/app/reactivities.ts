@@ -1,12 +1,15 @@
 import { invoke } from '@tauri-apps/api/core';
-import { Dispatch, SetStateAction, useEffect } from 'react';
-
-interface AppReactivitiesProps {
-	setAppState: Dispatch<SetStateAction<AppState | null>>;
-}
+import { listen } from '@tauri-apps/api/event';
+import { useEffect } from 'react';
+import { AppReactivitiesProps } from './types';
 
 export const appReactivities = ({
-	setAppState
+	appState,
+	setAppState,
+	setLicenseState,
+	setTrialDaysRemaining,
+	setSessionSummary,
+	setTerminalOpen
 }: AppReactivitiesProps) => {
 	useEffect(() => {
 		invoke<AppState>('get_state')

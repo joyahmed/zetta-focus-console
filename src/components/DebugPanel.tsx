@@ -1,14 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from 'react';
 
-interface LicenseState {
-	license_type: string;
-	issued_at: string | null;
-	expires_at: string | null;
-	signature: string | null;
-}
-
-export function DebugPanel() {
+const DebugPanel = () => {
 	const [currentOverride, setCurrentOverride] =
 		useState<string>('none');
 	const [message, setMessage] = useState<string>('');
@@ -156,4 +149,6 @@ export function DebugPanel() {
 			</details>
 		</div>
 	);
-}
+};
+
+export default DebugPanel;

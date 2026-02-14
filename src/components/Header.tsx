@@ -2,30 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from 'react';
 import Logo from '../assets/icon.png';
 
-interface LicenseState {
-	license_type: string;
-	issued_at: string | null;
-	expires_at: string | null;
-	signature: string | null;
-}
-
-interface HeaderProps {
-	activeProfileName: string;
-	devMode: boolean;
-	onSettingsClick: () => void;
-	onTerminalClick: () => void;
-	volume: number;
-	isMuted: boolean;
-	onVolumeChange: (volume: number) => void;
-	onMuteToggle: () => void;
-	theme: string;
-	onThemeChange: (theme: string) => void;
-	licenseState?: { license_type: string } | null;
-	trialDaysRemaining?: number | null;
-	onLicenseChange?: () => void;
-}
-
-export function Header({
+const Header = ({
 	activeProfileName,
 	devMode,
 	onSettingsClick,
@@ -39,7 +16,7 @@ export function Header({
 	licenseState: propLicenseState,
 	trialDaysRemaining: _trialDaysRemaining,
 	onLicenseChange
-}: HeaderProps) {
+}: HeaderProps) => {
 	const isLight = theme === 'light';
 	const [devLicenseOpen, setDevLicenseOpen] = useState(false);
 	const [currentOverride, setCurrentOverride] =
@@ -650,5 +627,6 @@ export function Header({
 			</div>
 		</header>
 	);
-}
+};
 
+export default Header;

@@ -1,3 +1,57 @@
+interface AppPanelProps {
+	appState: AppState;
+	processCommand: (command: string) => Promise<string>;
+	handleProfileSwitch: (profileId: string) => Promise<void>;
+	openCreateProfile: () => Promise<void>;
+	openEditProfile: () => void;
+	profileError: string | null;
+	setProfileError: (value: SetStateAction<string | null>) => void;
+	licenseState: {
+		license_type: string;
+	} | null;
+	trialDaysRemaining?: number | null | undefined;
+}
+
+interface AppModelsProps {
+	appState: AppState;
+	terminalKey: number;
+	terminalOpen: boolean;
+	setTerminalOpen: (value: SetStateAction<boolean>) => void;
+	processCommand: (command: string) => Promise<string>;
+	setHelpOpen: (value: SetStateAction<boolean>) => void;
+	sessionSummary: string | null;
+	setSessionSummary: (value: SetStateAction<string | null>) => void;
+	settingsOpen: boolean;
+	setSettingsOpen: (value: SetStateAction<boolean>) => void;
+	handleDevModeToggle: () => Promise<void>;
+	handleVolumeChange: (volume: number) => Promise<void>;
+	handleMuteToggle: () => Promise<void>;
+	handleAmbienceToggle: () => Promise<void>;
+	handleMuteToggle: () => Promise<void>;
+	handleSoundPlay: () => Promise<void>;
+	handleSoundStop: () => Promise<void>;
+	handleBackgroundTypeChange: (
+		type: 'gradient' | 'particles'
+	) => Promise<void>;
+	handleResetSettings: () => Promise<void>;
+	handleThemeChange: (theme: string) => Promise<void>;
+	helpOpen: boolean;
+
+	profileModalOpen: boolean;
+	setProfileModalOpen: (value: SetStateAction<boolean>) => void;
+	profileModalMode: 'create' | 'edit';
+	handleCreateProfile: (profileData: {
+		id?: string | undefined;
+		name: string;
+		focus_min: number;
+		short_break_min: number;
+		long_break_min: number;
+		season: string;
+		intensity: string;
+		sound: string;
+	}) => Promise<string>;
+}
+
 interface TimerState {
 	remaining_seconds: number;
 	total_seconds: number;
@@ -92,4 +146,206 @@ interface Particle {
 interface Leaf extends Particle {
 	rotation: number;
 	rotationDuration: number;
+}
+
+interface LicenseState {
+	license_type: string;
+	issued_at: string | null;
+	expires_at: string | null;
+	signature: string | null;
+}
+
+interface LicenseState {
+	license_type: string;
+	issued_at: string | null;
+	expires_at: string | null;
+	signature: string | null;
+}
+
+interface HeaderProps {
+	activeProfileName: string;
+	devMode: boolean;
+	onSettingsClick: () => void;
+	onTerminalClick: () => void;
+	volume: number;
+	isMuted: boolean;
+	onVolumeChange: (volume: number) => void;
+	onMuteToggle: () => void;
+	theme: string;
+	onThemeChange: (theme: string) => void;
+	licenseState?: { license_type: string } | null;
+	trialDaysRemaining?: number | null;
+	onLicenseChange?: () => void;
+}
+
+interface HelpModalProps {
+	isOpen: boolean;
+	onClose: () => void;
+}
+
+interface CommandGroup {
+	title: string;
+	commands: {
+		cmd: string;
+		description: string;
+	}[];
+}
+
+/** Profile  */
+interface Profile {
+	id: string;
+	name: string;
+	focus_duration: number;
+	short_break_duration: number;
+	long_break_duration: number;
+	season: string;
+	motion_intensity: string;
+	sound_file: string;
+}
+
+interface ProfileModalProps {
+	isOpen: boolean;
+	onClose: () => void;
+	mode: 'create' | 'edit';
+	profile?: Profile | undefined; // Required for edit mode
+	onSubmit: (profileData: {
+		id?: string; // Only for edit mode
+		name: string;
+		focus_min: number;
+		short_break_min: number;
+		long_break_min: number;
+		season: string;
+		intensity: string;
+		sound: string;
+	}) => Promise<string>;
+}
+
+/** Profile Panel */
+
+interface Profile {
+	id: string;
+	name: string;
+	season: 'spring' | 'summer' | 'autumn' | 'winter';
+	motion_intensity: 'low' | 'medium' | 'high';
+	background_type: 'gradient' | 'particles' | 'custom';
+	focus_duration: number;
+	short_break_duration: number;
+	long_break_duration: number;
+	glow_color: string;
+	is_preset: boolean;
+}
+
+interface ProfilePanelProps {
+	profile: Profile;
+	profiles: Profile[];
+	onProfileSwitch: (profileId: string) => void;
+	onCreateProfile?: () => void;
+	onEditProfile?: () => void;
+	errorMessage?: string | null;
+	onErrorDismiss?: () => void;
+	licenseType?: string;
+	trialDaysRemaining?: number | null;
+}
+
+/** Settings Panel */
+interface SettingsPanelProps {
+	isOpen: boolean;
+	onClose: () => void;
+	devMode: boolean;
+	onDevModeToggle: () => void;
+	ambienceEnabled: boolean;
+	onAmbienceToggle: () => void;
+	soundVolume: number;
+	onVolumeChange: (volume: number) => void;
+	isMuted: boolean;
+	onMuteToggle: () => void;
+	isPlaying: boolean;
+	onSoundPlay: () => void;
+	onSoundStop: () => void;
+	backgroundType: 'gradient' | 'particles' | 'custom';
+	onBackgroundTypeChange: (type: 'gradient' | 'particles') => void;
+	onResetSettings: () => void;
+	theme: string;
+	onThemeChange: (theme: string) => void;
+}
+
+/** Sound Control */
+interface SoundControlProps {
+	isPlaying: boolean;
+	isMuted: boolean;
+	volume: number;
+	currentSound: string | null;
+}
+
+/** StatsPanelProps  */
+interface Stats {
+	sessions_today: number;
+	total_focus_minutes: number;
+	current_streak: number;
+	last_session_duration: number;
+}
+
+interface SystemStats {
+	cpu_usage: number;
+	memory_used: number;
+	memory_total: number;
+}
+
+interface AppStats {
+	cpu_usage: number;
+	memory_used: number;
+}
+
+interface StatsPanelProps {
+	stats: Stats;
+	systemStats: SystemStats;
+	appStats: AppStats;
+	devMode?: boolean;
+	timerStatus?: string;
+	activeProfileName?: string;
+	licenseType?: string;
+	trialDaysRemaining?: number | null;
+}
+
+/**Terminal Modal  */
+
+interface TerminalLine {
+	type: 'input' | 'output' | 'error' | 'success';
+	content: string;
+}
+
+interface TerminalModalProps {
+	isOpen: boolean;
+	onClose: () => void;
+	onCommand: (command: string) => Promise<string>;
+	onHelp: () => void;
+	sessionSummary?: string | null;
+	onSummaryRead?: () => void;
+	theme: string;
+}
+
+/** Timer Panel */
+
+interface TimerState {
+	remaining_seconds: number;
+	total_seconds: number;
+	status: 'idle' | 'running' | 'paused' | 'completed';
+	session_type: 'focus' | 'short_break' | 'long_break';
+}
+
+interface SessionOverride {
+	focus_duration: number | null;
+	break_duration: number | null;
+	loop_count: number | null;
+}
+
+interface TimerPanelProps {
+	timer: TimerState;
+	glowColor: string;
+	sessionOverride?: SessionOverride | null;
+	onStart: () => void;
+	onPause: () => void;
+	onResume: () => void;
+	onStop: () => void;
+	theme?: string;
 }
