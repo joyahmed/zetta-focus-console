@@ -1395,6 +1395,56 @@ fn process_command(
             }
         },
 
+        "background" => match args.first() {
+            Some(&"gradient") => {
+                app_state.active_profile.background_type = BackgroundType::Gradient;
+                "Background set to: gradient".to_string()
+            }
+            Some(&"particles") => {
+                app_state.active_profile.background_type = BackgroundType::Particles;
+                "Background set to: particles".to_string()
+            }
+            _ => {
+                format!(
+                    "Background: {:?}",
+                    app_state.active_profile.background_type
+                )
+            }
+        },
+
+        "reset" => {
+            app_state.timer = TimerState {
+                remaining_seconds: 25 * 60,
+                total_seconds: 25 * 60,
+                status: TimerStatus::Idle,
+                session_type: SessionType::Focus,
+            };
+            app_state.session_override = None;
+            app_state.stats = Stats {
+                sessions_today: 0,
+                total_focus_minutes: 0,
+                current_streak: 0,
+                last_session_duration: 0,
+            };
+            // Reset dev mode
+            app_state.dev_mode = false;
+            // Reset ambience
+            app_state.ambience_enabled = true;
+            // Reset sound state
+            app_state.sound_state.volume = 50;
+            app_state.sound_state.is_muted = false;
+            if app_state.sound_state.is_playing {
+                let _ = sound_manager.stop();
+                app_state.sound_state.is_playing = false;
+                app_state.sound_state.current_sound = None;
+            }
+            // Reset to default profile (Winter Deep) - this includes background_type to Gradient
+            if let Some(default_profile) = app_state.profiles.iter().find(|p| p.id == "winter-deep") {
+                app_state.active_profile = default_profile.clone();
+            }
+            "Settings reset to defaults.".to_string()
+        }
+
         // Dev mode commands - only available when dev_mode is enabled
         "engine" => {
             if !app_state.dev_mode {
