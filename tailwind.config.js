@@ -7,12 +7,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        'zetta-bg': '#0f1115',
-        'zetta-card': '#151821',
-        'zetta-border': '#2a2f3a',
+        'zetta-bg': 'var(--bg-primary)',
+        'zetta-card': 'var(--bg-card)',
+        'zetta-border': 'var(--border-color)',
       },
       fontFamily: {
         'mono': ['JetBrains Mono', 'monospace'],
+      },
+      backgroundColor: {
+        'primary': 'var(--bg-primary)',
+        'secondary': 'var(--bg-secondary)',
       },
     },
   },

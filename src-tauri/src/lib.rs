@@ -1,6 +1,6 @@
 mod engine;
 
-use engine::{execute_command, get_state, tick_system_stats, tick_timer, EngineState};
+use engine::{execute_command, get_state, get_theme, set_theme, tick_system_stats, tick_timer, EngineState};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -9,6 +9,8 @@ pub fn run() {
         .manage(EngineState::new())
         .invoke_handler(tauri::generate_handler![
             get_state,
+            get_theme,
+            set_theme,
             execute_command,
             tick_timer,
             tick_system_stats

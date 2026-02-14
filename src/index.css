@@ -4,20 +4,272 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+:root {
+	/* Dark Mode (Default) */
+	--bg-primary: #0f1115;
+	--bg-secondary: #121417;
+	--bg-card: #1a1d23;
+	--bg-panel: #1a1d23;
+	--border-color: rgba(255, 255, 255, 0.06);
+	--text-primary: #e6e8ec;
+	--text-secondary: #9aa0a6;
+	--text-muted: #6b7280;
+	--accent: #60a5fa;
+	--accent-hover: #93c5fd;
+
+	/* Additional colors for theming */
+	--color-gray-50: #f9fafb;
+	--color-gray-100: #f3f4f6;
+	--color-gray-200: #e5e7eb;
+	--color-gray-300: #d1d5db;
+	--color-gray-400: #9ca3af;
+	--color-gray-500: #6b7280;
+	--color-gray-600: #4b5563;
+	--color-gray-700: #374151;
+	--color-gray-800: #1f2937;
+	--color-gray-900: #111827;
+
+	--color-white: #ffffff;
+	--color-black: #000000;
+
+	/* Semantic colors */
+	--color-bg: var(--bg-primary);
+	--color-card: var(--bg-card);
+	--color-border: var(--border-color);
+	--color-text: var(--text-primary);
+	--color-text-secondary: var(--text-secondary);
+	--color-text-muted: var(--text-muted);
 }
 
-html, body, #root {
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
+[data-theme='light'] {
+	--bg-primary: #f8f9fa;
+	--bg-secondary: #e9ecef;
+	--bg-card: #ffffff;
+	--bg-panel: #ffffff;
+	--border-color: rgba(0, 0, 0, 0.12);
+	--text-primary: #343a40;
+	--text-secondary: #6c757d;
+	--text-muted: #adb5bd;
+	--accent: #5c7cfa;
+	--accent-hover: #4263eb;
+
+	/* Additional colors for theming - softer light mode */
+	--color-gray-50: #f8f9fa;
+	--color-gray-100: #f1f3f5;
+	--color-gray-200: #e9ecef;
+	--color-gray-300: #dee2e6;
+	--color-gray-400: #ced4da;
+	--color-gray-500: #adb5bd;
+	--color-gray-600: #6c757d;
+	--color-gray-700: #495057;
+	--color-gray-800: #343a40;
+	--color-gray-900: #212529;
+
+	--color-white: #212529;
+	--color-black: #f8f9fa;
+
+	/* Semantic colors */
+	--color-bg: var(--bg-primary);
+	--color-card: var(--bg-card);
+	--color-border: var(--border-color);
+	--color-text: var(--text-primary);
+	--color-text-secondary: var(--text-secondary);
+	--color-text-muted: var(--text-muted);
+}
+
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
 }
 
 body {
-  font-family: 'JetBrains Mono', monospace;
-  background-color: #0f1115;
-  color: #e0e0e0;
+	font-family: 'JetBrains Mono', monospace;
+	background-color: var(--bg-primary);
+	color: var(--text-primary);
+	transition:
+		background-color 0.2s ease,
+		color 0.2s ease;
+}
+
+/* Tailwind theme extensions */
+@layer base {
+	.bg-zetta-bg {
+		background-color: var(--bg-primary);
+	}
+
+	.bg-zetta-card {
+		background-color: var(--bg-card);
+	}
+
+	.bg-zetta-panel {
+		background-color: var(--bg-panel);
+	}
+
+	.border-zetta-border {
+		border-color: var(--border-color);
+	}
+
+	.text-zetta-text {
+		color: var(--text-primary);
+	}
+
+	.text-zetta-text-secondary {
+		color: var(--text-secondary);
+	}
+
+	.text-zetta-text-muted {
+		color: var(--text-muted);
+	}
+
+	/* Theme-aware text colors */
+	.text-theme-primary {
+		color: var(--text-primary) !important;
+	}
+
+	.text-theme-secondary {
+		color: var(--text-secondary) !important;
+	}
+
+	.text-theme-muted {
+		color: var(--text-muted) !important;
+	}
+
+	/* Theme-aware backgrounds */
+	.bg-theme {
+		background-color: var(--bg-primary) !important;
+	}
+
+	.bg-theme-card {
+		background-color: var(--bg-card) !important;
+	}
+
+	.bg-theme-secondary {
+		background-color: var(--bg-secondary) !important;
+	}
+
+	/* Theme-aware borders */
+	.border-theme {
+		border-color: var(--border-color) !important;
+	}
+
+	/* Inverted colors for dark text on light backgrounds */
+	.text-inverted {
+		color: var(--text-primary);
+	}
+
+	[data-theme='light'] .text-inverted {
+		color: #1b1e24;
+	}
+}
+
+/* Theme-aware utility classes for common colors */
+@layer utilities {
+	.bg-gray-50 {
+		background-color: var(--color-gray-50) !important;
+	}
+	.bg-gray-100 {
+		background-color: var(--color-gray-100) !important;
+	}
+	.bg-gray-200 {
+		background-color: var(--color-gray-200) !important;
+	}
+	.bg-gray-300 {
+		background-color: var(--color-gray-300) !important;
+	}
+	.bg-gray-400 {
+		background-color: var(--color-gray-400) !important;
+	}
+	.bg-gray-500 {
+		background-color: var(--color-gray-500) !important;
+	}
+	.bg-gray-600 {
+		background-color: var(--color-gray-600) !important;
+	}
+	.bg-gray-700 {
+		background-color: var(--color-gray-700) !important;
+	}
+	.bg-gray-800 {
+		background-color: var(--color-gray-800) !important;
+	}
+	.bg-gray-900 {
+		background-color: var(--color-gray-900) !important;
+	}
+
+	.text-gray-50 {
+		color: var(--color-gray-50) !important;
+	}
+	.text-gray-100 {
+		color: var(--color-gray-100) !important;
+	}
+	.text-gray-200 {
+		color: var(--color-gray-200) !important;
+	}
+	.text-gray-300 {
+		color: var(--color-gray-300) !important;
+	}
+	.text-gray-400 {
+		color: var(--color-gray-400) !important;
+	}
+	.text-gray-500 {
+		color: var(--color-gray-500) !important;
+	}
+	.text-gray-600 {
+		color: var(--color-gray-600) !important;
+	}
+	.text-gray-700 {
+		color: var(--color-gray-700) !important;
+	}
+	.text-gray-800 {
+		color: var(--color-gray-800) !important;
+	}
+	.text-gray-900 {
+		color: var(--color-gray-900) !important;
+	}
+
+	.text-white {
+		color: var(--color-white) !important;
+	}
+	.text-black {
+		color: var(--color-black) !important;
+	}
+
+	.border-gray-50 {
+		border-color: var(--color-gray-50) !important;
+	}
+	.border-gray-100 {
+		border-color: var(--color-gray-100) !important;
+	}
+	.border-gray-200 {
+		border-color: var(--color-gray-200) !important;
+	}
+	.border-gray-300 {
+		border-color: var(--color-gray-300) !important;
+	}
+	.border-gray-400 {
+		border-color: var(--color-gray-400) !important;
+	}
+	.border-gray-500 {
+		border-color: var(--color-gray-500) !important;
+	}
+	.border-gray-600 {
+		border-color: var(--color-gray-600) !important;
+	}
+	.border-gray-700 {
+		border-color: var(--color-gray-700) !important;
+	}
+	.border-gray-800 {
+		border-color: var(--color-gray-800) !important;
+	}
+	.border-gray-900 {
+		border-color: var(--color-gray-900) !important;
+	}
 }
