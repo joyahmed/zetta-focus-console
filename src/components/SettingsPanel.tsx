@@ -1,3 +1,6 @@
+import { useState, useEffect } from 'react';
+import { invoke } from '@tauri-apps/api/core';
+
 interface SettingsPanelProps {
   isOpen: boolean;
   onClose: () => void;
@@ -40,6 +43,38 @@ export function SettingsPanel({
   onThemeChange
 }: SettingsPanelProps) {
   const isLight = theme === 'light';
+  const [licenseKey, setLicenseKey] = useState('');
+  const [licenseMessage, setLicenseMessage] = useState('');
+  const [currentLicense, setCurrentLicense] = useState<string>('Free');
+
+  useEffect(() => {
+    fetchLicenseState();
+  }, []);
+
+  const fetchLicenseState = async () => {
+    try {
+      const state = await invoke<{ license_type: string }>('get_license');
+      setCurrentLicense(state.license_type || 'Free');
+    } catch (error) {
+      console.error('Failed to fetch license:', error);
+    }
+  };
+
+  const handleActivateLicense = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!licenseKey.trim()) {
+      setLicenseMessage('Please enter a license key');
+      return;
+    }
+    try {
+      const result = await invoke<string>('activate_key', { key: licenseKey });
+      setLicenseMessage(result);
+      setLicenseKey('');
+      await fetchLicenseState();
+    } catch (error) {
+      setLicenseMessage(`Error: ${error}`);
+    }
+  };
 
   return (
     <>
@@ -370,6 +405,59 @@ export function SettingsPanel({
                 Restore default configuration
               </div>
             </button>
+          </section>
+
+          <section>
+            <h3
+              className="text-sm font-medium uppercase tracking-wider mb-3"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              License
+            </h3>
+            <div
+              className="p-3 rounded-lg border mb-3"
+              style={{
+                backgroundColor: 'var(--bg-primary)',
+                borderColor: 'var(--border-color)'
+              }}
+            >
+              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                Current License
+              </div>
+              <div className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+                {currentLicense}
+              </div>
+            </div>
+            <form onSubmit={handleActivateLicense}>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={licenseKey}
+                  onChange={(e) => setLicenseKey(e.target.value)}
+                  placeholder="ZETTA-PRO-XXXX or ZETTA-FOUNDER-XXXX"
+                  className="flex-1 p-2 rounded-lg border text-sm"
+                  style={{
+                    backgroundColor: 'var(--bg-primary)',
+                    borderColor: 'var(--border-color)',
+                    color: 'var(--text-primary)'
+                  }}
+                />
+                <button
+                  type="submit"
+                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors"
+                >
+                  Activate
+                </button>
+              </div>
+              {licenseMessage && (
+                <div
+                  className="mt-2 text-xs p-2 rounded"
+                  style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-muted)' }}
+                >
+                  {licenseMessage}
+                </div>
+              )}
+            </form>
           </section>
 
           <section

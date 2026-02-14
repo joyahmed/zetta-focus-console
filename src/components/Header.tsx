@@ -34,6 +34,9 @@ export function Header({
 		onThemeChange(themes[nextIndex]);
 	};
 
+	// Check if running in dev build
+	const isDevBuild = import.meta.env.DEV;
+
 	return (
 		<header className='flex items-center justify-between  pt-4  w-full px-4 mx-auto'>
 			<div
@@ -56,6 +59,20 @@ export function Header({
 						>
 							DEV
 						</span>
+					)}
+					{isDevBuild && (
+						<div className='relative group'>
+							<button
+								className='px-1.5 py-0.5 text-[10px] font-medium bg-purple-500/20 border border-purple-500/30 rounded cursor-help'
+								style={{ color: '#a855f7' }}
+							>
+								🔐 DEV
+							</button>
+							{/* Tooltip - shows on hover, closes when clicking outside */}
+							<div className='absolute top-full left-0 mt-1 px-2 py-1 bg-gray-900 border border-gray-700 rounded text-xs text-white whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50'>
+								Dev Build - License overrides active
+							</div>
+						</div>
 					)}
 				</div>
 

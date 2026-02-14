@@ -496,6 +496,54 @@ impl AppStateExt for AppState {
     }
 }
 
+impl AppState {
+    /// Count custom (non-preset) profiles
+    pub fn count_custom_profiles(&self) -> usize {
+        self.profiles.iter().filter(|p| !p.is_preset).count()
+    }
+
+    /// Check if user can create a new profile based on license tier
+    /// - Trial/Pro/Founder: Always can create (unlimited)
+    /// - Free: Can only create if they have less than 1 custom profile
+    pub fn can_create_profile(&self, is_pro: bool) -> bool {
+        if is_pro {
+            true // Trial, Pro, Founder - unlimited
+        } else {
+            // Free tier - can only have 1 custom profile
+            self.count_custom_profiles() < 1
+        }
+    }
+
+    /// Check if user can edit a custom profile based on license tier
+    /// - Trial/Pro/Founder: Can edit any custom profile
+    /// - Free: Can only edit their single custom profile (if exists)
+    pub fn can_edit_profile(&self, is_pro: bool, profile_id: &str) -> bool {
+        // Find the profile
+        if let Some(profile) = self.profiles.iter().find(|p| p.id == profile_id) {
+            // Can't edit preset profiles
+            if profile.is_preset {
+                return false;
+            }
+
+            if is_pro {
+                true // Trial, Pro, Founder - can edit
+            } else {
+                // Free tier - can only edit their single custom profile
+                self.count_custom_profiles() <= 1
+            }
+        } else {
+            false // Profile doesn't exist
+        }
+    }
+
+    /// Check if user can create multiple custom profiles based on license tier
+    /// - Trial/Pro/Founder: Yes
+    /// - Free: No
+    pub fn can_create_multiple_profiles(&self, is_pro: bool) -> bool {
+        is_pro
+    }
+}
+
 // ============================================================================
 // EVENT TYPES
 // ============================================================================

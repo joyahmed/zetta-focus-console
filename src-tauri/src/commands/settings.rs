@@ -1,17 +1,25 @@
 //! Settings module - Settings and license commands
 
-use crate::license::{get_license_state, LicenseManager};
+use crate::license::LicenseManager;
 #[cfg(debug_assertions)]
 use crate::license::{DevLicenseOverride, DevOverrides};
 use crate::types::{LicenseState, StateEvent, StrictModeState, TimerStatus};
 use crate::EngineState;
+use serde::{Deserialize, Serialize};
 use std::fs;
 use tauri::{AppHandle, Emitter, State};
 
 #[tauri::command]
 pub fn get_license(state: State<EngineState>) -> Result<LicenseState, String> {
     let license_manager = state.license_manager.lock().map_err(|e| e.to_string())?;
-    Ok(get_license_state())
+
+    // Use the license_manager from state directly instead of creating a new instance
+    Ok(LicenseState {
+        license_type: license_manager.get_license_type(),
+        issued_at: None,
+        expires_at: None,
+        signature: license_manager.get_signature(),
+    })
 }
 
 #[tauri::command]
@@ -34,6 +42,46 @@ pub fn is_pro(state: State<EngineState>) -> Result<bool, String> {
 pub fn get_trial_days_remaining(state: State<EngineState>) -> Result<u32, String> {
     let license_manager = state.license_manager.lock().map_err(|e| e.to_string())?;
     Ok(license_manager.get_trial_days_remaining())
+}
+
+/// Check if user can create a new profile based on license tier and current profile count
+#[tauri::command]
+pub fn can_create_profile(state: State<EngineState>) -> Result<CanCreateProfileResult, String> {
+    let license_manager = state.license_manager.lock().map_err(|e| e.to_string())?;
+    let is_pro = license_manager.is_pro_enabled();
+
+    let app_state = state.app_state.lock().map_err(|e| e.to_string())?;
+    let custom_count = app_state.count_custom_profiles();
+
+    let can_create = if is_pro {
+        true // Trial, Pro, Founder - unlimited
+    } else {
+        // Free tier - can only have 1 custom profile
+        custom_count < 1
+    };
+
+    Ok(CanCreateProfileResult {
+        can_create,
+        is_pro,
+        custom_profile_count: custom_count,
+        message: if can_create {
+            String::new()
+        } else if is_pro {
+            "Cannot create more profiles".to_string()
+        } else {
+            "Free tier is limited to 1 custom profile. Upgrade to Pro for unlimited profiles."
+                .to_string()
+        },
+    })
+}
+
+/// Result type for can_create_profile command
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CanCreateProfileResult {
+    pub can_create: bool,
+    pub is_pro: bool,
+    pub custom_profile_count: usize,
+    pub message: String,
 }
 
 // ============================================================================

@@ -216,16 +216,21 @@ impl LicenseManager {
         self.effective_tier().to_license_type()
     }
 
+    /// Get the license signature
+    pub fn get_signature(&self) -> Option<String> {
+        self.signature.clone()
+    }
+
     /// Check if Pro features are enabled
     /// Returns true if: Pro, Founder, or Trial (not expired)
     /// Returns false if: Free
     ///
-    /// In debug builds, this respects DevOverrides for testing purposes.
+    /// In debug builds, this respects DevOverrides for testing Pro features.
     pub fn is_pro_enabled(&self) -> bool {
         let effective = self.effective_tier();
         match effective {
             LicenseTier::Pro | LicenseTier::Founder => true,
-            LicenseTier::Trial => !self.is_trial_expired(),
+            LicenseTier::Trial => !self.is_trial_effectively_expired(),
             LicenseTier::Free => false,
         }
     }
@@ -278,12 +283,32 @@ impl LicenseManager {
         }
     }
 
+    /// Check if trial is effectively expired, considering dev overrides
+    /// In debug builds with SimulateExpiredTrial, this returns true
+    /// In other cases, checks the actual timestamp
+    fn is_trial_effectively_expired(&self) -> bool {
+        #[cfg(debug_assertions)]
+        {
+            let dev_overrides = DevOverrides::get();
+            if dev_overrides.override_mode == DevLicenseOverride::SimulateExpiredTrial {
+                return true;
+            }
+        }
+        self.is_trial_expired()
+    }
+
     /// Get trial days remaining (0 if expired or not in trial)
     /// Returns 0 if in debug mode with force_free override
+    /// Returns 0 if in debug mode with simulate_expired_trial override
     pub fn get_trial_days_remaining(&self) -> u32 {
         let effective = self.effective_tier();
 
         if effective != LicenseTier::Trial {
+            return 0;
+        }
+
+        // Check if trial is effectively expired (including dev overrides)
+        if self.is_trial_effectively_expired() {
             return 0;
         }
 
@@ -306,7 +331,7 @@ impl LicenseManager {
     /// Respects dev overrides in debug builds
     pub fn is_in_trial(&self) -> bool {
         let effective = self.effective_tier();
-        effective == LicenseTier::Trial && !self.is_trial_expired()
+        effective == LicenseTier::Trial && !self.is_trial_effectively_expired()
     }
 
     /// Initialize trial on first launch
@@ -483,6 +508,9 @@ impl LicenseManager {
 
 /// Get the current license state as a LicenseState-compatible struct
 /// This is for backward compatibility with the existing types
+///
+/// Note: This function creates a new LicenseManager instance. For commands,
+/// prefer using the license_manager from EngineState directly.
 pub fn get_license_state() -> crate::types::LicenseState {
     let manager = LicenseManager::new();
 
@@ -490,7 +518,7 @@ pub fn get_license_state() -> crate::types::LicenseState {
         license_type: manager.get_license_type(),
         issued_at: None,
         expires_at: None,
-        signature: manager.signature.clone(),
+        signature: manager.get_signature(),
     }
 }
 
@@ -498,3 +526,4 @@ pub fn get_license_state() -> crate::types::LicenseState {
 pub fn is_pro_enabled() -> bool {
     LicenseManager::new().is_pro_enabled()
 }
+

@@ -9,6 +9,7 @@ use engine::{
     activate_key, execute_command, get_license, get_state, get_theme, is_pro,
     set_theme, tick_system_stats, tick_timer, get_trial_days_remaining, EngineState,
     set_debug_license_override, clear_debug_license_override, clear_license_storage,
+    can_create_profile,
 };
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -30,6 +31,7 @@ pub fn run() {
             set_debug_license_override,
             clear_debug_license_override,
             clear_license_storage,
+            can_create_profile,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

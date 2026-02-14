@@ -16,5 +16,5 @@ pub use timer::{
 pub use settings::{
     activate_key, activate_strict_mode, check_strict_mode_failure, deactivate_strict_mode,
     get_license, get_trial_days_remaining, is_pro, set_debug_license_override,
-    clear_debug_license_override, clear_license_storage,
+    clear_debug_license_override, clear_license_storage, can_create_profile,
 };
