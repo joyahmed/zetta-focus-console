@@ -378,6 +378,7 @@ function App() {
 							onPause={() => processCommand('focus pause')}
 							onResume={() => processCommand('focus resume')}
 							onStop={() => processCommand('stop')}
+							theme={appState.theme}
 						/>
 					</div>
 

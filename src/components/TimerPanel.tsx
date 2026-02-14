@@ -19,6 +19,7 @@ interface TimerPanelProps {
   onPause: () => void;
   onResume: () => void;
   onStop: () => void;
+  theme?: string;
 }
 
 function formatTime(seconds: number): string {
@@ -42,7 +43,8 @@ function isOverrideActive(override: SessionOverride | null | undefined): boolean
     (override.focus_duration !== null || override.break_duration !== null || override.loop_count !== null);
 }
 
-export function TimerPanel({ timer, glowColor, sessionOverride, onStart, onPause, onResume, onStop }: TimerPanelProps) {
+export function TimerPanel({ timer, glowColor, sessionOverride, onStart, onPause, onResume, onStop, theme = 'dark' }: TimerPanelProps) {
+  const isLight = theme === 'light';
   const progress = timer.total_seconds > 0
     ? ((timer.total_seconds - timer.remaining_seconds) / timer.total_seconds) * 100
     : 0;
@@ -50,6 +52,11 @@ export function TimerPanel({ timer, glowColor, sessionOverride, onStart, onPause
   const circumference = 2 * Math.PI * 90;
   const strokeDashoffset = circumference - (progress / 100) * circumference;
   const hasOverride = isOverrideActive(sessionOverride);
+
+  // Premium colors based on spec - using CSS variable tokens
+  const baseRingColor = isLight ? 'var(--color-ring-base)' : 'var(--color-ring-base)';
+  const progressColor = 'var(--color-ring-progress)';
+  const progressGlow = isLight ? 'none' : 'drop-shadow(0 0 5px var(--color-ring-progress))';
 
   return (
     <div className="flex flex-col items-center justify-center p-3 md:p-4 bg-zetta-card border border-zetta-border rounded-lg h-full">
@@ -77,27 +84,29 @@ export function TimerPanel({ timer, glowColor, sessionOverride, onStart, onPause
 
       <div className="relative w-32 h-32 md:w-48 md:h-48 lg:w-56 lg:h-56 flex items-center justify-center">
         <svg className="absolute w-full h-full -rotate-90" viewBox="0 0 200 200">
+          {/* Base Ring - Background */}
           <circle
             cx="100"
             cy="100"
             r="90"
             fill="none"
-            stroke="var(--border-color)"
-            strokeWidth="6"
+            stroke={baseRingColor}
+            strokeWidth="7"
           />
+          {/* Progress Arc - Foreground */}
           <circle
             cx="100"
             cy="100"
             r="90"
             fill="none"
-            stroke={glowColor}
-            strokeWidth="6"
+            stroke={progressColor}
+            strokeWidth="9"
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
-            className="transition-all duration-1000 ease-linear"
+            className={`transition-all duration-1000 ease-linear ${timer.status === 'completed' ? 'animate-pulse' : ''}`}
             style={{
-              filter: `drop-shadow(0 0 6px ${glowColor})`,
+              filter: progressGlow,
             }}
           />
         </svg>
