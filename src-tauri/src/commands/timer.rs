@@ -64,8 +64,8 @@ pub fn execute_command(
 
     let mut app_state = state.app_state.lock().map_err(|e| e.to_string())?;
     let mut sound_manager = state.sound_manager.lock().map_err(|e| e.to_string())?;
-    let license_state = state.license_state.lock().map_err(|e| e.to_string())?;
-    let is_pro = license_state.is_pro();
+    let license_manager = state.license_manager.lock().map_err(|e| e.to_string())?;
+    let is_pro = license_manager.is_pro_enabled();
 
     let result = process_command(&mut app_state, &mut sound_manager, &cmd, &args, is_pro);
 
