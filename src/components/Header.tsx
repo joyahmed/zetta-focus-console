@@ -213,17 +213,49 @@ export function Header({
 								</svg>
 							)}
 						</button>
-						<input
-							type='range'
-							min='0'
-							max='100'
-							value={isMuted ? 0 : volume}
-							onChange={e => onVolumeChange(parseInt(e.target.value))}
-							className='w-20 h-1 rounded-lg appearance-none cursor-pointer accent-blue'
-							style={{
-								backgroundColor: isLight ? '#d1d5db' : '#374151'
-							}}
-						/>
+						{/* Custom Volume Slider */}
+						<div className='flex items-center gap-2'>
+							<svg
+								width='48'
+								height='16'
+								viewBox='0 0 48 16'
+								className='cursor-pointer'
+								onClick={(e) => {
+									const rect = e.currentTarget.getBoundingClientRect();
+									const x = e.clientX - rect.left;
+									const newVolume = Math.round((x / rect.width) * 100);
+									onVolumeChange(Math.max(0, Math.min(100, newVolume)));
+								}}
+							>
+								{/* Track */}
+								<rect
+									x='0'
+									y='6'
+									width='48'
+									height='4'
+									rx='2'
+									fill={isLight ? '#d1d5db' : '#374151'}
+								/>
+								{/* Progress */}
+								<rect
+									x='0'
+									y='6'
+									width={(isMuted ? 0 : volume) / 100 * 48}
+									height='4'
+									rx='2'
+									fill='var(--color-accent)'
+								/>
+								{/* Thumb */}
+								<circle
+									cx={(isMuted ? 0 : volume) / 100 * 48}
+									cy='8'
+									r='6'
+									fill={isLight ? '#1d4ed8' : '#f97316'}
+									stroke='var(--bg-card)'
+									strokeWidth='2'
+								/>
+							</svg>
+						</div>
 					</div>
 
 					{/* Settings Button */}

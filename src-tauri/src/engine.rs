@@ -113,6 +113,36 @@ impl Default for LicenseState {
     }
 }
 
+impl LicenseState {
+    /// Check if the current license is Pro or Founder
+    pub fn is_pro(&self) -> bool {
+        self.license_type == "Pro" || self.license_type == "Founder"
+    }
+
+    /// Check if the license is Founder (permanent status)
+    pub fn is_founder(&self) -> bool {
+        self.license_type == "Founder"
+    }
+}
+
+/// Strict Mode Session State - tracks Strict Mode for a session
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StrictModeState {
+    pub is_active: bool,
+    pub session_start_timestamp: Option<i64>,
+    pub was_force_closed: bool,
+}
+
+impl Default for StrictModeState {
+    fn default() -> Self {
+        Self {
+            is_active: false,
+            session_start_timestamp: None,
+            was_force_closed: false,
+        }
+    }
+}
+
 /// Get the app data directory for the current OS
 fn get_app_data_dir() -> PathBuf {
     let base_dir = dirs::data_dir().unwrap_or_else(|| PathBuf::from("."));
@@ -534,6 +564,7 @@ pub struct AppState {
     pub session_override: Option<SessionOverride>,
     pub ambience_enabled: bool,
     pub theme: String,
+    pub strict_mode: StrictModeState,
 }
 
 impl Default for AppState {
@@ -627,6 +658,7 @@ impl AppState {
             session_override: None,
             ambience_enabled: true,
             theme: "dark".to_string(),
+            strict_mode: StrictModeState::default(),
         }
     }
 
@@ -685,15 +717,28 @@ impl AppState {
 pub struct EngineState {
     pub app_state: Mutex<AppState>,
     pub sound_manager: Mutex<SoundManager>,
+    pub license_state: Mutex<LicenseState>,
 }
 
 impl EngineState {
     pub fn new() -> Self {
         let mut app_state = AppState::new();
         app_state.load_preferences();
+
+        // Load license state
+        let license_state = load_license();
+
+        // Check if previous Strict Mode session was force-closed
+        // If so, mark it as failed
+        if license_state.is_pro() {
+            // The license is Pro, so we can check for Strict Mode failure
+            // This is handled when the app starts
+        }
+
         Self {
             app_state: Mutex::new(app_state),
             sound_manager: Mutex::new(SoundManager::new()),
+            license_state: Mutex::new(license_state),
         }
     }
 }
@@ -716,7 +761,11 @@ pub fn get_theme(state: State<EngineState>) -> Result<String, String> {
 }
 
 #[tauri::command]
-pub fn set_theme(theme: String, state: State<EngineState>, app_handle: AppHandle) -> Result<String, String> {
+pub fn set_theme(
+    theme: String,
+    state: State<EngineState>,
+    app_handle: AppHandle,
+) -> Result<String, String> {
     let valid_themes = ["dark", "light", "system"];
     if !valid_themes.contains(&theme.as_str()) {
         return Err("Invalid theme. Use: dark, light, or system".to_string());
@@ -737,6 +786,123 @@ pub fn set_theme(theme: String, state: State<EngineState>, app_handle: AppHandle
 }
 
 #[tauri::command]
+pub fn get_license(state: State<EngineState>) -> Result<LicenseState, String> {
+    let license = state.license_state.lock().map_err(|e| e.to_string())?;
+    Ok(license.clone())
+}
+
+#[tauri::command]
+pub fn activate_strict_mode(
+    state: State<EngineState>,
+    app_handle: AppHandle,
+) -> Result<String, String> {
+    let license = state.license_state.lock().map_err(|e| e.to_string())?;
+
+    // Check if Pro
+    if !license.is_pro() {
+        return Err(
+            "Strict Mode is a Pro feature. Please upgrade to Pro or Founder edition.".to_string(),
+        );
+    }
+    drop(license);
+
+    let mut app_state = state.app_state.lock().map_err(|e| e.to_string())?;
+
+    // Can only activate Strict Mode when timer is idle
+    if app_state.timer.status != TimerStatus::Idle {
+        return Err("Strict Mode can only be activated when timer is idle.".to_string());
+    }
+
+    // Activate Strict Mode
+    app_state.strict_mode.is_active = true;
+    app_state.strict_mode.was_force_closed = false;
+    app_state.strict_mode.session_start_timestamp = Some(
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as i64,
+    );
+
+    let _ = app_handle.emit(
+        "state-updated",
+        StateEvent {
+            state: app_state.clone(),
+        },
+    );
+
+    Ok("Strict Mode activated. Session cannot be paused or stopped until completed. Type 'start' to begin.".to_string())
+}
+
+#[tauri::command]
+pub fn deactivate_strict_mode(
+    state: State<EngineState>,
+    app_handle: AppHandle,
+) -> Result<String, String> {
+    let license = state.license_state.lock().map_err(|e| e.to_string())?;
+
+    // Check if Pro
+    if !license.is_pro() {
+        return Err("Strict Mode is a Pro feature.".to_string());
+    }
+    drop(license);
+
+    let mut app_state = state.app_state.lock().map_err(|e| e.to_string())?;
+
+    // Cannot deactivate while session is running
+    if app_state.timer.status == TimerStatus::Running {
+        return Err("Cannot deactivate Strict Mode while session is running.".to_string());
+    }
+
+    // Deactivate Strict Mode
+    app_state.strict_mode = StrictModeState::default();
+
+    let _ = app_handle.emit(
+        "state-updated",
+        StateEvent {
+            state: app_state.clone(),
+        },
+    );
+
+    Ok("Strict Mode deactivated.".to_string())
+}
+
+#[tauri::command]
+pub fn check_strict_mode_failure(
+    state: State<EngineState>,
+    app_handle: AppHandle,
+) -> Result<Option<String>, String> {
+    let license = state.license_state.lock().map_err(|e| e.to_string())?;
+
+    // Check if Pro - only Pro users can have Strict Mode
+    if !license.is_pro() {
+        return Ok(None);
+    }
+    drop(license);
+
+    let mut app_state = state.app_state.lock().map_err(|e| e.to_string())?;
+
+    // Check if there was a force-close during Strict Mode
+    if app_state.strict_mode.is_active && app_state.strict_mode.was_force_closed {
+        let failure_msg =
+            "Previous Strict Mode session was marked as FAILED due to force-close.".to_string();
+
+        // Reset Strict Mode state
+        app_state.strict_mode = StrictModeState::default();
+
+        let _ = app_handle.emit(
+            "state-updated",
+            StateEvent {
+                state: app_state.clone(),
+            },
+        );
+
+        Ok(Some(failure_msg))
+    } else {
+        Ok(None)
+    }
+}
+
+#[tauri::command]
 pub fn execute_command(
     command: String,
     state: State<EngineState>,
@@ -749,8 +915,10 @@ pub fn execute_command(
 
     let mut app_state = state.app_state.lock().map_err(|e| e.to_string())?;
     let mut sound_manager = state.sound_manager.lock().map_err(|e| e.to_string())?;
+    let license_state = state.license_state.lock().map_err(|e| e.to_string())?;
+    let is_pro = license_state.is_pro();
 
-    let result = process_command(&mut app_state, &mut sound_manager, &cmd, &args);
+    let result = process_command(&mut app_state, &mut sound_manager, &cmd, &args, is_pro);
 
     // Save preferences after command execution (only for preference-modifying commands)
     let should_save = matches!(
@@ -805,39 +973,62 @@ fn process_command(
     sound_manager: &mut SoundManager,
     cmd: &str,
     args: &[&str],
+    is_pro: bool,
 ) -> String {
+    // Show Pro features in help if user has Pro
+    let pro_features = if is_pro {
+        "
+🔵 Pro Commands:
+  strict on             - Enable Strict Mode (commitment mode)
+  strict off            - Disable Strict Mode (when idle)
+  timer [duration]      - Runtime override (Pro)
+  break [duration]     - Runtime override (Pro)
+  loop [count]         - Runtime override (Pro)
+  profile create        - Create custom profile (Pro)
+  profile edit [id]     - Edit custom profile (Pro)
+  profile duplicate     - Duplicate profile (Pro)
+  devmode on/off       - Developer diagnostics (Pro)
+  engine state         - Engine state inspection (Pro)
+  engine reset         - Reset engine (Pro)
+  app usage            - App diagnostics (Pro)"
+    } else {
+        "
+🔵 Pro Commands (requires Pro license):
+  strict on/off        - Commitment mode (Pro)
+  timer/break/loop     - Runtime overrides (Pro)
+  profile create/edit  - Custom profiles (Pro)
+  devmode              - Developer diagnostics (Pro)
+
+  Run 'license upgrade' for Pro access."
+    };
+
     match cmd {
-        "help" => "Available commands:
+        "help" => format!(
+            "Available commands:
   start                  - Start session (uses override if set, else profile defaults)
   stop                   - Stop current session (override preserved)
   pause                  - Pause current session
   resume                 - Resume paused session
   status                 - Show current session status
-  timer [duration]       - Set focus duration (e.g., timer 1m, timer 30s)
-  break [duration]       - Set break duration (e.g., break 30s, break 5m)
-  loop [count]           - Set loop count (1-100)
   override clear         - Clear session override
   profile list           - List all available profiles
   profile switch [id]    - Switch to a profile
-  profile create         - Create custom profile (see usage)
-  profile delete [id]    - Delete a custom profile
-  profile duplicate [src] [new] - Duplicate a profile
-  season [name]          - Change season (spring/summer/autumn/winter)
-  config show            - Show current configuration
-  stats                  - Show detailed statistics
-  devmode on/off         - Toggle developer mode
-  ambience on/off        - Toggle ambient visuals
-  sound play             - Play ambient sound
-  sound stop             - Stop ambient sound
-  sound volume [0-100]   - Set volume level
-  sound mute             - Toggle mute
-  system                 - Show system information
-  memory                 - Show memory usage
-  cpu                    - Show CPU usage
-  theme [mode]           - Set theme (dark, light, system)
-  clear                  - Clear terminal
-  help                   - Show this help message"
-            .to_string(),
+  season [name]         - Change season (spring/summer/autumn/winter)
+  config show           - Show current configuration
+  stats                 - Show detailed statistics
+  ambience on/off       - Toggle ambient visuals
+  sound play            - Play ambient sound
+  sound stop            - Stop ambient sound
+  sound volume [0-100]  - Set volume level
+  sound mute            - Toggle mute
+  system                - Show system information
+  memory                - Show memory usage
+  cpu                   - Show CPU usage
+  theme [mode]          - Set theme (dark, light, system)
+  clear                 - Clear terminal
+  help                  - Show this help message{}",
+            pro_features
+        ),
 
         "focus" => match args.first() {
             Some(&"start") => {
@@ -903,9 +1094,69 @@ fn process_command(
             }
         },
 
-        // Runtime override commands
+        // Strict Mode commands (Pro feature)
+        "strict" => {
+            // Pro check
+            if !is_pro {
+                return "Error: Strict Mode is a Pro feature. Run 'license upgrade' for Pro access.".to_string();
+            }
+
+            match args.first() {
+                Some(&"on") | Some(&"enable") => {
+                    // Can only activate Strict Mode when timer is idle
+                    if app_state.timer.status != TimerStatus::Idle {
+                        return "Error: Strict Mode can only be activated when timer is idle."
+                            .to_string();
+                    }
+
+                    // Activate Strict Mode
+                    app_state.strict_mode.is_active = true;
+                    app_state.strict_mode.was_force_closed = false;
+                    app_state.strict_mode.session_start_timestamp = Some(
+                        std::time::SystemTime::now()
+                            .duration_since(std::time::UNIX_EPOCH)
+                            .unwrap()
+                            .as_secs() as i64,
+                    );
+
+                    "Strict Mode activated!\n\nWhen you start a session:\n  - Pause is disabled\n  - Stop is disabled\n  - Duration editing is disabled\n  - Force-close will mark session as FAILED\n\nType 'start' to begin your commitment session.".to_string()
+                }
+                Some(&"off") | Some(&"disable") => {
+                    // Cannot deactivate while session is running
+                    if app_state.timer.status == TimerStatus::Running {
+                        return "Error: Cannot deactivate Strict Mode while session is running."
+                            .to_string();
+                    }
+
+                    // Deactivate Strict Mode
+                    app_state.strict_mode = StrictModeState::default();
+
+                    "Strict Mode deactivated.".to_string()
+                }
+                _ => {
+                    let status = if app_state.strict_mode.is_active {
+                        "ACTIVE - Session cannot be paused or stopped"
+                    } else {
+                        "INACTIVE - Use 'strict on' to enable"
+                    };
+                    format!("Strict Mode: {}", status)
+                }
+            }
+        }
+
+        // Runtime override commands (Pro feature)
         "timer" => {
-            // Safety: Can't override while session is running
+            // Pro check
+            if !is_pro {
+                return "Error: Runtime overrides require Pro license. Run 'license upgrade' for Pro access.".to_string();
+            }
+
+            // Strict Mode: Cannot modify duration while session is running
+            if app_state.strict_mode.is_active && app_state.timer.status == TimerStatus::Running {
+                return "Cannot modify duration while Strict Mode is active.".to_string();
+            }
+
+            // Safety: Can't override while session is running (unless Strict Mode is active, already checked)
             if app_state.timer.status == TimerStatus::Running {
                 return "Stop current session before applying override.".to_string();
             }
@@ -950,6 +1201,16 @@ fn process_command(
         }
 
         "break" => {
+            // Pro check
+            if !is_pro {
+                return "Error: Runtime overrides require Pro license. Run 'license upgrade' for Pro access.".to_string();
+            }
+
+            // Strict Mode: Cannot modify duration while session is running
+            if app_state.strict_mode.is_active && app_state.timer.status == TimerStatus::Running {
+                return "Cannot modify duration while Strict Mode is active.".to_string();
+            }
+
             // Safety: Can't override while session is running
             if app_state.timer.status == TimerStatus::Running {
                 return "Stop current session before applying override.".to_string();
@@ -995,6 +1256,16 @@ fn process_command(
         }
 
         "loop" => {
+            // Pro check
+            if !is_pro {
+                return "Error: Runtime overrides require Pro license. Run 'license upgrade' for Pro access.".to_string();
+            }
+
+            // Strict Mode: Cannot modify loop count while session is running
+            if app_state.strict_mode.is_active && app_state.timer.status == TimerStatus::Running {
+                return "Cannot modify loop count while Strict Mode is active.".to_string();
+            }
+
             // Safety: Can't override while session is running
             if app_state.timer.status == TimerStatus::Running {
                 return "Stop current session before applying override.".to_string();
@@ -1042,6 +1313,16 @@ fn process_command(
             // Case 2: Session already running
             if app_state.timer.status == TimerStatus::Running {
                 return "Session already running. Use `stop` before restarting.".to_string();
+            }
+
+            // Record Strict Mode start timestamp when starting session
+            if app_state.strict_mode.is_active {
+                app_state.strict_mode.session_start_timestamp = Some(
+                    std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap()
+                        .as_secs() as i64,
+                );
             }
 
             // Get effective focus duration from override or profile
@@ -1095,6 +1376,24 @@ fn process_command(
             if app_state.timer.status == TimerStatus::Idle {
                 return "Error: No active session to stop.".to_string();
             }
+
+            // Strict Mode: Cannot stop session while Strict Mode is active
+            if app_state.strict_mode.is_active {
+                // Mark as failed due to force-stop
+                app_state.strict_mode.was_force_closed = true;
+                app_state.strict_mode.is_active = false;
+
+                // Stop the session
+                if app_state.sound_state.is_playing && !app_state.sound_state.is_muted {
+                    sound_manager.pause();
+                }
+                app_state.timer.status = TimerStatus::Idle;
+                app_state.timer.remaining_seconds = app_state.active_profile.focus_duration;
+
+                return "Strict Mode session marked as FAILED (manually stopped). Session reset."
+                    .to_string();
+            }
+
             // Auto-pause sound when timer stops
             if app_state.sound_state.is_playing && !app_state.sound_state.is_muted {
                 sound_manager.pause();
@@ -1156,6 +1455,11 @@ fn process_command(
                 format!("Profile: {}", app_state.active_profile.name),
             ];
 
+            // Add Strict Mode status if active
+            if app_state.strict_mode.is_active {
+                info.push("Strict Mode: ACTIVE (cannot pause/stop)".to_string());
+            }
+
             if let Some(ref override_state) = app_state.session_override {
                 if override_state.is_active() {
                     let mut override_info = vec![];
@@ -1179,6 +1483,12 @@ fn process_command(
             if app_state.timer.status != TimerStatus::Running {
                 return "Error: No running session to pause.".to_string();
             }
+
+            // Strict Mode: Cannot pause while Strict Mode is active
+            if app_state.strict_mode.is_active {
+                return "Error: Pause is disabled during Strict Mode. Session must run to completion.".to_string();
+            }
+
             // Auto-pause sound when timer pauses
             if app_state.sound_state.is_playing && !app_state.sound_state.is_muted {
                 sound_manager.pause();
@@ -1216,6 +1526,11 @@ fn process_command(
                 format!("Available profiles:\n{}", profiles_list.join("\n"))
             }
             Some(&"create") => {
+                // Pro check
+                if !is_pro {
+                    return "Error: Custom profiles require Pro license. Run 'license upgrade' for Pro access.".to_string();
+                }
+
                 // Usage: profile create <name> <focus_min> <short_break_min> <long_break_min> <season> <intensity> <sound>
                 // Example: profile create "My Profile" 25 5 15 winter low fireplace
                 // ID is auto-generated from name
@@ -1363,6 +1678,11 @@ fn process_command(
                 }
             }
             Some(&"edit") => {
+                // Pro check
+                if !is_pro {
+                    return "Error: Editing profiles requires Pro license. Run 'license upgrade' for Pro access.".to_string();
+                }
+
                 // Usage: profile edit <id> <name> <focus_min> <short_break_min> <long_break_min> <season> <intensity> <sound>
                 if args.len() < 9 {
                     return "Usage: profile edit <id> <name> <focus_min> <short_break_min> <long_break_min> <season> <intensity> <sound>".to_string();
@@ -1608,17 +1928,24 @@ fn process_command(
             )
         }
 
-        "devmode" => match args.first() {
-            Some(&"on") => {
-                app_state.dev_mode = true;
-                "Developer mode enabled.".to_string()
+        "devmode" => {
+            // Pro check
+            if !is_pro {
+                return "Error: Developer mode is a Pro feature. Run 'license upgrade' for Pro access.".to_string();
             }
-            Some(&"off") => {
-                app_state.dev_mode = false;
-                "Developer mode disabled.".to_string()
+
+            match args.first() {
+                Some(&"on") => {
+                    app_state.dev_mode = true;
+                    "Developer mode enabled.".to_string()
+                }
+                Some(&"off") => {
+                    app_state.dev_mode = false;
+                    "Developer mode disabled.".to_string()
+                }
+                _ => "Error: Usage: devmode on | off".to_string(),
             }
-            _ => "Error: Usage: devmode on | off".to_string(),
-        },
+        }
 
         "ambience" => match args.first() {
             Some(&"on") => {
@@ -1689,25 +2016,26 @@ fn process_command(
             "Settings reset to defaults.".to_string()
         }
 
-        "theme" => {
-            match args.first() {
-                Some(&"dark") => {
-                    app_state.theme = "dark".to_string();
-                    "Theme set to dark.".to_string()
-                }
-                Some(&"light") => {
-                    app_state.theme = "light".to_string();
-                    "Theme set to light.".to_string()
-                }
-                Some(&"system") => {
-                    app_state.theme = "system".to_string();
-                    "Theme set to system.".to_string()
-                }
-                _ => {
-                    format!("Current theme: {}. Usage: theme dark|light|system", app_state.theme)
-                }
+        "theme" => match args.first() {
+            Some(&"dark") => {
+                app_state.theme = "dark".to_string();
+                "Theme set to dark.".to_string()
             }
-        }
+            Some(&"light") => {
+                app_state.theme = "light".to_string();
+                "Theme set to light.".to_string()
+            }
+            Some(&"system") => {
+                app_state.theme = "system".to_string();
+                "Theme set to system.".to_string()
+            }
+            _ => {
+                format!(
+                    "Current theme: {}. Usage: theme dark|light|system",
+                    app_state.theme
+                )
+            }
+        },
 
         // Dev mode commands - only available when dev_mode is enabled
         "engine" => {
@@ -1904,12 +2232,22 @@ pub fn tick_timer(state: State<EngineState>, app_handle: AppHandle) -> Result<()
             app_state.stats.total_focus_minutes += app_state.timer.total_seconds / 60;
             app_state.stats.last_session_duration = app_state.timer.total_seconds / 60;
 
+            // Handle Strict Mode completion
+            let strict_mode_was_active = app_state.strict_mode.is_active;
+            let strict_mode_completed_successfully = if strict_mode_was_active {
+                // Clear Strict Mode state (session completed successfully)
+                app_state.strict_mode = StrictModeState::default();
+                true
+            } else {
+                false
+            };
+
             // Emit session completion summary
             let total_focus = app_state.timer.total_seconds;
             let focus_mins = total_focus / 60;
             let focus_secs = total_focus % 60;
 
-            let summary = format!(
+            let mut completion_msg = format!(
                 "Session Complete!\n  Focus Time: {}m {}s\n  Profile: {}\n  Sessions Today: {}",
                 focus_mins,
                 focus_secs,
@@ -1917,7 +2255,11 @@ pub fn tick_timer(state: State<EngineState>, app_handle: AppHandle) -> Result<()
                 app_state.stats.sessions_today
             );
 
-            let _ = app_handle.emit("session-complete", summary);
+            if strict_mode_completed_successfully {
+                completion_msg.push_str("\n  Strict Mode: COMPLETED ✓");
+            }
+
+            let _ = app_handle.emit("session-complete", completion_msg);
 
             // Clear override when session completes naturally
             app_state.session_override = None;
