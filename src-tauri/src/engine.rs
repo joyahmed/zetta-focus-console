@@ -1395,6 +1395,23 @@ fn process_command(
             }
         },
 
+        "background" => match args.first() {
+            Some(&"gradient") => {
+                app_state.active_profile.background_type = BackgroundType::Gradient;
+                "Background set to: gradient".to_string()
+            }
+            Some(&"particles") => {
+                app_state.active_profile.background_type = BackgroundType::Particles;
+                "Background set to: particles".to_string()
+            }
+            _ => {
+                format!(
+                    "Background: {:?}",
+                    app_state.active_profile.background_type
+                )
+            }
+        },
+
         // Dev mode commands - only available when dev_mode is enabled
         "engine" => {
             if !app_state.dev_mode {

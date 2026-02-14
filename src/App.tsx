@@ -248,6 +248,14 @@ function App() {
 		}
 	}, []);
 
+	const handleBackgroundTypeChange = useCallback(async (type: 'gradient' | 'particles') => {
+		try {
+			await invoke('execute_command', { command: `background ${type}` });
+		} catch (error) {
+			console.error(error);
+		}
+	}, []);
+
 	const handleCreateProfile = useCallback(
 		async (profileData: {
 			id?: string;
@@ -352,6 +360,7 @@ function App() {
 							motionIntensity={
 								appState.active_profile.motion_intensity
 							}
+							backgroundType={appState.active_profile.background_type}
 							glowColor={appState.active_profile.glow_color}
 							isRunning={appState.timer.status === 'running'}
 							isEnabled={appState.ambience_enabled}
@@ -387,6 +396,8 @@ function App() {
 				isPlaying={appState.sound_state.is_playing}
 				onSoundPlay={handleSoundPlay}
 				onSoundStop={handleSoundStop}
+				backgroundType={appState.active_profile.background_type}
+				onBackgroundTypeChange={handleBackgroundTypeChange}
 			/>
 
 			<HelpModal

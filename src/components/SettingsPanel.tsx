@@ -12,6 +12,8 @@ interface SettingsPanelProps {
   isPlaying: boolean;
   onSoundPlay: () => void;
   onSoundStop: () => void;
+  backgroundType: 'gradient' | 'particles' | 'custom';
+  onBackgroundTypeChange: (type: 'gradient' | 'particles') => void;
 }
 
 export function SettingsPanel({
@@ -27,7 +29,9 @@ export function SettingsPanel({
   onMuteToggle,
   isPlaying,
   onSoundPlay,
-  onSoundStop
+  onSoundStop,
+  backgroundType,
+  onBackgroundTypeChange
 }: SettingsPanelProps) {
   return (
     <>
@@ -139,19 +143,31 @@ export function SettingsPanel({
               Background Mode
             </h3>
             <div className="space-y-2">
-              <label className="flex items-center gap-3 p-3 bg-zetta-bg rounded-lg border border-zetta-border cursor-pointer hover:border-gray-500 transition-colors">
-                <input type="radio" name="bg" defaultChecked className="accent-blue-500" />
+              <label className={`flex items-center gap-3 p-3 bg-zetta-bg rounded-lg border cursor-pointer transition-colors ${backgroundType === 'gradient' ? 'border-blue-500' : 'border-zetta-border hover:border-gray-500'}`}>
+                <input
+                  type="radio"
+                  name="bg"
+                  checked={backgroundType === 'gradient'}
+                  onChange={() => onBackgroundTypeChange('gradient')}
+                  className="accent-blue-500"
+                />
                 <span className="text-sm text-gray-300">Gradient Theme</span>
               </label>
-              <label className="flex items-center gap-3 p-3 bg-zetta-bg rounded-lg border border-zetta-border cursor-pointer hover:border-gray-500 transition-colors">
-                <input type="radio" name="bg" className="accent-blue-500" />
+              <label className={`flex items-center gap-3 p-3 bg-zetta-bg rounded-lg border cursor-pointer transition-colors ${backgroundType === 'particles' ? 'border-blue-500' : 'border-zetta-border hover:border-gray-500'}`}>
+                <input
+                  type="radio"
+                  name="bg"
+                  checked={backgroundType === 'particles'}
+                  onChange={() => onBackgroundTypeChange('particles')}
+                  className="accent-blue-500"
+                />
                 <span className="text-sm text-gray-300">Subtle Particles</span>
               </label>
-              <label className="flex items-center gap-3 p-3 bg-zetta-bg rounded-lg border border-zetta-border cursor-pointer hover:border-gray-500 transition-colors opacity-50">
+              <label className="flex items-center gap-3 p-3 bg-zetta-bg rounded-lg border border-zetta-border opacity-50">
                 <input type="radio" name="bg" disabled className="accent-blue-500" />
                 <span className="text-sm text-gray-300">Custom Image (Coming Soon)</span>
               </label>
-              <label className="flex items-center gap-3 p-3 bg-zetta-bg rounded-lg border border-zetta-border cursor-pointer hover:border-gray-500 transition-colors opacity-50">
+              <label className="flex items-center gap-3 p-3 bg-zetta-bg rounded-lg border border-zetta-border opacity-50">
                 <input type="radio" name="bg" disabled className="accent-blue-500" />
                 <span className="text-sm text-gray-300">Custom Video (Coming Soon)</span>
               </label>

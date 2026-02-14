@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 interface AmbientPanelProps {
   season: 'spring' | 'summer' | 'autumn' | 'winter';
   motionIntensity: 'low' | 'medium' | 'high';
+  backgroundType: 'gradient' | 'particles' | 'custom';
   glowColor: string;
   isRunning: boolean;
   isEnabled: boolean;
@@ -25,6 +26,7 @@ interface Leaf extends Particle {
 export function AmbientPanel({
   season,
   motionIntensity,
+  backgroundType,
   glowColor,
   isRunning,
   isEnabled,
@@ -102,15 +104,86 @@ export function AmbientPanel({
     return null;
   }
 
-  const renderSeasonContent = () => {
-    switch (season) {
-      case 'winter':
-        return (
-          <div className="relative w-full h-full overflow-hidden">
-            {/* Snow particles */}
+  // Generate generic ambient particles (always visible in particles mode)
+  const ambientParticles = useMemo<Particle[]>(() => {
+    return Array.from({ length: 20 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      size: 0.5 + Math.random() * 1,
+      delay: Math.random() * 5,
+      duration: 10 + Math.random() * 10,
+      opacity: 0.05 + Math.random() * 0.1,
+    }));
+  }, []);
+
+  // Render gradient-only background (no particles)
+  const renderGradientBackground = () => {
+    return (
+      <div className="relative w-full h-full overflow-hidden">
+        {/* Static gradient background */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(135deg, ${glowColor}10 0%, transparent 50%, ${glowColor}05 100%)`,
+          }}
+        />
+        {/* Subtle radial glow */}
+        <div
+          className="absolute w-40 h-40 rounded-full blur-3xl opacity-20"
+          style={{
+            background: glowColor,
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+          }}
+        />
+        {/* Corner accents */}
+        <div
+          className="absolute w-20 h-20 rounded-full blur-2xl opacity-10"
+          style={{
+            background: glowColor,
+            left: '10%',
+            top: '20%',
+          }}
+        />
+        <div
+          className="absolute w-16 h-16 rounded-full blur-2xl opacity-10"
+          style={{
+            background: glowColor,
+            right: '15%',
+            bottom: '30%',
+          }}
+        />
+      </div>
+    );
+  };
+
+  // Render particles background (with seasonal animations + ambient particles)
+  const renderParticlesBackground = () => {
+    return (
+      <div className="relative w-full h-full overflow-hidden">
+        {/* Ambient floating particles - always visible */}
+        {ambientParticles.map(particle => (
+          <div
+            key={particle.id}
+            className={`absolute rounded-full bg-white ${isPaused ? 'animation-paused' : ''}`}
+            style={{
+              left: `${particle.x}%`,
+              width: particle.size,
+              height: particle.size,
+              opacity: particle.opacity,
+              animation: isPaused
+                ? 'none'
+                : `ambientFloat ${particle.duration}s ease-in-out ${particle.delay}s infinite`,
+            }}
+          />
+        ))}
+        {/* Seasonal particles */}
+        {season === 'winter' && (
+          <>
             {snowParticles.map(particle => (
               <div
-                key={particle.id}
+                key={`snow-${particle.id}`}
                 className={`absolute rounded-full bg-white ${isPaused ? 'animation-paused' : ''}`}
                 style={{
                   left: `${particle.x}%`,
@@ -130,12 +203,11 @@ export function AmbientPanel({
                 background: `linear-gradient(to top, ${glowColor}, transparent)`,
               }}
             />
-          </div>
-        );
+          </>
+        )}
 
-      case 'summer':
-        return (
-          <div className="relative w-full h-full overflow-hidden">
+        {season === 'summer' && (
+          <>
             {/* Heat shimmer effect */}
             <div
               className={`absolute inset-0 ${isPaused ? 'animation-paused' : ''}`}
@@ -163,16 +235,15 @@ export function AmbientPanel({
                 animation: isPaused ? 'none' : `float ${10 * speedMultiplier}s ease-in-out 2s infinite`,
               }}
             />
-          </div>
-        );
+          </>
+        )}
 
-      case 'spring':
-        return (
-          <div className="relative w-full h-full overflow-hidden">
+        {season === 'spring' && (
+          <>
             {/* Drifting particles */}
             {springParticles.map(particle => (
               <div
-                key={particle.id}
+                key={`spring-${particle.id}`}
                 className={`absolute rounded-full ${isPaused ? 'animation-paused' : ''}`}
                 style={{
                   left: `${particle.x}%`,
@@ -196,16 +267,15 @@ export function AmbientPanel({
                 transform: 'translate(-50%, -50%)',
               }}
             />
-          </div>
-        );
+          </>
+        )}
 
-      case 'autumn':
-        return (
-          <div className="relative w-full h-full overflow-hidden">
+        {season === 'autumn' && (
+          <>
             {/* Drifting leaves */}
             {leaves.map(leaf => (
               <div
-                key={leaf.id}
+                key={`leaf-${leaf.id}`}
                 className={`absolute ${isPaused ? 'animation-paused' : ''}`}
                 style={{
                   left: `${leaf.x}%`,
@@ -217,19 +287,27 @@ export function AmbientPanel({
                     : `leafFall ${leaf.duration * speedMultiplier}s ease-in-out ${leaf.delay}s infinite, leafRotate ${leaf.rotationDuration}s linear ${leaf.delay}s infinite`,
                 }}
               >
-                🍂
+                {/* Warm glow */}
+                <div
+                  className="absolute bottom-0 left-0 right-0 h-12 opacity-20"
+                  style={{
+                    background: `linear-gradient(to top, ${glowColor}, transparent)`,
+                  }}
+                />
               </div>
             ))}
-            {/* Warm glow */}
-            <div
-              className="absolute bottom-0 left-0 right-0 h-12 opacity-20"
-              style={{
-                background: `linear-gradient(to top, ${glowColor}, transparent)`,
-              }}
-            />
-          </div>
-        );
+          </>
+        )}
+      </div>
+    );
+  };
+
+  // Choose render mode based on backgroundType
+  const renderSeasonContent = () => {
+    if (backgroundType === 'gradient') {
+      return renderGradientBackground();
     }
+    return renderParticlesBackground();
   };
 
   return (
@@ -245,12 +323,33 @@ export function AmbientPanel({
 
         {/* Season indicator */}
         <div className="absolute bottom-2 right-2 text-xs text-gray-500 capitalize opacity-50">
-          {season} · {motionIntensity}
+          {season} · {motionIntensity} · {backgroundType}
         </div>
       </div>
 
       {/* CSS Animations */}
       <style>{`
+        @keyframes ambientFloat {
+          0%, 100% {
+            transform: translateY(0) translateX(0);
+            opacity: 0;
+          }
+          20% {
+            opacity: 0.3;
+          }
+          50% {
+            transform: translateY(80px) translateX(10px);
+            opacity: 0.2;
+          }
+          80% {
+            opacity: 0.1;
+          }
+          100% {
+            transform: translateY(160px) translateX(-5px);
+            opacity: 0;
+          }
+        }
+
         @keyframes snowfall {
           0% {
             transform: translateY(-10px) translateX(0);
