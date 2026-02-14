@@ -59,20 +59,14 @@ export function TerminalModal({
   // Global keyboard shortcuts
   useEffect(() => {
     const handleGlobalKeyDown = (e: globalThis.KeyboardEvent) => {
-      // Ctrl+K, ~, or : to open terminal
+      // Ctrl+T to toggle terminal (per Command Palette spec)
       if (!isOpen) {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        if ((e.ctrlKey || e.metaKey) && e.key === 't') {
           e.preventDefault();
           // Parent handles this
         }
         if (e.key === '`' || e.key === '~') {
           e.preventDefault();
-        }
-        if (e.key === ':' && !e.ctrlKey && !e.metaKey) {
-          // Only if not in an input field
-          if (document.activeElement?.tagName !== 'INPUT') {
-            e.preventDefault();
-          }
         }
       }
     };
@@ -172,13 +166,13 @@ export function TerminalModal({
         onClick={onClose}
       />
 
-      {/* Modal - 70-85% width, 60-75% height */}
-      <div className="relative bg-zetta-card border border-zetta-border rounded-lg shadow-2xl w-[85%] max-w-4xl h-[70%] flex flex-col">
+      {/* Modal - Centered, prominent size for focus */}
+      <div className="relative bg-zetta-card border border-zetta-border rounded-lg shadow-2xl w-[90%] max-w-5xl h-[80%] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2 border-b border-zetta-border bg-zetta-bg/50">
           <div className="flex items-center gap-2">
             <span className="text-green-400 font-mono text-sm">$</span>
-            <span className="text-sm font-medium text-white">Terminal</span>
+            <span className="text-sm font-medium text-white">Zetta Focus — Console</span>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-xs text-gray-500">

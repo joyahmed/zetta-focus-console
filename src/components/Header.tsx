@@ -33,6 +33,19 @@ export function Header({
       </div>
 
       <div className="flex items-center gap-4">
+        {/* Command Trigger Input - Opens Terminal Modal */}
+        <button
+          onClick={onTerminalClick}
+          className="flex items-center gap-2 px-3 py-1.5 bg-zetta-bg border border-zetta-border rounded-md text-gray-400 hover:border-gray-500 transition-colors min-w-[180px]"
+          title="Open Command Terminal (Ctrl+T)"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span className="text-xs font-mono text-gray-500">Type a command…</span>
+          <span className="ml-auto text-[10px] text-gray-600 bg-zetta-card px-1.5 py-0.5 rounded">Ctrl+T</span>
+        </button>
+
         {/* Profile Name */}
         <span className="text-xs text-gray-400">
           <span className="text-white">{activeProfileName}</span>
@@ -65,15 +78,6 @@ export function Header({
             className="w-20 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
           />
         </div>
-
-        {/* Terminal Button */}
-        <button
-          onClick={onTerminalClick}
-          className="px-2 py-1 text-xs font-mono text-gray-400 hover:text-white border border-zetta-border rounded hover:border-gray-500 transition-colors"
-          title="Open Terminal (Ctrl+K)"
-        >
-          Terminal
-        </button>
 
         {/* Settings Button */}
         <button

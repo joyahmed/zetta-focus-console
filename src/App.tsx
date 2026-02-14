@@ -113,12 +113,12 @@ function App() {
 	// Global keyboard shortcuts
 	useEffect(() => {
 		const handleGlobalKeyDown = (e: globalThis.KeyboardEvent) => {
-			// Ctrl+K to open terminal
-			if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+			// Ctrl+T to open terminal (per Command Palette spec)
+			if ((e.ctrlKey || e.metaKey) && e.key === 't') {
 				e.preventDefault();
 				setTerminalOpen(prev => !prev);
 			}
-			// ` or ~ to open terminal
+			// ` or ~ to open terminal (alternative shortcut)
 			if (e.key === '`' && !e.ctrlKey && !e.metaKey) {
 				if (document.activeElement?.tagName !== 'INPUT') {
 					e.preventDefault();
