@@ -1,7 +1,22 @@
+use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink, Source};
 use serde::{Deserialize, Serialize};
+use std::io::Cursor;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use sysinfo::System;
 use tauri::{AppHandle, Emitter, State};
+
+/// Get sound data based on sound file name
+/// Returns the embedded sound data for the given sound file name
+fn get_sound_data(sound_file: &str) -> &'static [u8] {
+    match sound_file {
+        "fireplace.mp3" => include_bytes!("../sounds/fireplace.mp3"),
+        "soft_rain.mp3" => include_bytes!("../sounds/soft_rain.mp3"),
+        "light_wind.mp3" => include_bytes!("../sounds/light_wind.mp3"),
+        "rain_window.mp3" => include_bytes!("../sounds/rain_window.mp3"),
+        _ => include_bytes!("../sounds/fireplace.mp3"), // Default fallback
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimerState {
@@ -39,6 +54,8 @@ pub struct Profile {
     pub short_break_duration: u32,
     pub long_break_duration: u32,
     pub glow_color: String,
+    pub sound_file: String,
+    pub default_volume: u8,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -86,6 +103,129 @@ pub struct AppStats {
     pub cpu_usage: f32,
     pub memory_used: u64,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SoundState {
+    pub current_sound: Option<String>,
+    pub volume: u8,
+    pub is_playing: bool,
+    pub is_muted: bool,
+}
+
+impl Default for SoundState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl SoundState {
+    pub fn new() -> Self {
+        Self {
+            current_sound: None,
+            volume: 50,
+            is_playing: false,
+            is_muted: false,
+        }
+    }
+}
+
+pub struct SoundManager {
+    sink: Option<Sink>,
+    _stream: Option<OutputStream>,
+    stream_handle: Option<OutputStreamHandle>,
+    is_initialized: AtomicBool,
+    current_sound_file: Option<String>,
+}
+
+impl SoundManager {
+    pub fn new() -> Self {
+        Self {
+            sink: None,
+            _stream: None,
+            stream_handle: None,
+            is_initialized: AtomicBool::new(false),
+            current_sound_file: None,
+        }
+    }
+
+    pub fn initialize(&mut self) -> Result<(), String> {
+        if self.is_initialized.load(Ordering::SeqCst) {
+            return Ok(());
+        }
+
+        match OutputStream::try_default() {
+            Ok((stream, stream_handle)) => {
+                self._stream = Some(stream);
+                self.stream_handle = Some(stream_handle);
+                self.is_initialized.store(true, Ordering::SeqCst);
+                Ok(())
+            }
+            Err(e) => Err(format!("Failed to initialize audio: {}", e)),
+        }
+    }
+
+    pub fn play(&mut self, sound_data: &'static [u8], volume: u8) -> Result<(), String> {
+        if !self.is_initialized.load(Ordering::SeqCst) {
+            self.initialize()?;
+        }
+
+        self.stop();
+
+        let cursor = Cursor::new(sound_data);
+        let source = Decoder::new(cursor).map_err(|e| format!("Failed to decode audio: {}", e))?;
+
+        let stream_handle = self
+            .stream_handle
+            .as_ref()
+            .ok_or_else(|| "Audio stream not initialized".to_string())?;
+
+        let sink =
+            Sink::try_new(stream_handle).map_err(|e| format!("Failed to create sink: {}", e))?;
+
+        let volume_float = (volume as f32) / 100.0;
+        sink.set_volume(volume_float);
+        // Loop the ambient sound indefinitely
+        sink.append(source.repeat_infinite());
+
+        self.sink = Some(sink);
+        Ok(())
+    }
+
+    pub fn stop(&mut self) {
+        if let Some(sink) = self.sink.take() {
+            sink.stop();
+        }
+    }
+
+    pub fn set_volume(&mut self, volume: u8) {
+        if let Some(sink) = &self.sink {
+            let volume_float = (volume as f32) / 100.0;
+            sink.set_volume(volume_float);
+        }
+    }
+
+    pub fn pause(&mut self) {
+        if let Some(sink) = &self.sink {
+            sink.pause();
+        }
+    }
+
+    pub fn resume(&mut self) {
+        if let Some(sink) = &self.sink {
+            sink.play();
+        }
+    }
+
+    pub fn is_playing(&self) -> bool {
+        self.sink
+            .as_ref()
+            .map(|s| !s.is_paused() && !s.empty())
+            .unwrap_or(false)
+    }
+}
+
+unsafe impl Send for SoundManager {}
+unsafe impl Sync for SoundManager {}
 
 impl Default for SystemStats {
     fn default() -> Self {
@@ -136,6 +276,7 @@ pub struct AppState {
     pub system_stats: SystemStats,
     pub app_stats: AppStats,
     pub dev_mode: bool,
+    pub sound_state: SoundState,
 }
 
 impl Default for AppState {
@@ -156,6 +297,8 @@ impl AppState {
             short_break_duration: 5 * 60,
             long_break_duration: 15 * 60,
             glow_color: "#60a5fa".to_string(),
+            sound_file: "fireplace.mp3".to_string(),
+            default_volume: 50,
         };
 
         let profiles = vec![
@@ -170,6 +313,8 @@ impl AppState {
                 short_break_duration: 5 * 60,
                 long_break_duration: 15 * 60,
                 glow_color: "#fbbf24".to_string(),
+                sound_file: "soft_rain.mp3".to_string(),
+                default_volume: 40,
             },
             Profile {
                 id: "spring-bloom".to_string(),
@@ -181,6 +326,8 @@ impl AppState {
                 short_break_duration: 5 * 60,
                 long_break_duration: 15 * 60,
                 glow_color: "#34d399".to_string(),
+                sound_file: "light_wind.mp3".to_string(),
+                default_volume: 30,
             },
             Profile {
                 id: "autumn-calm".to_string(),
@@ -192,6 +339,8 @@ impl AppState {
                 short_break_duration: 5 * 60,
                 long_break_duration: 15 * 60,
                 glow_color: "#f97316".to_string(),
+                sound_file: "rain_window.mp3".to_string(),
+                default_volume: 35,
             },
         ];
 
@@ -213,15 +362,22 @@ impl AppState {
             system_stats: SystemStats::new(),
             app_stats: AppStats::new(),
             dev_mode: false,
+            sound_state: SoundState::new(),
         }
     }
 }
 
-pub struct EngineState(pub Mutex<AppState>);
+pub struct EngineState {
+    pub app_state: Mutex<AppState>,
+    pub sound_manager: Mutex<SoundManager>,
+}
 
 impl EngineState {
     pub fn new() -> Self {
-        Self(Mutex::new(AppState::new()))
+        Self {
+            app_state: Mutex::new(AppState::new()),
+            sound_manager: Mutex::new(SoundManager::new()),
+        }
     }
 }
 
@@ -232,7 +388,7 @@ pub struct StateEvent {
 
 #[tauri::command]
 pub fn get_state(state: State<EngineState>) -> Result<AppState, String> {
-    let app_state = state.0.lock().map_err(|e| e.to_string())?;
+    let app_state = state.app_state.lock().map_err(|e| e.to_string())?;
     Ok(app_state.clone())
 }
 
@@ -247,8 +403,10 @@ pub fn execute_command(
     let cmd = parts.first().map(|s| *s).unwrap_or("");
     let args = &parts[1..];
 
-    let mut app_state = state.0.lock().map_err(|e| e.to_string())?;
-    let result = process_command(&mut app_state, cmd, args);
+    let mut app_state = state.app_state.lock().map_err(|e| e.to_string())?;
+    let mut sound_manager = state.sound_manager.lock().map_err(|e| e.to_string())?;
+
+    let result = process_command(&mut app_state, &mut sound_manager, cmd, args);
 
     let _ = app_handle.emit(
         "state-updated",
@@ -260,7 +418,12 @@ pub fn execute_command(
     Ok(result)
 }
 
-fn process_command(app_state: &mut AppState, cmd: &str, args: &[&str]) -> String {
+fn process_command(
+    app_state: &mut AppState,
+    sound_manager: &mut SoundManager,
+    cmd: &str,
+    args: &[&str],
+) -> String {
     match cmd {
         "help" => "Available commands:
   focus start [minutes]  - Start a focus session (default: 25 min)
@@ -273,6 +436,10 @@ fn process_command(app_state: &mut AppState, cmd: &str, args: &[&str]) -> String
   config show            - Show current configuration
   stats                  - Show detailed statistics
   devmode on/off         - Toggle developer mode
+  sound play             - Play ambient sound
+  sound stop             - Stop ambient sound
+  sound volume [0-100]   - Set volume level
+  sound mute             - Toggle mute
   system                 - Show system information
   memory                 - Show memory usage
   cpu                    - Show CPU usage
@@ -293,11 +460,24 @@ fn process_command(app_state: &mut AppState, cmd: &str, args: &[&str]) -> String
                     status: TimerStatus::Running,
                     session_type: SessionType::Focus,
                 };
+                // Auto-play sound when timer starts (if not muted)
+                if !app_state.sound_state.is_muted && !app_state.sound_state.is_playing {
+                    let sound_file = &app_state.active_profile.sound_file;
+                    let sound_data: &'static [u8] = get_sound_data(sound_file);
+                    app_state.sound_state.current_sound = Some(sound_file.clone());
+                    app_state.sound_state.is_playing = true;
+                    app_state.sound_state.volume = app_state.active_profile.default_volume;
+                    let _ = sound_manager.play(sound_data, app_state.sound_state.volume);
+                }
                 format!("Starting focus session for {} minutes...", minutes)
             }
             Some(&"stop") => {
                 if app_state.timer.status == TimerStatus::Idle {
                     return "Error: No active session to stop.".to_string();
+                }
+                // Auto-pause sound when timer stops
+                if app_state.sound_state.is_playing && !app_state.sound_state.is_muted {
+                    sound_manager.pause();
                 }
                 app_state.timer.status = TimerStatus::Idle;
                 app_state.timer.remaining_seconds = app_state.active_profile.focus_duration;
@@ -307,12 +487,20 @@ fn process_command(app_state: &mut AppState, cmd: &str, args: &[&str]) -> String
                 if app_state.timer.status != TimerStatus::Running {
                     return "Error: No running session to pause.".to_string();
                 }
+                // Auto-pause sound when timer pauses
+                if app_state.sound_state.is_playing && !app_state.sound_state.is_muted {
+                    sound_manager.pause();
+                }
                 app_state.timer.status = TimerStatus::Paused;
                 "Focus session paused.".to_string()
             }
             Some(&"resume") => {
                 if app_state.timer.status != TimerStatus::Paused {
                     return "Error: No paused session to resume.".to_string();
+                }
+                // Auto-resume sound when timer resumes
+                if app_state.sound_state.is_playing && !app_state.sound_state.is_muted {
+                    sound_manager.resume();
                 }
                 app_state.timer.status = TimerStatus::Running;
                 "Focus session resumed.".to_string()
@@ -345,6 +533,13 @@ fn process_command(app_state: &mut AppState, cmd: &str, args: &[&str]) -> String
                     .find(|p| p.id.as_str() == *profile_id)
                 {
                     app_state.active_profile = profile.clone();
+                    // Auto-switch sound when profile changes if sound is playing
+                    if app_state.sound_state.is_playing && !app_state.sound_state.is_muted {
+                        let sound_data: &[u8] = get_sound_data(&profile.sound_file);
+                        app_state.sound_state.current_sound = Some(profile.sound_file.clone());
+                        app_state.sound_state.volume = profile.default_volume;
+                        let _ = sound_manager.play(sound_data, app_state.sound_state.volume);
+                    }
                     format!("Switched to profile: {}", profile.name)
                 } else {
                     format!("Error: Profile \"{}\" not found. Use \"profile list\" to see available profiles.", profile_id)
@@ -484,6 +679,67 @@ fn process_command(app_state: &mut AppState, cmd: &str, args: &[&str]) -> String
             )
         }
 
+        "sound" => match args.first() {
+            Some(&"play") => {
+                let sound_file = &app_state.active_profile.sound_file;
+                app_state.sound_state.current_sound = Some(sound_file.clone());
+                app_state.sound_state.is_playing = true;
+                app_state.sound_state.volume = app_state.active_profile.default_volume;
+
+                // Get sound data based on profile's sound_file
+                let sound_data: &[u8] = get_sound_data(sound_file);
+
+                match sound_manager.play(sound_data, app_state.sound_state.volume) {
+                    Ok(_) => format!("Playing ambient sound: {}", sound_file),
+                    Err(e) => {
+                        app_state.sound_state.is_playing = false;
+                        format!("Warning: Sound system unavailable: {}. Add sound files to src-tauri/sounds/", e)
+                    }
+                }
+            }
+            Some(&"stop") => {
+                sound_manager.stop();
+                app_state.sound_state.is_playing = false;
+                "Ambient sound stopped.".to_string()
+            }
+            Some(&"volume") => {
+                if let Some(vol_str) = args.get(1) {
+                    if let Ok(vol) = vol_str.parse::<u8>() {
+                        let vol = vol.min(100);
+                        app_state.sound_state.volume = vol;
+                        sound_manager.set_volume(vol);
+                        format!("Volume set to {}%", vol)
+                    } else {
+                        "Error: Invalid volume value. Use 0-100".to_string()
+                    }
+                } else {
+                    format!("Current volume: {}%", app_state.sound_state.volume)
+                }
+            }
+            Some(&"mute") => {
+                app_state.sound_state.is_muted = !app_state.sound_state.is_muted;
+                if app_state.sound_state.is_muted {
+                    sound_manager.pause();
+                    "Sound muted.".to_string()
+                } else {
+                    sound_manager.resume();
+                    "Sound unmuted.".to_string()
+                }
+            }
+            _ => {
+                format!(
+                    "Sound Status: {} | Volume: {}% | Muted: {}",
+                    if app_state.sound_state.is_playing {
+                        "Playing"
+                    } else {
+                        "Stopped"
+                    },
+                    app_state.sound_state.volume,
+                    app_state.sound_state.is_muted
+                )
+            }
+        },
+
         "clear" => "__CLEAR__".to_string(),
 
         "" => String::new(),
@@ -499,7 +755,7 @@ fn process_command(app_state: &mut AppState, cmd: &str, args: &[&str]) -> String
 
 #[tauri::command]
 pub fn tick_timer(state: State<EngineState>, app_handle: AppHandle) -> Result<(), String> {
-    let mut app_state = state.0.lock().map_err(|e| e.to_string())?;
+    let mut app_state = state.app_state.lock().map_err(|e| e.to_string())?;
 
     if app_state.timer.status == TimerStatus::Running && app_state.timer.remaining_seconds > 0 {
         app_state.timer.remaining_seconds -= 1;
@@ -524,7 +780,7 @@ pub fn tick_timer(state: State<EngineState>, app_handle: AppHandle) -> Result<()
 
 #[tauri::command]
 pub fn tick_system_stats(state: State<EngineState>, app_handle: AppHandle) -> Result<(), String> {
-    let mut app_state = state.0.lock().map_err(|e| e.to_string())?;
+    let mut app_state = state.app_state.lock().map_err(|e| e.to_string())?;
 
     let mut sys = System::new_all();
     sys.refresh_all();
