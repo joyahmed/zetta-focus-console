@@ -53,10 +53,10 @@ export function TimerPanel({ timer, glowColor, sessionOverride, onStart, onPause
   const strokeDashoffset = circumference - (progress / 100) * circumference;
   const hasOverride = isOverrideActive(sessionOverride);
 
-  // Premium colors based on spec
-  const baseRingColor = isLight ? '#d1d5db' : '#1f2937';
-  const progressColor = isLight ? glowColor : '#f97316';
-  const progressGlow = isLight ? 'none' : 'drop-shadow(0 0 5px #f97316)';
+  // Premium colors based on spec - using CSS variable tokens
+  const baseRingColor = isLight ? 'var(--color-ring-base)' : 'var(--color-ring-base)';
+  const progressColor = 'var(--color-ring-progress)';
+  const progressGlow = isLight ? 'none' : 'drop-shadow(0 0 5px var(--color-ring-progress))';
 
   return (
     <div className="flex flex-col items-center justify-center p-3 md:p-4 bg-zetta-card border border-zetta-border rounded-lg h-full">

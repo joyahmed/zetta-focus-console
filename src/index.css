@@ -1,23 +1,35 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-	/* Dark Mode (Primary) - UI Spec */
+	/* Dark Mode (Primary) */
 	--bg-primary: #0f172a;
 	--bg-secondary: #111827;
 	--bg-card: #1a1d26;
 	--bg-panel: #1a1d26;
-	--border-color: rgba(148, 163, 184, 0.1);
+	--border-color: rgba(255, 255, 255, 0.06);
 	--text-primary: #e2e8f0;
 	--text-secondary: #94a3b8;
 	--text-muted: #64748b;
-	--accent: #60a5fa;
-	--accent-hover: #93c5fd;
+	--accent: #f97316;
+	--accent-hover: #fb923c;
 
-	/* Additional colors for theming */
+	/* Semantic Color Tokens - Dark Mode */
+	--color-background: #0f172a;
+	--color-surface: #111827;
+	--color-border: rgba(255, 255, 255, 0.06);
+	--color-primary: #f97316;
+	--color-accent: #f97316;
+	--color-danger: #ef4444;
+	--color-muted: #94a3b8;
+	--color-ring-base: #1e293b;
+	--color-ring-progress: #f97316;
+	--color-ring-glow: rgba(249, 115, 22, 0.25);
+
+	/* Grayscale */
 	--color-gray-50: #f9fafb;
 	--color-gray-100: #f3f4f6;
 	--color-gray-200: #e5e7eb;
@@ -28,21 +40,10 @@
 	--color-gray-700: #374151;
 	--color-gray-800: #1f2937;
 	--color-gray-900: #111827;
-
-	--color-white: #ffffff;
-	--color-black: #000000;
-
-	/* Semantic colors */
-	--color-bg: var(--bg-primary);
-	--color-card: var(--bg-card);
-	--color-border: var(--border-color);
-	--color-text: var(--text-primary);
-	--color-text-secondary: var(--text-secondary);
-	--color-text-muted: var(--text-muted);
 }
 
 [data-theme='light'] {
-	/* Light Mode (Secondary) - UI Spec */
+	/* Light Mode (Secondary) */
 	--bg-primary: #f3f4f6;
 	--bg-secondary: #e5e7eb;
 	--bg-card: #ffffff;
@@ -51,10 +52,22 @@
 	--text-primary: #1f2937;
 	--text-secondary: #4b5563;
 	--text-muted: #9ca3af;
-	--accent: #3b82f6;
-	--accent-hover: #2563eb;
+	--accent: #1d4ed8;
+	--accent-hover: #1d4ed8;
 
-	/* Additional colors for theming - softer light mode */
+	/* Semantic Color Tokens - Light Mode */
+	--color-background: #f3f4f6;
+	--color-surface: #ffffff;
+	--color-border: #d1d5db;
+	--color-primary: #1d4ed8;
+	--color-accent: #1d4ed8;
+	--color-danger: #dc2626;
+	--color-muted: #6b7280;
+	--color-ring-base: #9ca3af;
+	--color-ring-progress: #1d4ed8;
+	--color-ring-glow: none;
+
+	/* Grayscale */
 	--color-gray-50: #f8f9fa;
 	--color-gray-100: #f1f3f5;
 	--color-gray-200: #e9ecef;
@@ -65,17 +78,6 @@
 	--color-gray-700: #495057;
 	--color-gray-800: #343a40;
 	--color-gray-900: #212529;
-
-	--color-white: #212529;
-	--color-black: #f8f9fa;
-
-	/* Semantic colors */
-	--color-bg: var(--bg-primary);
-	--color-card: var(--bg-card);
-	--color-border: var(--border-color);
-	--color-text: var(--text-primary);
-	--color-text-secondary: var(--text-secondary);
-	--color-text-muted: var(--text-muted);
 }
 
 * {
@@ -93,16 +95,14 @@ body,
 }
 
 body {
-	font-family: 'JetBrains Mono', monospace;
+	font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 	background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
 	background-attachment: fixed;
 	color: var(--text-primary);
-	transition:
-		background 0.3s ease,
-		color 0.2s ease;
+	transition: background 0.3s ease, color 0.2s ease;
 }
 
-/* Dark mode specific gradient overlay */
+/* Dark mode specific gradient */
 :root body {
 	background: linear-gradient(135deg, #0f172a 0%, #111827 50%, #0f172a 100%);
 }
@@ -173,13 +173,56 @@ body {
 		border-color: var(--border-color) !important;
 	}
 
-	/* Inverted colors for dark text on light backgrounds */
-	.text-inverted {
-		color: var(--text-primary);
+	/* Semantic color tokens */
+	.bg-primary {
+		background-color: var(--color-primary) !important;
 	}
 
-	[data-theme='light'] .text-inverted {
-		color: #1b1e24;
+	.bg-surface {
+		background-color: var(--color-surface) !important;
+	}
+
+	.bg-background {
+		background-color: var(--color-background) !important;
+	}
+
+	.border-default {
+		border-color: var(--color-border) !important;
+	}
+
+	.text-primary {
+		color: var(--color-primary) !important;
+	}
+
+	.text-accent {
+		color: var(--color-accent) !important;
+	}
+
+	.text-danger {
+		color: var(--color-danger) !important;
+	}
+
+	.text-muted-color {
+		color: var(--color-muted) !important;
+	}
+
+	.ring-base {
+		stroke: var(--color-ring-base) !important;
+	}
+
+	.ring-progress {
+		stroke: var(--color-ring-progress) !important;
+	}
+
+	/* Accent color for sliders and focus states */
+	.accent-blue {
+		accent-color: var(--accent) !important;
+	}
+
+	/* Focus ring styles */
+	.focus-ring:focus {
+		outline: none;
+		box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 4px var(--accent);
 	}
 }
 
@@ -247,13 +290,6 @@ body {
 		color: var(--color-gray-900) !important;
 	}
 
-	.text-white {
-		color: var(--color-white) !important;
-	}
-	.text-black {
-		color: var(--color-black) !important;
-	}
-
 	.border-gray-50 {
 		border-color: var(--color-gray-50) !important;
 	}
@@ -309,4 +345,23 @@ body {
 * {
 	scrollbar-width: thin;
 	scrollbar-color: var(--text-muted) transparent;
+}
+
+/* Hide default scrollbar on main container */
+html, body, #root {
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+}
+
+html::-webkit-scrollbar, body::-webkit-scrollbar, #root::-webkit-scrollbar {
+	display: none;
+}
+
+/* Font families */
+.font-mono {
+	font-family: 'JetBrains Mono', monospace !important;
+}
+
+.font-sans {
+	font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
 }

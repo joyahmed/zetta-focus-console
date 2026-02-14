@@ -219,7 +219,7 @@ export function Header({
 							max='100'
 							value={isMuted ? 0 : volume}
 							onChange={e => onVolumeChange(parseInt(e.target.value))}
-							className='w-20 h-1 rounded-lg appearance-none cursor-pointer accent-blue-500'
+							className='w-20 h-1 rounded-lg appearance-none cursor-pointer accent-blue'
 							style={{
 								backgroundColor: isLight ? '#d1d5db' : '#374151'
 							}}
