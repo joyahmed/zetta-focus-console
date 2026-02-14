@@ -5,15 +5,15 @@
 @tailwind utilities;
 
 :root {
-	/* Dark Mode (Default) */
-	--bg-primary: #0f1115;
-	--bg-secondary: #121417;
-	--bg-card: #1a1d23;
-	--bg-panel: #1a1d23;
-	--border-color: rgba(255, 255, 255, 0.06);
-	--text-primary: #e6e8ec;
-	--text-secondary: #9aa0a6;
-	--text-muted: #6b7280;
+	/* Dark Mode (Primary) - UI Spec */
+	--bg-primary: #0f172a;
+	--bg-secondary: #111827;
+	--bg-card: #1a1d26;
+	--bg-panel: #1a1d26;
+	--border-color: rgba(148, 163, 184, 0.1);
+	--text-primary: #e2e8f0;
+	--text-secondary: #94a3b8;
+	--text-muted: #64748b;
 	--accent: #60a5fa;
 	--accent-hover: #93c5fd;
 
@@ -42,16 +42,17 @@
 }
 
 [data-theme='light'] {
-	--bg-primary: #f8f9fa;
-	--bg-secondary: #e9ecef;
+	/* Light Mode (Secondary) - UI Spec */
+	--bg-primary: #f3f4f6;
+	--bg-secondary: #e5e7eb;
 	--bg-card: #ffffff;
 	--bg-panel: #ffffff;
 	--border-color: rgba(0, 0, 0, 0.12);
-	--text-primary: #343a40;
-	--text-secondary: #6c757d;
-	--text-muted: #adb5bd;
-	--accent: #5c7cfa;
-	--accent-hover: #4263eb;
+	--text-primary: #1f2937;
+	--text-secondary: #4b5563;
+	--text-muted: #9ca3af;
+	--accent: #3b82f6;
+	--accent-hover: #2563eb;
 
 	/* Additional colors for theming - softer light mode */
 	--color-gray-50: #f8f9fa;
@@ -93,11 +94,22 @@ body,
 
 body {
 	font-family: 'JetBrains Mono', monospace;
-	background-color: var(--bg-primary);
+	background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+	background-attachment: fixed;
 	color: var(--text-primary);
 	transition:
-		background-color 0.2s ease,
+		background 0.3s ease,
 		color 0.2s ease;
+}
+
+/* Dark mode specific gradient overlay */
+:root body {
+	background: linear-gradient(135deg, #0f172a 0%, #111827 50%, #0f172a 100%);
+}
+
+[data-theme='light'] body {
+	background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+	background-attachment: fixed;
 }
 
 /* Tailwind theme extensions */
