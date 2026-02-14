@@ -3,11 +3,11 @@ import { listen } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useState } from 'react';
 import { AmbientPanel } from './components/AmbientPanel';
 import { Header } from './components/Header';
+import { HelpModal } from './components/HelpModal';
 import { ProfilePanel } from './components/ProfilePanel';
 import { SettingsPanel } from './components/SettingsPanel';
-import { SoundControl } from './components/SoundControl';
 import { StatsPanel } from './components/StatsPanel';
-import { TerminalPanel } from './components/TerminalPanel';
+import { TerminalModal } from './components/TerminalModal';
 import { TimerPanel } from './components/TimerPanel';
 
 interface TimerState {
@@ -83,6 +83,9 @@ function App() {
 	const [appState, setAppState] = useState<AppState | null>(null);
 	const [terminalKey, setTerminalKey] = useState(0);
 	const [settingsOpen, setSettingsOpen] = useState(false);
+	const [helpOpen, setHelpOpen] = useState(false);
+	const [terminalOpen, setTerminalOpen] = useState(false);
+	const [sessionSummary, setSessionSummary] = useState<string | null>(null);
 
 	useEffect(() => {
 		invoke<AppState>('get_state')
@@ -95,9 +98,37 @@ function App() {
 			setAppState(event.payload.state);
 		});
 
+		// Listen for session completion events
+		const unlistenSession = listen<string>('session-complete', event => {
+			setSessionSummary(event.payload);
+			setTerminalOpen(true); // Open terminal to show summary
+		});
+
 		return () => {
 			unlisten.then(fn => fn());
+			unlistenSession.then(fn => fn());
 		};
+	}, []);
+
+	// Global keyboard shortcuts
+	useEffect(() => {
+		const handleGlobalKeyDown = (e: globalThis.KeyboardEvent) => {
+			// Ctrl+T to open terminal (per Command Palette spec)
+			if ((e.ctrlKey || e.metaKey) && e.key === 't') {
+				e.preventDefault();
+				setTerminalOpen(prev => !prev);
+			}
+			// ` or ~ to open terminal (alternative shortcut)
+			if (e.key === '`' && !e.ctrlKey && !e.metaKey) {
+				if (document.activeElement?.tagName !== 'INPUT') {
+					e.preventDefault();
+					setTerminalOpen(prev => !prev);
+				}
+			}
+		};
+
+		window.addEventListener('keydown', handleGlobalKeyDown);
+		return () => window.removeEventListener('keydown', handleGlobalKeyDown);
 	}, []);
 
 	useEffect(() => {
@@ -171,10 +202,26 @@ function App() {
 		}
 	}, [appState?.ambience_enabled]);
 
+	const handleVolumeChange = useCallback(async (volume: number) => {
+		try {
+			await invoke('execute_command', { command: `sound volume ${volume}` });
+		} catch (error) {
+			console.error(error);
+		}
+	}, []);
+
+	const handleMuteToggle = useCallback(async () => {
+		try {
+			await invoke('execute_command', { command: 'sound mute' });
+		} catch (error) {
+			console.error(error);
+		}
+	}, []);
+
 	if (!appState) {
 		return (
 			<div className='h-screen w-screen bg-zetta-bg flex items-center justify-center'>
-				<div className='text-gray-400'>Loading...</div>
+				<div className='text-gray-400 text-sm'>Loading...</div>
 			</div>
 		);
 	}
@@ -185,10 +232,17 @@ function App() {
 				activeProfileName={appState.active_profile.name}
 				devMode={appState.dev_mode}
 				onSettingsClick={() => setSettingsOpen(true)}
+				onTerminalClick={() => setTerminalOpen(true)}
+				volume={appState.sound_state.volume}
+				isMuted={appState.sound_state.is_muted}
+				onVolumeChange={handleVolumeChange}
+				onMuteToggle={handleMuteToggle}
 			/>
 
-			<main className='flex-1 p-3 md:p-6 overflow-auto'>
-				<div className='grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 min-w-0'>
+			{/* Compact 2x2 Grid Layout */}
+			<main className='flex-1 p-4 overflow-auto'>
+				<div className='grid grid-cols-2 gap-4 h-full' style={{ gridTemplateRows: '1fr 1fr' }}>
+					{/* Top Left: Timer */}
 					<div className='min-h-0'>
 						<TimerPanel
 							timer={appState.timer}
@@ -201,6 +255,7 @@ function App() {
 						/>
 					</div>
 
+					{/* Top Right: Profile */}
 					<div className='min-h-0'>
 						<ProfilePanel
 							profile={appState.active_profile}
@@ -209,13 +264,7 @@ function App() {
 						/>
 					</div>
 
-					<div className='min-h-0'>
-						<TerminalPanel
-							key={terminalKey}
-							onCommand={processCommand}
-						/>
-					</div>
-
+					{/* Bottom Left: Stats */}
 					<div className='min-h-0'>
 						<StatsPanel
 							stats={appState.stats}
@@ -224,13 +273,11 @@ function App() {
 						/>
 					</div>
 
-					{/* Ambient Panel - Full width at bottom */}
-					<div className='min-h-0 md:col-span-2'>
+					{/* Bottom Right: Ambience */}
+					<div className='min-h-0'>
 						<AmbientPanel
 							season={appState.active_profile.season}
-							motionIntensity={
-								appState.active_profile.motion_intensity
-							}
+							motionIntensity={appState.active_profile.motion_intensity}
 							glowColor={appState.active_profile.glow_color}
 							isRunning={appState.timer.status === 'running'}
 							isEnabled={appState.ambience_enabled}
@@ -239,15 +286,18 @@ function App() {
 				</div>
 			</main>
 
-			{/* Sound Control - Fixed at bottom */}
-			<div className='fixed bottom-4 right-4 z-50'>
-				<SoundControl
-					isPlaying={appState.sound_state.is_playing}
-					isMuted={appState.sound_state.is_muted}
-					volume={appState.sound_state.volume}
-					currentSound={appState.sound_state.current_sound}
-				/>
-			</div>
+			{/* Terminal Modal */}
+			<TerminalModal
+				key={terminalKey}
+				isOpen={terminalOpen}
+				onClose={() => setTerminalOpen(false)}
+				onCommand={processCommand}
+				onHelp={() => {
+					setHelpOpen(true);
+				}}
+				sessionSummary={sessionSummary}
+				onSummaryRead={() => setSessionSummary(null)}
+			/>
 
 			<SettingsPanel
 				isOpen={settingsOpen}
@@ -256,6 +306,11 @@ function App() {
 				onDevModeToggle={handleDevModeToggle}
 				ambienceEnabled={appState.ambience_enabled}
 				onAmbienceToggle={handleAmbienceToggle}
+			/>
+
+			<HelpModal
+				isOpen={helpOpen}
+				onClose={() => setHelpOpen(false)}
 			/>
 		</div>
 	);
