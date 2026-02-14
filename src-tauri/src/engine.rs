@@ -75,6 +75,7 @@ pub struct Preferences {
     pub volume: u8,
     pub is_muted: bool,
     pub dev_mode: bool,
+    pub theme: String,
     pub custom_profiles: Vec<Profile>,
 }
 
@@ -86,6 +87,7 @@ impl Default for Preferences {
             volume: 50,
             is_muted: false,
             dev_mode: false,
+            theme: "dark".to_string(),
             custom_profiles: vec![],
         }
     }
@@ -531,6 +533,7 @@ pub struct AppState {
     pub sound_state: SoundState,
     pub session_override: Option<SessionOverride>,
     pub ambience_enabled: bool,
+    pub theme: String,
 }
 
 impl Default for AppState {
@@ -623,6 +626,7 @@ impl AppState {
             sound_state: SoundState::new(),
             session_override: None,
             ambience_enabled: true,
+            theme: "dark".to_string(),
         }
     }
 
@@ -635,6 +639,7 @@ impl AppState {
         self.ambience_enabled = prefs.ambience_enabled;
         self.sound_state.volume = prefs.volume;
         self.sound_state.is_muted = prefs.is_muted;
+        self.theme = prefs.theme;
 
         // Add custom profiles to the profiles list
         for profile in prefs.custom_profiles {
@@ -670,6 +675,7 @@ impl AppState {
             volume: self.sound_state.volume,
             is_muted: self.sound_state.is_muted,
             dev_mode: self.dev_mode,
+            theme: self.theme.clone(),
             custom_profiles,
         };
         save_preferences(&prefs)
@@ -704,6 +710,33 @@ pub fn get_state(state: State<EngineState>) -> Result<AppState, String> {
 }
 
 #[tauri::command]
+pub fn get_theme(state: State<EngineState>) -> Result<String, String> {
+    let app_state = state.app_state.lock().map_err(|e| e.to_string())?;
+    Ok(app_state.theme.clone())
+}
+
+#[tauri::command]
+pub fn set_theme(theme: String, state: State<EngineState>, app_handle: AppHandle) -> Result<String, String> {
+    let valid_themes = ["dark", "light", "system"];
+    if !valid_themes.contains(&theme.as_str()) {
+        return Err("Invalid theme. Use: dark, light, or system".to_string());
+    }
+
+    let mut app_state = state.app_state.lock().map_err(|e| e.to_string())?;
+    app_state.theme = theme.clone();
+    let _ = app_state.save_preferences();
+
+    let _ = app_handle.emit(
+        "state-updated",
+        StateEvent {
+            state: app_state.clone(),
+        },
+    );
+
+    Ok(format!("Theme set to {}", theme))
+}
+
+#[tauri::command]
 pub fn execute_command(
     command: String,
     state: State<EngineState>,
@@ -722,7 +755,7 @@ pub fn execute_command(
     // Save preferences after command execution (only for preference-modifying commands)
     let should_save = matches!(
         cmd.as_str(),
-        "devmode" | "ambience" | "sound" | "profile" | "background" | "reset"
+        "devmode" | "ambience" | "sound" | "profile" | "background" | "reset" | "theme"
     );
     if should_save {
         let _ = app_state.save_preferences();
@@ -801,6 +834,7 @@ fn process_command(
   system                 - Show system information
   memory                 - Show memory usage
   cpu                    - Show CPU usage
+  theme [mode]           - Set theme (dark, light, system)
   clear                  - Clear terminal
   help                   - Show this help message"
             .to_string(),
@@ -1653,6 +1687,26 @@ fn process_command(
                 app_state.active_profile = default_profile.clone();
             }
             "Settings reset to defaults.".to_string()
+        }
+
+        "theme" => {
+            match args.first() {
+                Some(&"dark") => {
+                    app_state.theme = "dark".to_string();
+                    "Theme set to dark.".to_string()
+                }
+                Some(&"light") => {
+                    app_state.theme = "light".to_string();
+                    "Theme set to light.".to_string()
+                }
+                Some(&"system") => {
+                    app_state.theme = "system".to_string();
+                    "Theme set to system.".to_string()
+                }
+                _ => {
+                    format!("Current theme: {}. Usage: theme dark|light|system", app_state.theme)
+                }
+            }
         }
 
         // Dev mode commands - only available when dev_mode is enabled

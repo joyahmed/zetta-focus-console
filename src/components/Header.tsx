@@ -7,6 +7,8 @@ interface HeaderProps {
   isMuted: boolean;
   onVolumeChange: (volume: number) => void;
   onMuteToggle: () => void;
+  theme: string;
+  onThemeChange: (theme: string) => void;
 }
 
 export function Header({
@@ -17,45 +19,103 @@ export function Header({
   volume,
   isMuted,
   onVolumeChange,
-  onMuteToggle
+  onMuteToggle,
+  theme,
+  onThemeChange
 }: HeaderProps) {
+  const isLight = theme === 'light';
+
+  const toggleTheme = () => {
+    const themes = ['dark', 'light', 'system'];
+    const currentIndex = themes.indexOf(theme);
+    const nextIndex = (currentIndex + 1) % themes.length;
+    onThemeChange(themes[nextIndex]);
+  };
+
   return (
-    <header className="flex items-center justify-between px-4 py-2 border-b border-zetta-border bg-zetta-card flex-shrink-0">
+    <header
+      className="flex items-center justify-between px-4 py-2 border-b flex-shrink-0"
+      style={{
+        backgroundColor: 'var(--bg-card)',
+        borderColor: 'var(--border-color)'
+      }}
+    >
       <div className="flex items-center gap-3">
-        <h1 className="text-sm font-semibold text-white tracking-tight">
+        <h1
+          className="text-sm font-semibold tracking-tight"
+          style={{ color: 'var(--text-primary)' }}
+        >
           Zetta Focus
         </h1>
         {devMode && (
-          <span className="px-1.5 py-0.5 text-[10px] font-medium bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded">
+          <span className="px-1.5 py-0.5 text-[10px] font-medium bg-yellow-500/20 border border-yellow-500/30 rounded"
+            style={{ color: '#ca8a04' }}
+          >
             DEV
           </span>
         )}
       </div>
 
       <div className="flex items-center gap-4">
+        {/* Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+          className="p-1.5 transition-colors"
+          style={{ color: 'var(--text-secondary)' }}
+          title={`Current theme: ${theme} (click to change)`}
+        >
+          {theme === 'light' ? (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          ) : theme === 'system' ? (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          )}
+        </button>
+
         {/* Command Trigger Input - Opens Terminal Modal */}
         <button
           onClick={onTerminalClick}
-          className="flex items-center gap-2 px-3 py-1.5 bg-zetta-bg border border-zetta-border rounded-md text-gray-400 hover:border-gray-500 transition-colors min-w-[180px]"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-md border transition-colors min-w-[180px]"
+          style={{
+            backgroundColor: 'var(--bg-primary)',
+            borderColor: 'var(--border-color)',
+            color: 'var(--text-secondary)'
+          }}
           title="Open Command Terminal (Ctrl+T)"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          <span className="text-xs font-mono text-gray-500">Type a command…</span>
-          <span className="ml-auto text-[10px] text-gray-600 bg-zetta-card px-1.5 py-0.5 rounded">Ctrl+T</span>
+          <span className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>Type a command…</span>
+          <span
+            className="ml-auto text-[10px] px-1.5 py-0.5 rounded"
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              color: 'var(--text-muted)'
+            }}
+          >
+            Ctrl+T
+          </span>
         </button>
 
         {/* Profile Name */}
-        <span className="text-xs text-gray-400">
-          <span className="text-white">{activeProfileName}</span>
+        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+          <span style={{ color: 'var(--text-primary)' }}>{activeProfileName}</span>
         </span>
 
         {/* Volume Control - Micro */}
         <div className="flex items-center gap-2">
           <button
             onClick={onMuteToggle}
-            className="p-1 text-gray-400 hover:text-white transition-colors"
+            className="p-1 transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
             title={isMuted ? "Unmute" : "Mute"}
           >
             {isMuted ? (
@@ -75,14 +135,16 @@ export function Header({
             max="100"
             value={isMuted ? 0 : volume}
             onChange={(e) => onVolumeChange(parseInt(e.target.value))}
-            className="w-20 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+            className="w-20 h-1 rounded-lg appearance-none cursor-pointer accent-blue-500"
+            style={{ backgroundColor: isLight ? '#d1d5db' : '#374151' }}
           />
         </div>
 
         {/* Settings Button */}
         <button
           onClick={onSettingsClick}
-          className="p-1.5 text-gray-400 hover:text-white transition-colors"
+          className="p-1.5 transition-colors"
+          style={{ color: 'var(--text-secondary)' }}
           title="Settings"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -66,11 +66,11 @@ export function TimerPanel({ timer, glowColor, sessionOverride, onStart, onPause
         <span
           className="w-2 h-2 rounded-full"
           style={{
-            backgroundColor: timer.status === 'running' ? glowColor : '#6b7280',
+            backgroundColor: timer.status === 'running' ? glowColor : 'var(--text-muted)',
             boxShadow: timer.status === 'running' ? `0 0 8px ${glowColor}` : 'none'
           }}
         />
-        <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+        <span className="text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
           {getStatusLabel(timer.status)}
         </span>
       </div>
@@ -82,7 +82,7 @@ export function TimerPanel({ timer, glowColor, sessionOverride, onStart, onPause
             cy="100"
             r="90"
             fill="none"
-            stroke="#2a2f3a"
+            stroke="var(--border-color)"
             strokeWidth="6"
           />
           <circle
@@ -101,7 +101,7 @@ export function TimerPanel({ timer, glowColor, sessionOverride, onStart, onPause
             }}
           />
         </svg>
-        <div className="text-3xl md:text-4xl lg:text-5xl font-bold text-white tracking-tight">
+        <div className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
           {formatTime(timer.remaining_seconds)}
         </div>
       </div>
@@ -110,7 +110,8 @@ export function TimerPanel({ timer, glowColor, sessionOverride, onStart, onPause
         {timer.status === 'idle' && (
           <button
             onClick={onStart}
-            className="px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium text-white bg-zetta-border hover:bg-gray-600 rounded transition-colors"
+            className="px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium bg-zetta-border hover:opacity-80 rounded transition-colors"
+            style={{ color: 'var(--text-primary)' }}
           >
             START
           </button>
@@ -118,7 +119,8 @@ export function TimerPanel({ timer, glowColor, sessionOverride, onStart, onPause
         {timer.status === 'running' && (
           <button
             onClick={onPause}
-            className="px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium text-white bg-zetta-border hover:bg-gray-600 rounded transition-colors"
+            className="px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium bg-zetta-border hover:opacity-80 rounded transition-colors"
+            style={{ color: 'var(--text-primary)' }}
           >
             PAUSE
           </button>
@@ -127,13 +129,15 @@ export function TimerPanel({ timer, glowColor, sessionOverride, onStart, onPause
           <>
             <button
               onClick={onResume}
-              className="px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium text-white bg-zetta-border hover:bg-gray-600 rounded transition-colors"
+              className="px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium bg-zetta-border hover:opacity-80 rounded transition-colors"
+              style={{ color: 'var(--text-primary)' }}
             >
               RESUME
             </button>
             <button
               onClick={onStop}
-              className="px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium text-red-400 border border-red-400/30 hover:bg-red-400/10 rounded transition-colors"
+              className="px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium border rounded transition-colors"
+              style={{ color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
             >
               STOP
             </button>
@@ -142,14 +146,15 @@ export function TimerPanel({ timer, glowColor, sessionOverride, onStart, onPause
         {timer.status === 'completed' && (
           <button
             onClick={onStart}
-            className="px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium text-white bg-zetta-border hover:bg-gray-600 rounded transition-colors"
+            className="px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium bg-zetta-border hover:opacity-80 rounded transition-colors"
+            style={{ color: 'var(--text-primary)' }}
           >
             RESTART
           </button>
         )}
       </div>
 
-      <div className="mt-2 md:mt-3 text-xs text-gray-500 uppercase tracking-wider">
+      <div className="mt-2 md:mt-3 text-xs uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
         {timer.session_type === 'focus' ? 'Focus Session' :
          timer.session_type === 'short_break' ? 'Short Break' : 'Long Break'}
       </div>

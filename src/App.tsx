@@ -75,6 +75,7 @@ interface AppState {
 	sound_state: SoundState;
 	session_override: SessionOverride | null;
 	ambience_enabled: boolean;
+	theme: string;
 }
 
 interface StateEvent {
@@ -120,6 +121,33 @@ function App() {
 			unlistenSession.then(fn => fn());
 		};
 	}, []);
+
+	// Apply theme to document
+	useEffect(() => {
+		if (!appState) return;
+
+		const applyTheme = (theme: string) => {
+			if (theme === 'system') {
+				// Check system preference
+				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+				document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+			} else {
+				document.documentElement.setAttribute('data-theme', theme);
+			}
+		};
+
+		applyTheme(appState.theme);
+
+		// Listen for system theme changes
+		const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+		const handleChange = () => {
+			if (appState.theme === 'system') {
+				applyTheme('system');
+			}
+		};
+		mediaQuery.addEventListener('change', handleChange);
+		return () => mediaQuery.removeEventListener('change', handleChange);
+	}, [appState?.theme]);
 
 	// Global keyboard shortcuts
 	useEffect(() => {
@@ -248,17 +276,30 @@ function App() {
 		}
 	}, []);
 
-	const handleBackgroundTypeChange = useCallback(async (type: 'gradient' | 'particles') => {
+	const handleBackgroundTypeChange = useCallback(
+		async (type: 'gradient' | 'particles') => {
+			try {
+				await invoke('execute_command', {
+					command: `background ${type}`
+				});
+			} catch (error) {
+				console.error(error);
+			}
+		},
+		[]
+	);
+
+	const handleResetSettings = useCallback(async () => {
 		try {
-			await invoke('execute_command', { command: `background ${type}` });
+			await invoke('execute_command', { command: 'reset' });
 		} catch (error) {
 			console.error(error);
 		}
 	}, []);
 
-	const handleResetSettings = useCallback(async () => {
+	const handleThemeChange = useCallback(async (theme: string) => {
 		try {
-			await invoke('execute_command', { command: 'reset' });
+			await invoke('set_theme', { theme });
 		} catch (error) {
 			console.error(error);
 		}
@@ -317,6 +358,8 @@ function App() {
 				isMuted={appState.sound_state.is_muted}
 				onVolumeChange={handleVolumeChange}
 				onMuteToggle={handleMuteToggle}
+				theme={appState.theme}
+				onThemeChange={handleThemeChange}
 			/>
 
 			{/* Compact 2x2 Grid Layout */}
@@ -372,6 +415,7 @@ function App() {
 							glowColor={appState.active_profile.glow_color}
 							isRunning={appState.timer.status === 'running'}
 							isEnabled={appState.ambience_enabled}
+							theme={appState.theme}
 						/>
 					</div>
 				</div>
@@ -407,6 +451,8 @@ function App() {
 				backgroundType={appState.active_profile.background_type}
 				onBackgroundTypeChange={handleBackgroundTypeChange}
 				onResetSettings={handleResetSettings}
+				theme={appState.theme}
+				onThemeChange={handleThemeChange}
 			/>
 
 			<HelpModal
