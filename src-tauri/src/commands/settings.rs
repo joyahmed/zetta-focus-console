@@ -9,6 +9,25 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use tauri::{AppHandle, Emitter, State};
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TrialStatus {
+    pub state: String,
+    pub days_remaining: u32,
+}
+
+#[tauri::command]
+pub fn get_trial_status(state: State<EngineState>) -> Result<TrialStatus, String> {
+    let license_manager = state.license_manager.lock().map_err(|e| e.to_string())?;
+
+    let license_type = license_manager.get_license_type();
+    let days_remaining = license_manager.get_trial_days_remaining();
+
+    Ok(TrialStatus {
+        state: license_type,
+        days_remaining,
+    })
+}
+
 #[tauri::command]
 pub fn get_license(state: State<EngineState>) -> Result<LicenseState, String> {
     let license_manager = state.license_manager.lock().map_err(|e| e.to_string())?;

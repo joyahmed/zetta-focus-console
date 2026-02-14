@@ -2,7 +2,6 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useState } from 'react';
 import { AmbientPanel } from './components/AmbientPanel';
-import { DebugPanel } from './components/DebugPanel';
 import { Header } from './components/Header';
 import { HelpModal } from './components/HelpModal';
 import { ProfileModal } from './components/ProfileModal';
@@ -12,96 +11,50 @@ import { StatsPanel } from './components/StatsPanel';
 import { TerminalModal } from './components/TerminalModal';
 import { TimerPanel } from './components/TimerPanel';
 
-interface TimerState {
-	remaining_seconds: number;
-	total_seconds: number;
-	status: 'idle' | 'running' | 'paused' | 'completed';
-	session_type: 'focus' | 'short_break' | 'long_break';
-}
-
-interface Profile {
-	id: string;
-	name: string;
-	season: 'spring' | 'summer' | 'autumn' | 'winter';
-	motion_intensity: 'low' | 'medium' | 'high';
-	background_type: 'gradient' | 'particles' | 'custom';
-	focus_duration: number;
-	short_break_duration: number;
-	long_break_duration: number;
-	glow_color: string;
-	sound_file: string;
-	default_volume: number;
-	is_preset: boolean;
-}
-
-interface Stats {
-	sessions_today: number;
-	total_focus_minutes: number;
-	current_streak: number;
-	last_session_duration: number;
-}
-
-interface SystemStats {
-	cpu_usage: number;
-	memory_used: number;
-	memory_total: number;
-}
-
-interface AppStats {
-	cpu_usage: number;
-	memory_used: number;
-}
-
-interface SoundState {
-	current_sound: string | null;
-	volume: number;
-	is_playing: boolean;
-	is_muted: boolean;
-}
-
-interface SessionOverride {
-	focus_duration: number | null;
-	break_duration: number | null;
-	loop_count: number | null;
-}
-
-interface AppState {
-	timer: TimerState;
-	active_profile: Profile;
-	profiles: Profile[];
-	stats: Stats;
-	system_stats: SystemStats;
-	app_stats: AppStats;
-	dev_mode: boolean;
-	sound_state: SoundState;
-	session_override: SessionOverride | null;
-	ambience_enabled: boolean;
-	theme: string;
-}
-
-interface StateEvent {
-	state: AppState;
-}
-
 function App() {
-	const [appState, setAppState] = useState<AppState | null>(null);
-	const [terminalKey, setTerminalKey] = useState(0);
-	const [settingsOpen, setSettingsOpen] = useState(false);
-	const [helpOpen, setHelpOpen] = useState(false);
-	const [terminalOpen, setTerminalOpen] = useState(false);
-	const [profileModalOpen, setProfileModalOpen] = useState(false);
-	const [profileModalMode, setProfileModalMode] = useState<
-		'create' | 'edit'
-	>('create');
-	const [sessionSummary, setSessionSummary] = useState<string | null>(
-		null
-	);
-	const [profileError, setProfileError] = useState<string | null>(null);
+	// const [appState, setAppState] = useState<AppState | null>(null);
+	// const [licenseState, setLicenseState] = useState<{
+	// 	license_type: string;
+	// } | null>(null);
+	// const [trialDaysRemaining, setTrialDaysRemaining] = useState<
+	// 	number | null
+	// >(null);
+	// const [terminalKey, setTerminalKey] = useState(0);
+	// const [settingsOpen, setSettingsOpen] = useState(false);
+	// const [helpOpen, setHelpOpen] = useState(false);
+	// const [terminalOpen, setTerminalOpen] = useState(false);
+	// const [profileModalOpen, setProfileModalOpen] = useState(false);
+	// const [profileModalMode, setProfileModalMode] = useState<
+	// 	'create' | 'edit'
+	// >('create');
+	// const [sessionSummary, setSessionSummary] = useState<string | null>(
+	// 	null
+	// );
+	// const [profileError, setProfileError] = useState<string | null>(
+	// 	null
+	// );
 
 	useEffect(() => {
 		invoke<AppState>('get_state')
 			.then(state => {
 				setAppState(state);
+			})
+			.catch(console.error);
+
+		// Fetch license state
+		invoke<{ license_type: string }>('get_license')
+			.then(state => {
+				setLicenseState(state);
+				// Fetch trial days if Trial
+				if (state.license_type === 'Trial') {
+					invoke<{ state: string; days_remaining: number }>(
+						'get_trial_status'
+					)
+						.then(status =>
+							setTrialDaysRemaining(status.days_remaining)
+						)
+						.catch(() => {});
+				}
 			})
 			.catch(console.error);
 
@@ -366,6 +319,27 @@ function App() {
 		setProfileModalOpen(true);
 	}, []);
 
+	// Refresh license state (used by Header when license override changes)
+	const refreshLicenseState = useCallback(async () => {
+		try {
+			const state = await invoke<{ license_type: string }>(
+				'get_license'
+			);
+			setLicenseState(state);
+			if (state.license_type === 'Trial') {
+				const status = await invoke<{
+					state: string;
+					days_remaining: number;
+				}>('get_trial_status');
+				setTrialDaysRemaining(status.days_remaining);
+			} else {
+				setTrialDaysRemaining(null);
+			}
+		} catch (error) {
+			console.error('Failed to refresh license state:', error);
+		}
+	}, []);
+
 	if (!appState) {
 		return (
 			<div className='h-screen w-screen bg-zetta-bg flex items-center justify-center'>
@@ -387,6 +361,9 @@ function App() {
 				onMuteToggle={handleMuteToggle}
 				theme={appState.theme}
 				onThemeChange={handleThemeChange}
+				licenseState={licenseState}
+				trialDaysRemaining={trialDaysRemaining}
+				onLicenseChange={refreshLicenseState}
 			/>
 
 			{/* Compact 2x2 Grid Layout */}
@@ -419,6 +396,8 @@ function App() {
 							onEditProfile={openEditProfile}
 							errorMessage={profileError}
 							onErrorDismiss={() => setProfileError(null)}
+							licenseType={licenseState?.license_type}
+							trialDaysRemaining={trialDaysRemaining}
 						/>
 					</div>
 
@@ -431,6 +410,8 @@ function App() {
 							devMode={appState.dev_mode}
 							timerStatus={appState.timer.status}
 							activeProfileName={appState.active_profile.name}
+							licenseType={licenseState?.license_type}
+							trialDaysRemaining={trialDaysRemaining}
 						/>
 					</div>
 
@@ -515,12 +496,8 @@ function App() {
 				}
 				onSubmit={handleCreateProfile}
 			/>
-
-			{/* Debug Panel - Only visible in dev builds or when dev mode is enabled */}
-			{(import.meta.env.DEV || appState.dev_mode) && <DebugPanel />}
 		</div>
 	);
 }
 
 export default App;
-

@@ -46,6 +46,7 @@ export function SettingsPanel({
   const [licenseKey, setLicenseKey] = useState('');
   const [licenseMessage, setLicenseMessage] = useState('');
   const [currentLicense, setCurrentLicense] = useState<string>('Free');
+  const [trialDaysRemaining, setTrialDaysRemaining] = useState<number | null>(null);
 
   useEffect(() => {
     fetchLicenseState();
@@ -55,6 +56,14 @@ export function SettingsPanel({
     try {
       const state = await invoke<{ license_type: string }>('get_license');
       setCurrentLicense(state.license_type || 'Free');
+      
+      // Fetch trial status if in trial
+      if (state.license_type === 'Trial') {
+        const trialStatus = await invoke<{ state: string; days_remaining: number }>('get_trial_status');
+        setTrialDaysRemaining(trialStatus.days_remaining);
+      } else {
+        setTrialDaysRemaining(null);
+      }
     } catch (error) {
       console.error('Failed to fetch license:', error);
     }
@@ -425,7 +434,9 @@ export function SettingsPanel({
                 Current License
               </div>
               <div className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
-                {currentLicense}
+                {currentLicense === 'Trial' && trialDaysRemaining !== null 
+                  ? `Trial - ${trialDaysRemaining} days left` 
+                  : currentLicense}
               </div>
             </div>
             <form onSubmit={handleActivateLicense}>

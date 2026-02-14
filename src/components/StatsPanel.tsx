@@ -23,6 +23,8 @@ interface StatsPanelProps {
   devMode?: boolean;
   timerStatus?: string;
   activeProfileName?: string;
+  licenseType?: string;
+  trialDaysRemaining?: number | null;
 }
 
 function MonitorSection({ title, cpuUsage, memoryUsed, memoryTotal }: {
@@ -81,12 +83,22 @@ function MonitorSection({ title, cpuUsage, memoryUsed, memoryTotal }: {
   );
 }
 
-export function StatsPanel({ stats, systemStats, appStats, devMode, timerStatus, activeProfileName }: StatsPanelProps) {
+export function StatsPanel({ stats, systemStats, appStats, devMode, timerStatus, activeProfileName, licenseType, trialDaysRemaining }: StatsPanelProps) {
+  const isTrial = licenseType === 'Trial';
+
   return (
     <div className="p-2 md:p-3 lg:p-4 bg-zetta-card border border-zetta-border rounded-lg h-full flex flex-col gap-2 md:gap-3 overflow-auto">
-      <h2 className="text-xs md:text-sm font-medium uppercase tracking-wider flex-shrink-0" style={{ color: 'var(--text-secondary)' }}>
-        Statistics
-      </h2>
+      <div className="flex items-center justify-between flex-shrink-0">
+        <h2 className="text-xs md:text-sm font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+          Statistics
+        </h2>
+        {isTrial && trialDaysRemaining !== null && trialDaysRemaining !== undefined && (
+          <div className="flex items-center gap-1.5 px-2 py-0.5 bg-amber-500/20 rounded border border-amber-500/30">
+            <span className="text-[10px] md:text-xs font-medium" style={{ color: '#f59e0b' }}>Trial</span>
+            <span className="text-[10px] md:text-xs" style={{ color: '#f59e0b' }}>{trialDaysRemaining}d left</span>
+          </div>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 gap-1 md:gap-2 flex-shrink-0">
         <div className="p-2 md:p-3 bg-zetta-bg rounded-lg border border-zetta-border">
@@ -147,4 +159,5 @@ export function StatsPanel({ stats, systemStats, appStats, devMode, timerStatus,
     </div>
   );
 }
+
 
