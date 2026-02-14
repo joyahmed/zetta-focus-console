@@ -1044,6 +1044,59 @@ fn process_command(
             }
         },
 
+        // Dev mode commands - only available when dev_mode is enabled
+        "engine" => {
+            if !app_state.dev_mode {
+                return "Error: Dev mode required. Run 'devmode on' first.".to_string();
+            }
+            match args.first() {
+                Some(&"state") => {
+                    format!(
+                        "Engine State:\n  Timer: {:?}\n  Remaining: {}s\n  Profile: {}\n  Override: {:?}\n  Dev Mode: {}\n  Ambience: {}",
+                        app_state.timer.status,
+                        app_state.timer.remaining_seconds,
+                        app_state.active_profile.name,
+                        app_state.session_override,
+                        app_state.dev_mode,
+                        app_state.ambience_enabled
+                    )
+                }
+                Some(&"reset") => {
+                    app_state.timer = TimerState {
+                        remaining_seconds: 25 * 60,
+                        total_seconds: 25 * 60,
+                        status: TimerStatus::Idle,
+                        session_type: SessionType::Focus,
+                    };
+                    app_state.session_override = None;
+                    app_state.stats = Stats {
+                        sessions_today: 0,
+                        total_focus_minutes: 0,
+                        current_streak: 0,
+                        last_session_duration: 0,
+                    };
+                    "Engine reset to defaults.".to_string()
+                }
+                _ => "Error: Usage: engine state | reset".to_string()
+            }
+        }
+
+        "app" => {
+            if !app_state.dev_mode {
+                return "Error: Dev mode required. Run 'devmode on' first.".to_string();
+            }
+            match args.first() {
+                Some(&"usage") => {
+                    format!(
+                        "App Usage:\n  CPU: {:.1}%\n  Memory: {} MB",
+                        app_state.app_stats.cpu_usage,
+                        app_state.app_stats.memory_used
+                    )
+                }
+                _ => "Error: Usage: app usage".to_string()
+            }
+        }
+
         "system" | "sysinfo" => {
             let mut sys = System::new_all();
             sys.refresh_all();
@@ -1186,6 +1239,22 @@ pub fn tick_timer(state: State<EngineState>, app_handle: AppHandle) -> Result<()
             app_state.stats.sessions_today += 1;
             app_state.stats.total_focus_minutes += app_state.timer.total_seconds / 60;
             app_state.stats.last_session_duration = app_state.timer.total_seconds / 60;
+
+            // Emit session completion summary
+            let total_focus = app_state.timer.total_seconds;
+            let focus_mins = total_focus / 60;
+            let focus_secs = total_focus % 60;
+
+            let summary = format!(
+                "Session Complete!\n  Focus Time: {}m {}s\n  Profile: {}\n  Sessions Today: {}",
+                focus_mins,
+                focus_secs,
+                app_state.active_profile.name,
+                app_state.stats.sessions_today
+            );
+
+            let _ = app_handle.emit("session-complete", summary);
+
             // Clear override when session completes naturally
             app_state.session_override = None;
         }

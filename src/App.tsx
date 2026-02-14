@@ -3,6 +3,7 @@ import { listen } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useState } from 'react';
 import { AmbientPanel } from './components/AmbientPanel';
 import { Header } from './components/Header';
+import { HelpModal } from './components/HelpModal';
 import { ProfilePanel } from './components/ProfilePanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { SoundControl } from './components/SoundControl';
@@ -83,6 +84,9 @@ function App() {
 	const [appState, setAppState] = useState<AppState | null>(null);
 	const [terminalKey, setTerminalKey] = useState(0);
 	const [settingsOpen, setSettingsOpen] = useState(false);
+	const [helpOpen, setHelpOpen] = useState(false);
+	const [terminalFocused, setTerminalFocused] = useState(false);
+	const [sessionSummary, setSessionSummary] = useState<string | null>(null);
 
 	useEffect(() => {
 		invoke<AppState>('get_state')
@@ -95,8 +99,14 @@ function App() {
 			setAppState(event.payload.state);
 		});
 
+		// Listen for session completion events
+		const unlistenSession = listen<string>('session-complete', event => {
+			setSessionSummary(event.payload);
+		});
+
 		return () => {
 			unlisten.then(fn => fn());
+			unlistenSession.then(fn => fn());
 		};
 	}, []);
 
@@ -213,6 +223,12 @@ function App() {
 						<TerminalPanel
 							key={terminalKey}
 							onCommand={processCommand}
+							onHelp={() => setHelpOpen(true)}
+							isFocused={terminalFocused}
+							onFocus={() => setTerminalFocused(true)}
+							onBlur={() => setTerminalFocused(false)}
+							sessionSummary={sessionSummary}
+							onSummaryRead={() => setSessionSummary(null)}
 						/>
 					</div>
 
@@ -256,6 +272,11 @@ function App() {
 				onDevModeToggle={handleDevModeToggle}
 				ambienceEnabled={appState.ambience_enabled}
 				onAmbienceToggle={handleAmbienceToggle}
+			/>
+
+			<HelpModal
+				isOpen={helpOpen}
+				onClose={() => setHelpOpen(false)}
 			/>
 		</div>
 	);
