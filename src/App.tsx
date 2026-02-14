@@ -270,6 +270,9 @@ function App() {
 							stats={appState.stats}
 							systemStats={appState.system_stats}
 							appStats={appState.app_stats}
+							devMode={appState.dev_mode}
+							timerStatus={appState.timer.status}
+							activeProfileName={appState.active_profile.name}
 						/>
 					</div>
 
