@@ -14,6 +14,7 @@ interface SettingsPanelProps {
   onSoundStop: () => void;
   backgroundType: 'gradient' | 'particles' | 'custom';
   onBackgroundTypeChange: (type: 'gradient' | 'particles') => void;
+  onResetSettings: () => void;
 }
 
 export function SettingsPanel({
@@ -31,7 +32,8 @@ export function SettingsPanel({
   onSoundPlay,
   onSoundStop,
   backgroundType,
-  onBackgroundTypeChange
+  onBackgroundTypeChange,
+  onResetSettings
 }: SettingsPanelProps) {
   return (
     <>
@@ -39,9 +41,9 @@ export function SettingsPanel({
         className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         onClick={onClose}
       />
-      <div className={`fixed top-0 right-0 h-full w-80 bg-zetta-card border-l border-zetta-border z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-        <div className="flex items-center justify-between p-4 border-b border-zetta-border">
-          <h2 className="text-lg font-semibold text-white">Settings</h2>
+      <div className={`fixed top-0 right-0 h-full w-80 max-sm:w-full sm:w-72 md:w-80 bg-zetta-card border-l border-zetta-border z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className="flex items-center justify-between p-3 sm:p-4 border-b border-zetta-border">
+          <h2 className="text-base sm:text-lg font-semibold text-white">Settings</h2>
           <button
             onClick={onClose}
             className="p-1 text-gray-400 hover:text-white transition-colors"
@@ -52,7 +54,7 @@ export function SettingsPanel({
           </button>
         </div>
 
-        <div className="p-4 space-y-6">
+        <div className="p-3 sm:p-4 space-y-4 sm:space-y-6 overflow-y-auto h-[calc(100%-60px)]">
           <section>
             <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">
               Visual
@@ -163,14 +165,6 @@ export function SettingsPanel({
                 />
                 <span className="text-sm text-gray-300">Subtle Particles</span>
               </label>
-              <label className="flex items-center gap-3 p-3 bg-zetta-bg rounded-lg border border-zetta-border opacity-50">
-                <input type="radio" name="bg" disabled className="accent-blue-500" />
-                <span className="text-sm text-gray-300">Custom Image (Coming Soon)</span>
-              </label>
-              <label className="flex items-center gap-3 p-3 bg-zetta-bg rounded-lg border border-zetta-border opacity-50">
-                <input type="radio" name="bg" disabled className="accent-blue-500" />
-                <span className="text-sm text-gray-300">Custom Video (Coming Soon)</span>
-              </label>
             </div>
           </section>
 
@@ -193,7 +187,9 @@ export function SettingsPanel({
             <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">
               Data
             </h3>
-            <button className="w-full p-3 bg-zetta-bg rounded-lg border border-zetta-border text-left hover:border-red-500/50 transition-colors group">
+            <button
+              onClick={onResetSettings}
+              className="w-full p-3 bg-zetta-bg rounded-lg border border-zetta-border text-left hover:border-red-500/50 transition-colors group">
               <div className="text-sm text-gray-300 group-hover:text-red-400">Reset Settings</div>
               <div className="text-xs text-gray-500 mt-0.5">Restore default configuration</div>
             </button>
@@ -209,3 +205,4 @@ export function SettingsPanel({
     </>
   );
 }
+

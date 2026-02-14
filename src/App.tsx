@@ -256,6 +256,14 @@ function App() {
 		}
 	}, []);
 
+	const handleResetSettings = useCallback(async () => {
+		try {
+			await invoke('execute_command', { command: 'reset' });
+		} catch (error) {
+			console.error(error);
+		}
+	}, []);
+
 	const handleCreateProfile = useCallback(
 		async (profileData: {
 			id?: string;
@@ -398,6 +406,7 @@ function App() {
 				onSoundStop={handleSoundStop}
 				backgroundType={appState.active_profile.background_type}
 				onBackgroundTypeChange={handleBackgroundTypeChange}
+				onResetSettings={handleResetSettings}
 			/>
 
 			<HelpModal

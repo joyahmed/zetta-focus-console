@@ -104,18 +104,6 @@ export function AmbientPanel({
     return null;
   }
 
-  // Generate generic ambient particles (always visible in particles mode)
-  const ambientParticles = useMemo<Particle[]>(() => {
-    return Array.from({ length: 20 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      size: 0.5 + Math.random() * 1,
-      delay: Math.random() * 5,
-      duration: 10 + Math.random() * 10,
-      opacity: 0.05 + Math.random() * 0.1,
-    }));
-  }, []);
-
   // Render gradient-only background (no particles)
   const renderGradientBackground = () => {
     return (
@@ -158,32 +146,23 @@ export function AmbientPanel({
     );
   };
 
-  // Render particles background (with seasonal animations + ambient particles)
+  // Render particles background (with seasonal animations)
   const renderParticlesBackground = () => {
-    return (
-      <div className="relative w-full h-full overflow-hidden">
-        {/* Ambient floating particles - always visible */}
-        {ambientParticles.map(particle => (
-          <div
-            key={particle.id}
-            className={`absolute rounded-full bg-white ${isPaused ? 'animation-paused' : ''}`}
-            style={{
-              left: `${particle.x}%`,
-              width: particle.size,
-              height: particle.size,
-              opacity: particle.opacity,
-              animation: isPaused
-                ? 'none'
-                : `ambientFloat ${particle.duration}s ease-in-out ${particle.delay}s infinite`,
-            }}
-          />
-        ))}
-        {/* Seasonal particles */}
-        {season === 'winter' && (
-          <>
+    switch (season) {
+      case 'winter':
+        return (
+          <div className="relative w-full h-full overflow-hidden">
+            {/* Subtle gradient base */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(135deg, ${glowColor}08 0%, transparent 50%, ${glowColor}03 100%)`,
+              }}
+            />
+            {/* Snow particles */}
             {snowParticles.map(particle => (
               <div
-                key={`snow-${particle.id}`}
+                key={particle.id}
                 className={`absolute rounded-full bg-white ${isPaused ? 'animation-paused' : ''}`}
                 style={{
                   left: `${particle.x}%`,
@@ -203,11 +182,19 @@ export function AmbientPanel({
                 background: `linear-gradient(to top, ${glowColor}, transparent)`,
               }}
             />
-          </>
-        )}
+          </div>
+        );
 
-        {season === 'summer' && (
-          <>
+      case 'summer':
+        return (
+          <div className="relative w-full h-full overflow-hidden">
+            {/* Subtle gradient base */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(135deg, ${glowColor}08 0%, transparent 50%, ${glowColor}03 100%)`,
+              }}
+            />
             {/* Heat shimmer effect */}
             <div
               className={`absolute inset-0 ${isPaused ? 'animation-paused' : ''}`}
@@ -235,15 +222,23 @@ export function AmbientPanel({
                 animation: isPaused ? 'none' : `float ${10 * speedMultiplier}s ease-in-out 2s infinite`,
               }}
             />
-          </>
-        )}
+          </div>
+        );
 
-        {season === 'spring' && (
-          <>
+      case 'spring':
+        return (
+          <div className="relative w-full h-full overflow-hidden">
+            {/* Subtle gradient base */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(135deg, ${glowColor}08 0%, transparent 50%, ${glowColor}03 100%)`,
+              }}
+            />
             {/* Drifting particles */}
             {springParticles.map(particle => (
               <div
-                key={`spring-${particle.id}`}
+                key={particle.id}
                 className={`absolute rounded-full ${isPaused ? 'animation-paused' : ''}`}
                 style={{
                   left: `${particle.x}%`,
@@ -267,15 +262,23 @@ export function AmbientPanel({
                 transform: 'translate(-50%, -50%)',
               }}
             />
-          </>
-        )}
+          </div>
+        );
 
-        {season === 'autumn' && (
-          <>
+      case 'autumn':
+        return (
+          <div className="relative w-full h-full overflow-hidden">
+            {/* Subtle gradient base */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(135deg, ${glowColor}08 0%, transparent 50%, ${glowColor}03 100%)`,
+              }}
+            />
             {/* Drifting leaves */}
             {leaves.map(leaf => (
               <div
-                key={`leaf-${leaf.id}`}
+                key={leaf.id}
                 className={`absolute ${isPaused ? 'animation-paused' : ''}`}
                 style={{
                   left: `${leaf.x}%`,
@@ -296,10 +299,9 @@ export function AmbientPanel({
                 />
               </div>
             ))}
-          </>
-        )}
-      </div>
-    );
+          </div>
+        );
+    }
   };
 
   // Choose render mode based on backgroundType
@@ -329,27 +331,6 @@ export function AmbientPanel({
 
       {/* CSS Animations */}
       <style>{`
-        @keyframes ambientFloat {
-          0%, 100% {
-            transform: translateY(0) translateX(0);
-            opacity: 0;
-          }
-          20% {
-            opacity: 0.3;
-          }
-          50% {
-            transform: translateY(80px) translateX(10px);
-            opacity: 0.2;
-          }
-          80% {
-            opacity: 0.1;
-          }
-          100% {
-            transform: translateY(160px) translateX(-5px);
-            opacity: 0;
-          }
-        }
-
         @keyframes snowfall {
           0% {
             transform: translateY(-10px) translateX(0);
