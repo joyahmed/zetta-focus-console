@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { AmbientPanel } from './components/AmbientPanel';
 import { Header } from './components/Header';
 import { HelpModal } from './components/HelpModal';
+import { ProfileModal } from './components/ProfileModal';
 import { ProfilePanel } from './components/ProfilePanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { StatsPanel } from './components/StatsPanel';
@@ -29,6 +30,7 @@ interface Profile {
 	glow_color: string;
 	sound_file: string;
 	default_volume: number;
+	is_preset: boolean;
 }
 
 interface Stats {
@@ -85,7 +87,13 @@ function App() {
 	const [settingsOpen, setSettingsOpen] = useState(false);
 	const [helpOpen, setHelpOpen] = useState(false);
 	const [terminalOpen, setTerminalOpen] = useState(false);
-	const [sessionSummary, setSessionSummary] = useState<string | null>(null);
+	const [profileModalOpen, setProfileModalOpen] = useState(false);
+	const [profileModalMode, setProfileModalMode] = useState<
+		'create' | 'edit'
+	>('create');
+	const [sessionSummary, setSessionSummary] = useState<string | null>(
+		null
+	);
 
 	useEffect(() => {
 		invoke<AppState>('get_state')
@@ -99,10 +107,13 @@ function App() {
 		});
 
 		// Listen for session completion events
-		const unlistenSession = listen<string>('session-complete', event => {
-			setSessionSummary(event.payload);
-			setTerminalOpen(true); // Open terminal to show summary
-		});
+		const unlistenSession = listen<string>(
+			'session-complete',
+			event => {
+				setSessionSummary(event.payload);
+				setTerminalOpen(true); // Open terminal to show summary
+			}
+		);
 
 		return () => {
 			unlisten.then(fn => fn());
@@ -128,7 +139,8 @@ function App() {
 		};
 
 		window.addEventListener('keydown', handleGlobalKeyDown);
-		return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+		return () =>
+			window.removeEventListener('keydown', handleGlobalKeyDown);
 	}, []);
 
 	useEffect(() => {
@@ -204,7 +216,9 @@ function App() {
 
 	const handleVolumeChange = useCallback(async (volume: number) => {
 		try {
-			await invoke('execute_command', { command: `sound volume ${volume}` });
+			await invoke('execute_command', {
+				command: `sound volume ${volume}`
+			});
 		} catch (error) {
 			console.error(error);
 		}
@@ -216,6 +230,56 @@ function App() {
 		} catch (error) {
 			console.error(error);
 		}
+	}, []);
+
+	const handleSoundPlay = useCallback(async () => {
+		try {
+			await invoke('execute_command', { command: 'sound play' });
+		} catch (error) {
+			console.error(error);
+		}
+	}, []);
+
+	const handleSoundStop = useCallback(async () => {
+		try {
+			await invoke('execute_command', { command: 'sound stop' });
+		} catch (error) {
+			console.error(error);
+		}
+	}, []);
+
+	const handleCreateProfile = useCallback(
+		async (profileData: {
+			id?: string;
+			name: string;
+			focus_min: number;
+			short_break_min: number;
+			long_break_min: number;
+			season: string;
+			intensity: string;
+			sound: string;
+		}) => {
+			let cmd: string;
+			if (profileData.id) {
+				// Edit mode
+				cmd = `profile edit ${profileData.id} "${profileData.name}" ${profileData.focus_min} ${profileData.short_break_min} ${profileData.long_break_min} ${profileData.season} ${profileData.intensity} ${profileData.sound}`;
+			} else {
+				// Create mode
+				cmd = `profile create "${profileData.name}" ${profileData.focus_min} ${profileData.short_break_min} ${profileData.long_break_min} ${profileData.season} ${profileData.intensity} ${profileData.sound}`;
+			}
+			return await processCommand(cmd);
+		},
+		[processCommand]
+	);
+
+	const openCreateProfile = useCallback(() => {
+		setProfileModalMode('create');
+		setProfileModalOpen(true);
+	}, []);
+
+	const openEditProfile = useCallback(() => {
+		setProfileModalMode('edit');
+		setProfileModalOpen(true);
 	}, []);
 
 	if (!appState) {
@@ -241,7 +305,10 @@ function App() {
 
 			{/* Compact 2x2 Grid Layout */}
 			<main className='flex-1 p-4 overflow-auto'>
-				<div className='grid grid-cols-2 gap-4 h-full' style={{ gridTemplateRows: '1fr 1fr' }}>
+				<div
+					className='grid grid-cols-2 gap-4 h-full'
+					style={{ gridTemplateRows: '1fr 1fr' }}
+				>
 					{/* Top Left: Timer */}
 					<div className='min-h-0'>
 						<TimerPanel
@@ -261,6 +328,8 @@ function App() {
 							profile={appState.active_profile}
 							profiles={appState.profiles}
 							onProfileSwitch={handleProfileSwitch}
+							onCreateProfile={openCreateProfile}
+							onEditProfile={openEditProfile}
 						/>
 					</div>
 
@@ -280,7 +349,9 @@ function App() {
 					<div className='min-h-0'>
 						<AmbientPanel
 							season={appState.active_profile.season}
-							motionIntensity={appState.active_profile.motion_intensity}
+							motionIntensity={
+								appState.active_profile.motion_intensity
+							}
 							glowColor={appState.active_profile.glow_color}
 							isRunning={appState.timer.status === 'running'}
 							isEnabled={appState.ambience_enabled}
@@ -309,11 +380,43 @@ function App() {
 				onDevModeToggle={handleDevModeToggle}
 				ambienceEnabled={appState.ambience_enabled}
 				onAmbienceToggle={handleAmbienceToggle}
+				soundVolume={appState.sound_state.volume}
+				onVolumeChange={handleVolumeChange}
+				isMuted={appState.sound_state.is_muted}
+				onMuteToggle={handleMuteToggle}
+				isPlaying={appState.sound_state.is_playing}
+				onSoundPlay={handleSoundPlay}
+				onSoundStop={handleSoundStop}
 			/>
 
 			<HelpModal
 				isOpen={helpOpen}
 				onClose={() => setHelpOpen(false)}
+			/>
+
+			<ProfileModal
+				isOpen={profileModalOpen}
+				onClose={() => setProfileModalOpen(false)}
+				mode={profileModalMode}
+				profile={
+					profileModalMode === 'edit'
+						? {
+								id: appState.active_profile.id,
+								name: appState.active_profile.name,
+								focus_duration:
+									appState.active_profile.focus_duration,
+								short_break_duration:
+									appState.active_profile.short_break_duration,
+								long_break_duration:
+									appState.active_profile.long_break_duration,
+								season: appState.active_profile.season,
+								motion_intensity:
+									appState.active_profile.motion_intensity,
+								sound_file: appState.active_profile.sound_file
+							}
+						: undefined
+				}
+				onSubmit={handleCreateProfile}
 			/>
 		</div>
 	);

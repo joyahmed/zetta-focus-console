@@ -5,9 +5,30 @@ interface SettingsPanelProps {
   onDevModeToggle: () => void;
   ambienceEnabled: boolean;
   onAmbienceToggle: () => void;
+  soundVolume: number;
+  onVolumeChange: (volume: number) => void;
+  isMuted: boolean;
+  onMuteToggle: () => void;
+  isPlaying: boolean;
+  onSoundPlay: () => void;
+  onSoundStop: () => void;
 }
 
-export function SettingsPanel({ isOpen, onClose, devMode, onDevModeToggle, ambienceEnabled, onAmbienceToggle }: SettingsPanelProps) {
+export function SettingsPanel({
+  isOpen,
+  onClose,
+  devMode,
+  onDevModeToggle,
+  ambienceEnabled,
+  onAmbienceToggle,
+  soundVolume,
+  onVolumeChange,
+  isMuted,
+  onMuteToggle,
+  isPlaying,
+  onSoundPlay,
+  onSoundStop
+}: SettingsPanelProps) {
   return (
     <>
       <div
@@ -42,6 +63,73 @@ export function SettingsPanel({ isOpen, onClose, devMode, onDevModeToggle, ambie
                 className={`relative w-11 h-6 rounded-full transition-colors ${ambienceEnabled ? 'bg-blue-500' : 'bg-gray-600'}`}
               >
                 <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${ambienceEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+              </button>
+            </div>
+          </section>
+
+          <section>
+            <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">
+              Sound
+            </h3>
+            <div className="space-y-3">
+              {/* Volume Control */}
+              <div className="p-3 bg-zetta-bg rounded-lg border border-zetta-border">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-300">Volume</span>
+                  <span className="text-xs text-gray-500">{soundVolume}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={soundVolume}
+                  onChange={(e) => onVolumeChange(parseInt(e.target.value))}
+                  className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                />
+              </div>
+
+              {/* Mute Toggle */}
+              <div className="flex items-center justify-between p-3 bg-zetta-bg rounded-lg border border-zetta-border">
+                <div>
+                  <span className="text-sm text-gray-300">Mute</span>
+                  <div className="text-xs text-gray-500 mt-0.5">Silence ambient sound</div>
+                </div>
+                <button
+                  onClick={onMuteToggle}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${isMuted ? 'bg-red-500' : 'bg-gray-600'}`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${isMuted ? 'translate-x-5' : 'translate-x-0'}`} />
+                </button>
+              </div>
+
+              {/* Play/Stop Button */}
+              <button
+                onClick={isPlaying ? onSoundStop : onSoundPlay}
+                className={`w-full p-3 rounded-lg border transition-colors ${
+                  isPlaying
+                    ? 'bg-red-500/10 border-red-500/30 hover:bg-red-500/20 text-red-400'
+                    : 'bg-zetta-bg border-zetta-border hover:border-gray-500 text-gray-300'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  {isPlaying ? (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                      </svg>
+                      <span className="text-sm">Stop Ambient Sound</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="text-sm">Play Ambient Sound</span>
+                    </>
+                  )}
+                </div>
               </button>
             </div>
           </section>
