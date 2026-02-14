@@ -1,6 +1,8 @@
 use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink, Source};
 use serde::{Deserialize, Serialize};
+use std::fs;
 use std::io::Cursor;
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use sysinfo::System;
@@ -58,6 +60,156 @@ fn format_time(seconds: u32) -> String {
     let mins = seconds / 60;
     let secs = seconds % 60;
     format!("{:02}:{:02}", mins, secs)
+}
+
+// ============================================================================
+// DATA PERSISTENCY LAYER
+// ============================================================================
+
+/// Preferences - User configuration that is persisted to disk
+/// This is separate from runtime engine state
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Preferences {
+    pub active_profile_id: String,
+    pub ambience_enabled: bool,
+    pub volume: u8,
+    pub is_muted: bool,
+    pub dev_mode: bool,
+    pub custom_profiles: Vec<Profile>,
+}
+
+impl Default for Preferences {
+    fn default() -> Self {
+        Self {
+            active_profile_id: "winter-deep".to_string(),
+            ambience_enabled: true,
+            volume: 50,
+            is_muted: false,
+            dev_mode: false,
+            custom_profiles: vec![],
+        }
+    }
+}
+
+/// License State - Persisted license information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LicenseState {
+    pub license_type: String,
+    pub issued_at: Option<String>,
+    pub expires_at: Option<String>,
+    pub signature: Option<String>,
+}
+
+impl Default for LicenseState {
+    fn default() -> Self {
+        Self {
+            license_type: "Free".to_string(),
+            issued_at: None,
+            expires_at: None,
+            signature: None,
+        }
+    }
+}
+
+/// Get the app data directory for the current OS
+fn get_app_data_dir() -> PathBuf {
+    let base_dir = dirs::data_dir().unwrap_or_else(|| PathBuf::from("."));
+    base_dir.join("ZettaFocus")
+}
+
+/// Get the preferences file path
+fn get_preferences_path() -> PathBuf {
+    get_app_data_dir().join("preferences.json")
+}
+
+/// Get the license file path
+fn get_license_path() -> PathBuf {
+    get_app_data_dir().join("license.json")
+}
+
+/// Load preferences from disk, with fallback to defaults if corrupted or missing
+fn load_preferences() -> Preferences {
+    let path = get_preferences_path();
+
+    eprintln!("[DEBUG] Loading preferences from: {:?}", path);
+
+    if !path.exists() {
+        eprintln!("[DEBUG] Preferences file does not exist, using defaults");
+        return Preferences::default();
+    }
+
+    match fs::read_to_string(&path) {
+        Ok(content) => {
+            eprintln!("[DEBUG] Preferences content: {}", content);
+            match serde_json::from_str::<Preferences>(&content) {
+                Ok(prefs) => prefs,
+                Err(e) => {
+                    eprintln!("[DEBUG] Failed to parse preferences: {}", e);
+                    Preferences::default()
+                }
+            }
+        }
+        Err(e) => {
+            eprintln!("[DEBUG] Failed to read preferences file: {}", e);
+            Preferences::default()
+        }
+    }
+}
+
+/// Save preferences to disk
+fn save_preferences(prefs: &Preferences) -> Result<(), String> {
+    let path = get_preferences_path();
+
+    eprintln!("[DEBUG] Saving preferences to: {:?}", path);
+
+    // Ensure directory exists
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+
+    let content = serde_json::to_string_pretty(prefs).map_err(|e| e.to_string())?;
+    eprintln!("[DEBUG] Preferences content to save: {}", content);
+    fs::write(&path, content).map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+/// Load license state from disk
+fn load_license() -> LicenseState {
+    let path = get_license_path();
+
+    if !path.exists() {
+        return LicenseState::default();
+    }
+
+    match fs::read_to_string(&path) {
+        Ok(content) => match serde_json::from_str::<LicenseState>(&content) {
+            Ok(license) => license,
+            Err(e) => {
+                eprintln!("Failed to parse license: {}", e);
+                LicenseState::default()
+            }
+        },
+        Err(e) => {
+            eprintln!("Failed to read license file: {}", e);
+            LicenseState::default()
+        }
+    }
+}
+
+/// Save license state to disk
+fn save_license(license: &LicenseState) -> Result<(), String> {
+    let path = get_license_path();
+
+    // Ensure directory exists
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+
+    let content = serde_json::to_string_pretty(license).map_err(|e| e.to_string())?;
+    fs::write(&path, content).map_err(|e| e.to_string())?;
+
+    Ok(())
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -473,6 +625,55 @@ impl AppState {
             ambience_enabled: true,
         }
     }
+
+    /// Load preferences from disk and apply to state
+    pub fn load_preferences(&mut self) {
+        let prefs = load_preferences();
+
+        // Apply preferences to state
+        self.dev_mode = prefs.dev_mode;
+        self.ambience_enabled = prefs.ambience_enabled;
+        self.sound_state.volume = prefs.volume;
+        self.sound_state.is_muted = prefs.is_muted;
+
+        // Add custom profiles to the profiles list
+        for profile in prefs.custom_profiles {
+            // Only add if not already in list
+            if !self.profiles.iter().any(|p| p.id == profile.id) {
+                self.profiles.push(profile);
+            }
+        }
+
+        // Set active profile if it exists
+        if let Some(profile) = self
+            .profiles
+            .iter()
+            .find(|p| p.id == prefs.active_profile_id)
+        {
+            self.active_profile = profile.clone();
+        }
+    }
+
+    /// Save current state as preferences to disk
+    pub fn save_preferences(&self) -> Result<(), String> {
+        // Get custom profiles (non-preset profiles)
+        let custom_profiles: Vec<Profile> = self
+            .profiles
+            .iter()
+            .filter(|p| !p.is_preset)
+            .cloned()
+            .collect();
+
+        let prefs = Preferences {
+            active_profile_id: self.active_profile.id.clone(),
+            ambience_enabled: self.ambience_enabled,
+            volume: self.sound_state.volume,
+            is_muted: self.sound_state.is_muted,
+            dev_mode: self.dev_mode,
+            custom_profiles,
+        };
+        save_preferences(&prefs)
+    }
 }
 
 pub struct EngineState {
@@ -482,8 +683,10 @@ pub struct EngineState {
 
 impl EngineState {
     pub fn new() -> Self {
+        let mut app_state = AppState::new();
+        app_state.load_preferences();
         Self {
-            app_state: Mutex::new(AppState::new()),
+            app_state: Mutex::new(app_state),
             sound_manager: Mutex::new(SoundManager::new()),
         }
     }
@@ -515,6 +718,15 @@ pub fn execute_command(
     let mut sound_manager = state.sound_manager.lock().map_err(|e| e.to_string())?;
 
     let result = process_command(&mut app_state, &mut sound_manager, &cmd, &args);
+
+    // Save preferences after command execution (only for preference-modifying commands)
+    let should_save = matches!(
+        cmd.as_str(),
+        "devmode" | "ambience" | "sound" | "profile" | "background" | "reset"
+    );
+    if should_save {
+        let _ = app_state.save_preferences();
+    }
 
     let _ = app_handle.emit(
         "state-updated",
@@ -1405,10 +1617,7 @@ fn process_command(
                 "Background set to: particles".to_string()
             }
             _ => {
-                format!(
-                    "Background: {:?}",
-                    app_state.active_profile.background_type
-                )
+                format!("Background: {:?}", app_state.active_profile.background_type)
             }
         },
 
@@ -1439,7 +1648,8 @@ fn process_command(
                 app_state.sound_state.current_sound = None;
             }
             // Reset to default profile (Winter Deep) - this includes background_type to Gradient
-            if let Some(default_profile) = app_state.profiles.iter().find(|p| p.id == "winter-deep") {
+            if let Some(default_profile) = app_state.profiles.iter().find(|p| p.id == "winter-deep")
+            {
                 app_state.active_profile = default_profile.clone();
             }
             "Settings reset to defaults.".to_string()
