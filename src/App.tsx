@@ -496,8 +496,8 @@ function App() {
 				onSubmit={handleCreateProfile}
 			/>
 
-			{/* Debug Panel - Only visible in dev builds */}
-			{import.meta.env.DEV && <DebugPanel />}
+			{/* Debug Panel - Only visible in dev builds or when dev mode is enabled */}
+			{(import.meta.env.DEV || appState.dev_mode) && <DebugPanel />}
 		</div>
 	);
 }

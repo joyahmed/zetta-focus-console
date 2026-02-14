@@ -1,6 +1,6 @@
 //! Settings module - Settings and license commands
 
-use crate::license::{get_license_state, LicenseManager};
+use crate::license::LicenseManager;
 #[cfg(debug_assertions)]
 use crate::license::{DevLicenseOverride, DevOverrides};
 use crate::types::{LicenseState, StateEvent, StrictModeState, TimerStatus};
@@ -11,7 +11,14 @@ use tauri::{AppHandle, Emitter, State};
 #[tauri::command]
 pub fn get_license(state: State<EngineState>) -> Result<LicenseState, String> {
     let license_manager = state.license_manager.lock().map_err(|e| e.to_string())?;
-    Ok(get_license_state())
+
+    // Use the license_manager from state directly instead of creating a new instance
+    Ok(LicenseState {
+        license_type: license_manager.get_license_type(),
+        issued_at: None,
+        expires_at: None,
+        signature: license_manager.get_signature(),
+    })
 }
 
 #[tauri::command]

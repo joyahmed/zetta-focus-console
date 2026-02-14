@@ -2,13 +2,15 @@
 
 ## Philosophy
 
-Free = Complete engine
+Free = Complete engine (with limits)
 Pro = Commitment & precision
 Founder = Permanent status
 
 The engine is never crippled.
-Free must remain fully usable.
-Pro adds intentional friction and deeper control.
+Free must feel complete, not artificially blocked.
+Free gets 1 custom profile to test the system.
+Trial gets full Pro experience to sell the upgrade.
+Pro adds discipline and depth.
 
 Zetta Focus Console is not a decorative timer.
 It is a structured focus system.
@@ -17,7 +19,7 @@ It is a structured focus system.
 
 # 🟢 Free — The Core Focus Engine
 
-Free includes the full timing engine.
+Free includes the full timing engine with **1 custom profile**.
 
 ### Core Engine
 
@@ -27,6 +29,13 @@ Free includes the full timing engine.
 - Start / Pause / Stop
 - Automatic work → break transitions
 - Restore last base configuration
+
+### Custom Profile (Limited)
+
+- Can create **1 custom profile**
+- Can edit the custom profile
+- Cannot create multiple saved profiles
+- Cannot save multiple presets
 
 ### Interface
 
@@ -42,8 +51,25 @@ Free includes the full timing engine.
 - `clear`
 
 Free supports serious daily use.
-
 No essential functionality is removed.
+
+---
+
+# 🟣 Trial — The Pro Experience (14 Days)
+
+Trial should feel like Pro. Not a weak teaser — but the full experience.
+
+### All Pro Features Unlocked
+
+- Unlimited custom profiles
+- Multiple presets
+- Advanced session chaining
+- Strict Mode
+- Developer diagnostics
+- Full ambience system
+
+Trial must sell Pro.
+Not tease it weakly.
 
 ---
 
@@ -62,7 +88,6 @@ When enabled for a session:
 - Requires explicit confirmation before activation
 
 Strict Mode is optional per session.
-
 It is not enforced globally.
 
 ---
@@ -115,8 +140,9 @@ It is a permanent status tier.
 
 # 🎯 Distinction Summary
 
-Free → Functional daily focus
-Pro → Structured commitment
+Free → Functional daily focus + 1 custom profile
+Trial → Full Pro experience (to sell upgrade)
+Pro → Structured commitment + unlimited profiles
 Founder → Permanent origin status
 
 The engine remains intact.

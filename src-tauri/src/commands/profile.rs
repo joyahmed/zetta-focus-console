@@ -14,7 +14,7 @@ pub fn profile_command(
         Some(&"create") => create_profile(args, app_state, is_pro),
         Some(&"delete") => delete_profile(args, app_state),
         Some(&"edit") => edit_profile(args, app_state, is_pro),
-        Some(&"duplicate") => duplicate_profile(args, app_state),
+        Some(&"duplicate") => duplicate_profile(args, app_state, is_pro),
         Some(&"switch") => switch_profile(args, app_state, sound_manager),
         None => format!(
             "Current profile: {}\nUse \"profile list\" to see all profiles.",
@@ -37,8 +37,13 @@ fn list_profiles(app_state: &AppState) -> String {
 }
 
 fn create_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String {
-    if !is_pro {
-        return "Error: Custom profiles require Pro license. Run 'license upgrade' for Pro access.".to_string();
+    // Check if user can create profile based on their tier
+    if !app_state.can_create_profile(is_pro) {
+        if is_pro {
+            return "Error: Cannot create more profiles.".to_string();
+        } else {
+            return "Error: Free tier is limited to 1 custom profile. Upgrade to Pro for unlimited profiles.".to_string();
+        }
     }
 
     if args.len() < 8 {
@@ -170,14 +175,19 @@ fn delete_profile(args: &[&str], app_state: &mut AppState) -> String {
 }
 
 fn edit_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String {
-    if !is_pro {
-        return "Error: Editing profiles requires Pro license. Run 'license upgrade' for Pro access.".to_string();
-    }
-
     if args.len() < 9 {
         return "Usage: profile edit <id> <name> <focus_min> <short_break_min> <long_break_min> <season> <intensity> <sound>".to_string();
     }
     let profile_id = args[1];
+
+    // Check if user can edit this profile based on their tier
+    if !app_state.can_edit_profile(is_pro, profile_id) {
+        if is_pro {
+            return "Error: Cannot edit this profile.".to_string();
+        } else {
+            return "Error: Free tier can only edit your single custom profile. Upgrade to Pro for unlimited editing.".to_string();
+        }
+    }
     let new_name = args[2].to_string();
 
     let profile_ref = app_state.profiles.iter().find(|p| p.id == profile_id);
@@ -254,7 +264,16 @@ fn edit_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String
     }
 }
 
-fn duplicate_profile(args: &[&str], app_state: &mut AppState) -> String {
+fn duplicate_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String {
+    // Check if user can create more profiles based on their tier
+    if !app_state.can_create_profile(is_pro) {
+        if is_pro {
+            return "Error: Cannot duplicate profile.".to_string();
+        } else {
+            return "Error: Free tier is limited to 1 custom profile. Upgrade to Pro for unlimited profiles.".to_string();
+        }
+    }
+
     if args.len() < 3 {
         return "Usage: profile duplicate <source_id> <new_id>".to_string();
     }

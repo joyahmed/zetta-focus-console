@@ -24,6 +24,21 @@ Rust is the authority. UI never decides license validity.
 
 ------------------------------------------------------------------------
 
+# 📊 Feature Gating Summary
+
+| Feature | Free | Trial | Pro | Founder |
+|---------|------|-------|-----|---------|
+| Core Timer | ✅ | ✅ | ✅ | ✅ |
+| Custom Profiles | 1 | Unlimited | Unlimited | Unlimited |
+| Edit Profile | 1 | ✅ | ✅ | ✅ |
+| Strict Mode | ❌ | ✅ | ✅ | ✅ |
+| Dev Diagnostics | ❌ | ✅ | ✅ | ✅ |
+| Runtime Overrides | ❌ | ✅ | ✅ | ✅ |
+
+**Note**: Trial has full Pro access. Trial must sell Pro, not tease it.
+
+------------------------------------------------------------------------
+
 # 🧠 Authority Model
 
 Only one component manages licensing:
