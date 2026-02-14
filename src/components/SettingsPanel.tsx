@@ -3,19 +3,21 @@ interface SettingsPanelProps {
   onClose: () => void;
   devMode: boolean;
   onDevModeToggle: () => void;
+  ambienceEnabled: boolean;
+  onAmbienceToggle: () => void;
 }
 
-export function SettingsPanel({ isOpen, onClose, devMode, onDevModeToggle }: SettingsPanelProps) {
+export function SettingsPanel({ isOpen, onClose, devMode, onDevModeToggle, ambienceEnabled, onAmbienceToggle }: SettingsPanelProps) {
   return (
     <>
-      <div 
+      <div
         className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         onClick={onClose}
       />
       <div className={`fixed top-0 right-0 h-full w-80 bg-zetta-card border-l border-zetta-border z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="flex items-center justify-between p-4 border-b border-zetta-border">
           <h2 className="text-lg font-semibold text-white">Settings</h2>
-          <button 
+          <button
             onClick={onClose}
             className="p-1 text-gray-400 hover:text-white transition-colors"
           >
@@ -24,8 +26,26 @@ export function SettingsPanel({ isOpen, onClose, devMode, onDevModeToggle }: Set
             </svg>
           </button>
         </div>
-        
+
         <div className="p-4 space-y-6">
+          <section>
+            <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">
+              Visual
+            </h3>
+            <div className="flex items-center justify-between p-3 bg-zetta-bg rounded-lg border border-zetta-border">
+              <div>
+                <span className="text-sm text-gray-300">Ambient Animations</span>
+                <div className="text-xs text-gray-500 mt-0.5">Seasonal visual effects</div>
+              </div>
+              <button
+                onClick={onAmbienceToggle}
+                className={`relative w-11 h-6 rounded-full transition-colors ${ambienceEnabled ? 'bg-blue-500' : 'bg-gray-600'}`}
+              >
+                <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${ambienceEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+              </button>
+            </div>
+          </section>
+
           <section>
             <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">
               Background Mode
@@ -56,7 +76,7 @@ export function SettingsPanel({ isOpen, onClose, devMode, onDevModeToggle }: Set
             </h3>
             <div className="flex items-center justify-between p-3 bg-zetta-bg rounded-lg border border-zetta-border">
               <span className="text-sm text-gray-300">Developer Mode</span>
-              <button 
+              <button
                 onClick={onDevModeToggle}
                 className={`relative w-11 h-6 rounded-full transition-colors ${devMode ? 'bg-blue-500' : 'bg-gray-600'}`}
               >

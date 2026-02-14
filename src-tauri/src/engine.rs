@@ -376,6 +376,7 @@ pub struct AppState {
     pub dev_mode: bool,
     pub sound_state: SoundState,
     pub session_override: Option<SessionOverride>,
+    pub ambience_enabled: bool,
 }
 
 impl Default for AppState {
@@ -463,6 +464,7 @@ impl AppState {
             dev_mode: false,
             sound_state: SoundState::new(),
             session_override: None,
+            ambience_enabled: true,
         }
     }
 }
@@ -541,6 +543,7 @@ fn process_command(
   config show            - Show current configuration
   stats                  - Show detailed statistics
   devmode on/off         - Toggle developer mode
+  ambience on/off        - Toggle ambient visuals
   sound play             - Play ambient sound
   sound stop             - Stop ambient sound
   sound volume [0-100]   - Set volume level
@@ -1022,6 +1025,23 @@ fn process_command(
                 "Developer mode disabled.".to_string()
             }
             _ => "Error: Usage: devmode on | off".to_string(),
+        },
+
+        "ambience" => match args.first() {
+            Some(&"on") => {
+                app_state.ambience_enabled = true;
+                "Ambience enabled.".to_string()
+            }
+            Some(&"off") => {
+                app_state.ambience_enabled = false;
+                "Ambience disabled.".to_string()
+            }
+            _ => {
+                format!(
+                    "Ambience: {}",
+                    if app_state.ambience_enabled { "enabled" } else { "disabled" }
+                )
+            }
         },
 
         "system" | "sysinfo" => {

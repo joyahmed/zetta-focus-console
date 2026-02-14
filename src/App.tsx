@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useState } from 'react';
+import { AmbientPanel } from './components/AmbientPanel';
 import { Header } from './components/Header';
 import { ProfilePanel } from './components/ProfilePanel';
 import { SettingsPanel } from './components/SettingsPanel';
@@ -71,6 +72,7 @@ interface AppState {
 	dev_mode: boolean;
 	sound_state: SoundState;
 	session_override: SessionOverride | null;
+	ambience_enabled: boolean;
 }
 
 interface StateEvent {
@@ -157,6 +159,18 @@ function App() {
 		}
 	}, [appState?.dev_mode]);
 
+	const handleAmbienceToggle = useCallback(async () => {
+		if (!appState) return;
+		const cmd = appState.ambience_enabled
+			? 'ambience off'
+			: 'ambience on';
+		try {
+			await invoke('execute_command', { command: cmd });
+		} catch (error) {
+			console.error(error);
+		}
+	}, [appState?.ambience_enabled]);
+
 	if (!appState) {
 		return (
 			<div className='h-screen w-screen bg-zetta-bg flex items-center justify-center'>
@@ -209,6 +223,19 @@ function App() {
 							appStats={appState.app_stats}
 						/>
 					</div>
+
+					{/* Ambient Panel - Full width at bottom */}
+					<div className='min-h-0 md:col-span-2'>
+						<AmbientPanel
+							season={appState.active_profile.season}
+							motionIntensity={
+								appState.active_profile.motion_intensity
+							}
+							glowColor={appState.active_profile.glow_color}
+							isRunning={appState.timer.status === 'running'}
+							isEnabled={appState.ambience_enabled}
+						/>
+					</div>
 				</div>
 			</main>
 
@@ -227,6 +254,8 @@ function App() {
 				onClose={() => setSettingsOpen(false)}
 				devMode={appState.dev_mode}
 				onDevModeToggle={handleDevModeToggle}
+				ambienceEnabled={appState.ambience_enabled}
+				onAmbienceToggle={handleAmbienceToggle}
 			/>
 		</div>
 	);
