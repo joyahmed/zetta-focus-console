@@ -42,61 +42,61 @@ export default function StatsPanel({
 					)}
 			</div>
 
-			<div className='grid grid-cols-2 gap-1 md:gap-2 flex-shrink-0'>
-				<div className='p-2 md:p-3 bg-zetta-bg rounded-lg border border-zetta-border'>
+			<div className='grid grid-cols-2 gap-4 md:gap-6 flex-shrink-0 px-2'>
+				<div className='flex flex-col'>
 					<div
-						className='text-base md:text-lg font-bold'
+						className='text-xl md:text-2xl font-semibold tracking-tight'
 						style={{ color: 'var(--text-primary)' }}
 					>
 						{stats.sessions_today}
 					</div>
 					<div
-						className='text-[10px] md:text-xs'
+						className='text-[10px] md:text-xs uppercase tracking-wide'
 						style={{ color: 'var(--text-muted)' }}
 					>
 						Sessions Today
 					</div>
 				</div>
 
-				<div className='p-2 md:p-3 bg-zetta-bg rounded-lg border border-zetta-border'>
+				<div className='flex flex-col'>
 					<div
-						className='text-base md:text-lg font-bold'
+						className='text-xl md:text-2xl font-semibold tracking-tight'
 						style={{ color: 'var(--text-primary)' }}
 					>
 						{stats.total_focus_minutes}
 					</div>
 					<div
-						className='text-[10px] md:text-xs'
+						className='text-[10px] md:text-xs uppercase tracking-wide'
 						style={{ color: 'var(--text-muted)' }}
 					>
 						Total Focus (min)
 					</div>
 				</div>
 
-				<div className='p-2 md:p-3 bg-zetta-bg rounded-lg border border-zetta-border'>
+				<div className='flex flex-col'>
 					<div
-						className='text-base md:text-lg font-bold'
+						className='text-xl md:text-2xl font-semibold tracking-tight'
 						style={{ color: 'var(--text-primary)' }}
 					>
 						{stats.current_streak}
 					</div>
 					<div
-						className='text-[10px] md:text-xs'
+						className='text-[10px] md:text-xs uppercase tracking-wide'
 						style={{ color: 'var(--text-muted)' }}
 					>
 						Current Streak
 					</div>
 				</div>
 
-				<div className='p-2 md:p-3 bg-zetta-bg rounded-lg border border-zetta-border'>
+				<div className='flex flex-col'>
 					<div
-						className='text-base md:text-lg font-bold'
+						className='text-xl md:text-2xl font-semibold tracking-tight'
 						style={{ color: 'var(--text-primary)' }}
 					>
 						{stats.last_session_duration}
 					</div>
 					<div
-						className='text-[10px] md:text-xs'
+						className='text-[10px] md:text-xs uppercase tracking-wide'
 						style={{ color: 'var(--text-muted)' }}
 					>
 						Last Session (min)
@@ -106,7 +106,7 @@ export default function StatsPanel({
 
 			{/* Dev Mode: Engine State Section */}
 			{devMode && (
-				<div className='p-2 md:p-3 bg-zetta-bg rounded-lg border border-yellow-500/30 flex-shrink-0'>
+				<div className='p-3 rounded border border-yellow-500/20 bg-yellow-500/5 flex-shrink-0'>
 					<div className='flex items-center gap-2 mb-2'>
 						<span
 							className='text-[10px] uppercase tracking-wider font-medium'
@@ -114,30 +114,20 @@ export default function StatsPanel({
 						>
 							Engine State
 						</span>
-						<span
-							className='px-1.5 py-0.5 text-[9px] bg-yellow-500/20 rounded'
-							style={{ color: '#ca8a04' }}
-						>
-							DEV
-						</span>
 					</div>
-					<div className='grid grid-cols-2 gap-2 text-[10px] md:text-xs'>
-						<div className='flex justify-between'>
-							<span style={{ color: 'var(--text-muted)' }}>
-								Timer:
-							</span>
+					<div className='grid grid-cols-2 gap-4 text-[10px]'>
+						<div className='flex flex-col'>
+							<span style={{ color: 'var(--text-muted)' }}>Timer</span>
 							<span
 								style={{ color: 'var(--text-primary)' }}
-								className='font-mono'
+								className='font-mono font-medium'
 							>
 								{timerStatus || 'idle'}
 							</span>
 						</div>
-						<div className='flex justify-between'>
-							<span style={{ color: 'var(--text-muted)' }}>
-								Profile:
-							</span>
-							<span style={{ color: 'var(--text-primary)' }}>
+						<div className='flex flex-col'>
+							<span style={{ color: 'var(--text-muted)' }}>Profile</span>
+							<span style={{ color: 'var(--text-primary)' }} className='font-medium'>
 								{activeProfileName || '-'}
 							</span>
 						</div>
@@ -148,14 +138,12 @@ export default function StatsPanel({
 			<div className='flex gap-2'>
 				<MonitorSection
 					title='System Monitor'
-					cpuUsage={systemStats.cpu_usage}
 					memoryUsed={systemStats.memory_used}
 					memoryTotal={systemStats.memory_total}
 				/>
 
 				<MonitorSection
 					title='App Monitor'
-					cpuUsage={appStats.cpu_usage}
 					memoryUsed={appStats.memory_used}
 				/>
 			</div>

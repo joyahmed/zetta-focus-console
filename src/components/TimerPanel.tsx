@@ -12,15 +12,6 @@ export default function TimerPanel({
 }: TimerPanelProps) {
 	const isLight = theme === 'light';
 
-	// Premium colors based on spec - using CSS variable tokens
-	const baseRingColor = isLight
-		? 'var(--color-ring-base)'
-		: 'var(--color-ring-base)';
-	const progressColor = 'var(--color-ring-progress)';
-	const progressGlow = isLight
-		? 'none'
-		: 'drop-shadow(0 0 5px var(--color-ring-progress))';
-
 	const {
 		hasOverride,
 		getStatusLabel,
@@ -32,138 +23,143 @@ export default function TimerPanel({
 		sessionOverride
 	});
 
-	return (
-		<div className='flex flex-col items-center justify-center p-3 md:p-4 bg-zetta-card border border-zetta-border rounded-lg h-full'>
-			{/* Override Indicator */}
-			{hasOverride && (
-				<div className='mb-2 px-3 py-1 bg-amber-500/20 border border-amber-500/40 rounded-full'>
-					<span className='text-xs font-medium text-amber-400 uppercase tracking-wider'>
-						⚡ Override Active
-					</span>
-				</div>
-			)}
+	// Dynamic glow based on timer state
+	const isRunning = timer.status === 'running';
+	const activeGlow = isRunning ? glowColor : 'var(--text-muted)';
 
-			<div className='flex items-center gap-2 mb-2 md:mb-3'>
-				<span
-					className='w-2 h-2 rounded-full'
-					style={{
-						backgroundColor:
-							timer.status === 'running'
-								? glowColor
-								: 'var(--text-muted)',
-						boxShadow:
-							timer.status === 'running'
-								? `0 0 8px ${glowColor}`
-								: 'none'
-					}}
-				/>
-				<span
-					className='text-xs font-medium uppercase tracking-wider'
-					style={{ color: 'var(--text-secondary)' }}
-				>
-					{getStatusLabel(timer.status)}
+	// Stroke config
+	const strokeWidth = 6;
+	const radius = 90;
+
+	return (
+		<div className='glass-panel h-full rounded-2xl p-6 flex flex-col items-center justify-center relative overflow-hidden group'>
+			{/* Background ambient glow */}
+			<div
+				className='absolute inset-0 opacity-20 transition-opacity duration-1000'
+				style={{
+					background: isRunning
+						? `radial-gradient(circle at center, ${glowColor} 0%, transparent 70%)`
+						: 'none'
+				}}
+			/>
+
+			{/* Session Indicator */}
+			<div className='absolute top-6 flex flex-col items-center gap-2'>
+				<span className='text-[10px] font-bold uppercase tracking-[0.2em] text-zetta-text-muted'>
+					{timer.session_type.replace('_', ' ')}
 				</span>
+
+				{hasOverride && (
+					<span className='px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-500 bg-amber-500/10 rounded-full border border-amber-500/20'>
+						Override
+					</span>
+				)}
 			</div>
 
-			<div className='relative w-32 h-32 md:w-48 md:h-48 lg:w-56 lg:h-56 flex items-center justify-center'>
+			{/* Timer Ring & Display */}
+			<div className='relative w-64 h-64 flex items-center justify-center my-6'>
 				<svg
-					className='absolute w-full h-full -rotate-90'
+					className='absolute w-full h-full -rotate-90 transform'
 					viewBox='0 0 200 200'
 				>
-					{/* Base Ring - Background */}
+					{/* Track */}
 					<circle
 						cx='100'
 						cy='100'
-						r='90'
+						r={radius}
 						fill='none'
-						stroke={baseRingColor}
-						strokeWidth='7'
+						stroke='var(--color-ring-base)'
+						strokeWidth='4'
 					/>
-					{/* Progress Arc - Foreground */}
+
+					{/* Progress with Glow */}
 					<circle
 						cx='100'
 						cy='100'
-						r='90'
+						r={radius}
 						fill='none'
-						stroke={progressColor}
-						strokeWidth='9'
+						stroke={isRunning ? glowColor : 'var(--text-muted)'}
+						strokeWidth='4'
 						strokeLinecap='round'
 						strokeDasharray={circumference}
 						strokeDashoffset={strokeDashoffset}
-						className={`transition-all duration-1000 ease-linear ${timer.status === 'completed' ? 'animate-pulse' : ''}`}
+						className='transition-all duration-1000 ease-linear'
 						style={{
-							filter: progressGlow
+							filter: isRunning ? `drop-shadow(0 0 6px ${glowColor})` : 'none'
 						}}
 					/>
 				</svg>
+
+				{/* Time Display */}
 				<div
-					className='text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight'
-					style={{ color: 'var(--text-primary)' }}
+					className='z-10 font-mono text-6xl font-medium tracking-wide tabular-nums transition-colors duration-300'
+					style={{
+						color: 'var(--text-primary)',
+						opacity: isRunning ? 1 : 0.7,
+						textShadow: isRunning ? `0 0 20px ${glowColor}50` : 'none'
+					}}
 				>
 					{formatTime(timer.remaining_seconds)}
 				</div>
 			</div>
 
-			<div className='flex gap-2 md:gap-3 mt-3 md:mt-4'>
+			{/* Controls - Iconic & Minimal */}
+			<div className='flex items-center gap-6 z-10'>
 				{timer.status === 'idle' && (
 					<button
 						onClick={onStart}
-						className='px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium bg-zetta-border hover:opacity-80 rounded transition-colors'
-						style={{ color: 'var(--text-primary)' }}
+						className='group relative h-16 w-16 rounded-full flex items-center justify-center border-2 border-zetta-neon bg-zetta-neon/10 text-zetta-neon transition-all duration-300 shadow-[0_0_15px_rgba(139,92,246,0.3)] hover:bg-zetta-neon/20 hover:shadow-[0_0_25px_rgba(139,92,246,0.5)] hover:scale-105 active:scale-95'
+						title='Start Focus'
 					>
-						START
+						<svg xmlns='http://www.w3.org/2000/svg' className='h-8 w-8 ml-1' viewBox='0 0 24 24' fill='currentColor'>
+							<path d='M8 5v14l11-7z' />
+						</svg>
 					</button>
 				)}
+
 				{timer.status === 'running' && (
 					<button
 						onClick={onPause}
-						className='px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium bg-zetta-border hover:opacity-80 rounded transition-colors'
-						style={{ color: 'var(--text-primary)' }}
+						className='h-16 w-16 rounded-full flex items-center justify-center border border-zetta-border bg-zetta-card text-zetta-text backdrop-blur-sm transition-all duration-300 hover:bg-zetta-text/5 hover:border-zetta-text/20 hover:scale-105 active:scale-95'
+						title='Pause'
 					>
-						PAUSE
+						<svg xmlns='http://www.w3.org/2000/svg' className='h-8 w-8' viewBox='0 0 24 24' fill='currentColor'>
+							<path d='M6 19h4V5H6v14zm8-14v14h4V5h-4z' />
+						</svg>
 					</button>
 				)}
-				{timer.status === 'paused' && (
+
+				{(timer.status === 'paused' || timer.status === 'completed') && (
 					<>
 						<button
-							onClick={onResume}
-							className='px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium bg-zetta-border hover:opacity-80 rounded transition-colors'
-							style={{ color: 'var(--text-primary)' }}
+							onClick={timer.status === 'completed' ? onStart : onResume}
+							className='group relative h-16 w-16 rounded-full flex items-center justify-center border-2 border-zetta-neon bg-zetta-neon/10 text-zetta-neon transition-all duration-300 shadow-[0_0_15px_rgba(139,92,246,0.3)] hover:bg-zetta-neon/20 hover:shadow-[0_0_25px_rgba(139,92,246,0.5)] hover:scale-105 active:scale-95'
+							title={timer.status === 'completed' ? 'Restart' : 'Resume'}
 						>
-							RESUME
+							{timer.status === 'completed' ? (
+								<svg xmlns='http://www.w3.org/2000/svg' className='h-8 w-8' viewBox='0 0 24 24' fill='currentColor'>
+									<path d='M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z' />
+								</svg>
+							) : (
+								<svg xmlns='http://www.w3.org/2000/svg' className='h-8 w-8 ml-1' viewBox='0 0 24 24' fill='currentColor'>
+									<path d='M8 5v14l11-7z' />
+								</svg>
+							)}
 						</button>
-						<button
-							onClick={onStop}
-							className='px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium border rounded transition-colors'
-							style={{
-								color: '#ef4444',
-								borderColor: 'rgba(239, 68, 68, 0.3)'
-							}}
-						>
-							STOP
-						</button>
+
+						{timer.status === 'paused' && (
+							<button
+								onClick={onStop}
+								className='h-16 w-16 rounded-full flex items-center justify-center border border-red-500/30 bg-red-500/10 text-red-500 backdrop-blur-sm transition-all duration-300 hover:bg-red-500/20 hover:border-red-500/50 hover:scale-105 active:scale-95'
+								title='Stop'
+							>
+								<svg xmlns='http://www.w3.org/2000/svg' className='h-6 w-6' viewBox='0 0 24 24' fill='currentColor'>
+									<path d='M6 6h12v12H6z' />
+								</svg>
+							</button>
+						)}
 					</>
 				)}
-				{timer.status === 'completed' && (
-					<button
-						onClick={onStart}
-						className='px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium bg-zetta-border hover:opacity-80 rounded transition-colors'
-						style={{ color: 'var(--text-primary)' }}
-					>
-						RESTART
-					</button>
-				)}
-			</div>
-
-			<div
-				className='mt-2 md:mt-3 text-xs uppercase tracking-wider'
-				style={{ color: 'var(--text-muted)' }}
-			>
-				{timer.session_type === 'focus'
-					? 'Focus Session'
-					: timer.session_type === 'short_break'
-						? 'Short Break'
-						: 'Long Break'}
 			</div>
 		</div>
 	);

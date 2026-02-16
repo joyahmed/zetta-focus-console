@@ -52,66 +52,71 @@ const App = () => {
 	}
 
 	return (
-		<div className='h-screen w-screen bg-zetta-bg flex flex-col overflow-hidden'>
-			<Header
-				activeProfileName={appState.active_profile.name}
-				devMode={appState.dev_mode}
-				onSettingsClick={() => setSettingsOpen(true)}
-				onTerminalClick={() => setTerminalOpen(true)}
-				volume={appState.sound_state.volume}
-				isMuted={appState.sound_state.is_muted}
-				onVolumeChange={handleVolumeChange}
-				onMuteToggle={handleMuteToggle}
-				theme={appState.theme}
-				onThemeChange={handleThemeChange}
-				licenseState={licenseState}
-				trialDaysRemaining={trialDaysRemaining}
-				onLicenseChange={refreshLicenseState}
-			/>
+		<div className='h-screen w-screen flex flex-col overflow-hidden relative'>
+			{/* Mesh Background Overlay to ensure it's visible if body is covered */}
+			<div className='absolute inset-0 bg-radial-gradient from-zetta-neon/5 to-transparent z-0 pointer-events-none' />
 
-			{/* Compact 2x2 Grid Layout */}
-			<AppPanels
-				{...{
-					appState,
-					processCommand,
-					handleProfileSwitch,
-					openCreateProfile,
-					openEditProfile,
-					profileError,
-					setProfileError,
-					licenseState,
-					trialDaysRemaining
-				}}
-			/>
+			<div className='relative z-10 flex flex-col h-full'>
+				<Header
+					activeProfileName={appState.active_profile.name}
+					devMode={appState.dev_mode}
+					onSettingsClick={() => setSettingsOpen(true)}
+					onTerminalClick={() => setTerminalOpen(true)}
+					volume={appState.sound_state.volume}
+					isMuted={appState.sound_state.is_muted}
+					onVolumeChange={handleVolumeChange}
+					onMuteToggle={handleMuteToggle}
+					theme={appState.theme}
+					onThemeChange={handleThemeChange}
+					licenseState={licenseState}
+					trialDaysRemaining={trialDaysRemaining}
+					onLicenseChange={refreshLicenseState}
+				/>
 
-			<AppModals
-				{...{
-					appState,
-					terminalKey,
-					terminalOpen,
-					setTerminalOpen,
-					processCommand,
-					setHelpOpen,
-					sessionSummary,
-					setSessionSummary,
-					settingsOpen,
-					setSettingsOpen,
-					handleDevModeToggle,
-					handleAmbienceToggle,
-					handleVolumeChange,
-					handleMuteToggle,
-					handleSoundPlay,
-					handleSoundStop,
-					handleBackgroundTypeChange,
-					handleResetSettings,
-					handleThemeChange,
-					helpOpen,
-					profileModalOpen,
-					setProfileModalOpen,
-					profileModalMode,
-					handleCreateProfile
-				}}
-			/>
+				{/* Compact 2x2 Grid Layout */}
+				<AppPanels
+					{...{
+						appState,
+						processCommand,
+						handleProfileSwitch,
+						openCreateProfile,
+						openEditProfile,
+						profileError,
+						setProfileError,
+						licenseState,
+						trialDaysRemaining
+					}}
+				/>
+
+				<AppModals
+					{...{
+						appState,
+						terminalKey,
+						terminalOpen,
+						setTerminalOpen,
+						processCommand,
+						setHelpOpen,
+						sessionSummary,
+						setSessionSummary,
+						settingsOpen,
+						setSettingsOpen,
+						handleDevModeToggle,
+						handleAmbienceToggle,
+						handleVolumeChange,
+						handleMuteToggle,
+						handleSoundPlay,
+						handleSoundStop,
+						handleBackgroundTypeChange,
+						handleResetSettings,
+						handleThemeChange,
+						helpOpen,
+						profileModalOpen,
+						setProfileModalOpen,
+						profileModalMode,
+						handleCreateProfile
+					}}
+				/>
+			</div>
 		</div>
 	);
 };

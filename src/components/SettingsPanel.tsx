@@ -38,11 +38,7 @@ export default function SettingsPanel({
 				onClick={onClose}
 			/>
 			<div
-				className={`fixed top-0 right-0 h-full w-80 max-sm:w-full sm:w-72 md:w-80 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
-				style={{
-					backgroundColor: 'var(--bg-card)',
-					borderLeft: '1px solid var(--border-color)'
-				}}
+				className={`fixed top-0 right-0 h-full w-80 max-sm:w-full sm:w-72 md:w-80 z-50 transform transition-transform duration-300 glass-panel border-l border-zetta-border ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
 			>
 				<div
 					className='flex items-center justify-between p-3 sm:p-4'
@@ -207,11 +203,10 @@ export default function SettingsPanel({
 							{/* Play/Stop Button */}
 							<button
 								onClick={isPlaying ? onSoundStop : onSoundPlay}
-								className={`w-full p-3 rounded-lg border transition-colors ${
-									isPlaying
+								className={`w-full p-3 rounded-lg border transition-colors ${isPlaying
 										? 'bg-red-500/10 border-red-500/30 text-red-400'
 										: 'border-opacity-50'
-								}`}
+									}`}
 								style={{
 									backgroundColor: isPlaying
 										? undefined
@@ -513,7 +508,7 @@ export default function SettingsPanel({
 								style={{ color: 'var(--text-primary)' }}
 							>
 								{currentLicense === 'Trial' &&
-								trialDaysRemaining !== null
+									trialDaysRemaining !== null
 									? `Trial - ${trialDaysRemaining} days left`
 									: currentLicense}
 							</div>
