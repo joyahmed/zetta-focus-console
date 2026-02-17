@@ -259,8 +259,10 @@ fn focus_command(
             if app_state.timer.status == TimerStatus::Idle {
                 return "Error: No active session to stop.".to_string();
             }
-            if app_state.sound_state.is_playing && !app_state.sound_state.is_muted {
-                sound_manager.pause();
+            if app_state.sound_state.is_playing {
+                sound_manager.stop();
+                app_state.sound_state.is_playing = false;
+                app_state.sound_state.current_sound = None;
             }
             app_state.timer.status = TimerStatus::Idle;
             app_state.timer.remaining_seconds = app_state.active_profile.focus_duration;
@@ -537,8 +539,10 @@ fn stop_command(
         app_state.strict_mode.was_force_closed = true;
         app_state.strict_mode.is_active = false;
 
-        if app_state.sound_state.is_playing && !app_state.sound_state.is_muted {
-            sound_manager.pause();
+        if app_state.sound_state.is_playing {
+            sound_manager.stop();
+            app_state.sound_state.is_playing = false;
+            app_state.sound_state.current_sound = None;
         }
         app_state.timer.status = TimerStatus::Idle;
         app_state.timer.remaining_seconds = app_state.active_profile.focus_duration;
@@ -547,8 +551,10 @@ fn stop_command(
             .to_string();
     }
 
-    if app_state.sound_state.is_playing && !app_state.sound_state.is_muted {
-        sound_manager.pause();
+    if app_state.sound_state.is_playing {
+        sound_manager.stop();
+        app_state.sound_state.is_playing = false;
+        app_state.sound_state.current_sound = None;
     }
     app_state.timer.status = TimerStatus::Idle;
     app_state.timer.remaining_seconds = app_state.active_profile.focus_duration;

@@ -94,13 +94,15 @@ export default function ProfileModal({
 			/>
 
 			{/* Modal */}
-			<div className='relative bg-zetta-card border border-zetta-border rounded-lg shadow-2xl w-[500px] max-h-[80vh] overflow-auto'>
+			<div className='relative bg-white dark:bg-zetta-card dark:backdrop-blur-xl border border-zetta-border rounded-lg shadow-2xl w-[500px] max-h-[80vh] overflow-auto custom-scrollbar'>
 				{/* Header */}
-				<div className='flex items-center justify-between px-4 py-3 border-b border-zetta-border'>
-					<h2 className='text-sm font-medium text-white'>{title}</h2>
+				<div className='flex items-center justify-between px-5 py-4 border-b border-zetta-border bg-zetta-card/50 backdrop-blur sticky top-0 z-10'>
+					<h2 className='text-base font-semibold text-zetta-text tracking-tight'>
+						{title}
+					</h2>
 					<button
 						onClick={onClose}
-						className='p-1 text-gray-400 hover:text-white transition-colors'
+						className='p-1.5 rounded-md text-zetta-text-secondary hover:text-zetta-text hover:bg-zetta-bg transition-all'
 					>
 						<svg
 							xmlns='http://www.w3.org/2000/svg'
@@ -120,154 +122,222 @@ export default function ProfileModal({
 				</div>
 
 				{/* Form */}
-				<form onSubmit={handleSubmit} className='p-4 space-y-4'>
+				<form onSubmit={handleSubmit} className='p-5 space-y-6'>
 					{error && (
-						<div className='p-2 bg-red-500/20 border border-red-500/30 rounded text-red-400 text-xs'>
+						<div className='p-3 bg-red-500/10 border border-red-500/20 rounded-md text-red-500 text-xs flex items-center gap-2'>
+							<svg
+								xmlns='http://www.w3.org/2000/svg'
+								viewBox='0 0 20 20'
+								fill='currentColor'
+								className='w-4 h-4 shrink-0'
+							>
+								<path
+									fillRule='evenodd'
+									d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z'
+									clipRule='evenodd'
+								/>
+							</svg>
 							{error}
 						</div>
 					)}
 
 					{/* Profile Name */}
 					<div>
-						<label className='block text-xs text-gray-400 mb-1'>
-							Profile Name
-						</label>
-						<input
-							type='text'
-							value={name}
-							onChange={e => setName(e.target.value)}
-							placeholder='My Custom Profile'
-							className='w-full px-3 py-2 bg-zetta-bg border border-zetta-border rounded text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gray-500'
-							autoFocus
-						/>
-						{mode === 'create' && (
-							<p className='text-[10px] text-gray-600 mt-1'>
-								ID will be auto-generated from the name
-							</p>
-						)}
-						{mode === 'edit' && profile && (
-							<p className='text-[10px] text-gray-600 mt-1'>
-								ID: {profile.id}
-							</p>
-						)}
+						<h3 className='text-xs font-semibold text-zetta-text-muted uppercase tracking-wider mb-3'>
+							Identity
+						</h3>
+						<div className='bg-zetta-bg/50 backdrop-blur-sm rounded-lg p-3 border border-zetta-border/50'>
+							<label className='block text-xs text-zetta-text-secondary mb-1.5 font-medium'>
+								Profile Name
+							</label>
+							<input
+								type='text'
+								value={name}
+								onChange={e => setName(e.target.value)}
+								placeholder='My Custom Profile'
+								className='w-full px-3 py-2 bg-zetta-card border border-zetta-border rounded text-sm text-zetta-text placeholder-zetta-text-muted focus:outline-none focus:border-zetta-text-secondary focus:ring-1 focus:ring-zetta-text-secondary/20 transition-all font-medium'
+								autoFocus
+							/>
+							{mode === 'create' && (
+								<p className='text-[10px] text-zetta-text-muted mt-1.5 flex items-center gap-1.5 opacity-80'>
+									<svg
+										xmlns='http://www.w3.org/2000/svg'
+										viewBox='0 0 20 20'
+										fill='currentColor'
+										className='w-3 h-3'
+									>
+										<path
+											fillRule='evenodd'
+											d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z'
+											clipRule='evenodd'
+										/>
+									</svg>
+									ID will be auto-generated from the name
+								</p>
+							)}
+							{mode === 'edit' && profile && (
+								<p className='text-[10px] text-zetta-text-muted mt-1.5 flex items-center gap-1.5 opacity-80 font-mono'>
+									<span className='px-1 bg-zetta-bg border border-zetta-border rounded'>
+										ID
+									</span>
+									{profile.id}
+								</p>
+							)}
+						</div>
 					</div>
 
 					{/* Durations */}
-					<div className='grid grid-cols-3 gap-4'>
-						<div>
-							<label className='block text-xs text-gray-400 mb-1'>
-								Focus (min)
-							</label>
-							<input
-								type='number'
-								min={1}
-								max={180}
-								value={focusMin}
-								onChange={e =>
-									setFocusMin(parseInt(e.target.value) || 25)
-								}
-								className='w-full px-3 py-2 bg-zetta-bg border border-zetta-border rounded text-sm text-white focus:outline-none focus:border-gray-500'
-							/>
-						</div>
-						<div>
-							<label className='block text-xs text-gray-400 mb-1'>
-								Short Break
-							</label>
-							<input
-								type='number'
-								min={1}
-								max={60}
-								value={shortBreakMin}
-								onChange={e =>
-									setShortBreakMin(parseInt(e.target.value) || 5)
-								}
-								className='w-full px-3 py-2 bg-zetta-bg border border-zetta-border rounded text-sm text-white focus:outline-none focus:border-gray-500'
-							/>
-						</div>
-						<div>
-							<label className='block text-xs text-gray-400 mb-1'>
-								Long Break
-							</label>
-							<input
-								type='number'
-								min={1}
-								max={60}
-								value={longBreakMin}
-								onChange={e =>
-									setLongBreakMin(parseInt(e.target.value) || 15)
-								}
-								className='w-full px-3 py-2 bg-zetta-bg border border-zetta-border rounded text-sm text-white focus:outline-none focus:border-gray-500'
-							/>
-						</div>
-					</div>
-
-					{/* Season & Intensity */}
-					<div className='grid grid-cols-2 gap-4'>
-						<div>
-							<label className='block text-xs text-gray-400 mb-1'>
-								Season
-							</label>
-							<select
-								value={season}
-								onChange={e => setSeason(e.target.value)}
-								className='w-full px-3 py-2 bg-zetta-bg border border-zetta-border rounded text-sm text-white focus:outline-none focus:border-gray-500'
-							>
-								<option value='winter'>Winter</option>
-								<option value='spring'>Spring</option>
-								<option value='summer'>Summer</option>
-								<option value='autumn'>Autumn</option>
-							</select>
-						</div>
-						<div>
-							<label className='block text-xs text-gray-400 mb-1'>
-								Motion Intensity
-							</label>
-							<select
-								value={intensity}
-								onChange={e => setIntensity(e.target.value)}
-								className='w-full px-3 py-2 bg-zetta-bg border border-zetta-border rounded text-sm text-white focus:outline-none focus:border-gray-500'
-							>
-								<option value='low'>Low</option>
-								<option value='medium'>Medium</option>
-								<option value='high'>High</option>
-							</select>
-						</div>
-					</div>
-
-					{/* Sound */}
 					<div>
-						<label className='block text-xs text-gray-400 mb-1'>
-							Ambient Sound
-						</label>
-						<select
-							value={sound}
-							onChange={e => setSound(e.target.value)}
-							className='w-full px-3 py-2 bg-zetta-bg border border-zetta-border rounded text-sm text-white focus:outline-none focus:border-gray-500'
-						>
-							<option value='fireplace'>Fireplace</option>
-							<option value='soft_rain'>Soft Rain</option>
-							<option value='light_wind'>Light Wind</option>
-							<option value='rain_window'>Rain on Window</option>
-						</select>
+						<h3 className='text-xs font-semibold text-zetta-text-muted uppercase tracking-wider mb-3 mt-2'>
+							Time Intervals
+						</h3>
+						<div className='grid grid-cols-3 gap-4 bg-zetta-bg/50 backdrop-blur-sm rounded-lg p-3 border border-zetta-border/50'>
+							<div>
+								<label className='block text-xs text-zetta-text-secondary mb-1.5 font-medium'>
+									Focus (min)
+								</label>
+								<input
+									type='number'
+									min={1}
+									max={180}
+									value={focusMin}
+									onChange={e =>
+										setFocusMin(
+											parseInt(e.target.value) || 25
+										)
+									}
+									className='w-full px-3 py-2 bg-zetta-card border border-zetta-border rounded text-sm text-zetta-text focus:outline-none focus:border-zetta-text-secondary focus:ring-1 focus:ring-zetta-text-secondary/20 transition-all text-center font-mono'
+								/>
+							</div>
+							<div>
+								<label className='block text-xs text-zetta-text-secondary mb-1.5 font-medium'>
+									Short Break
+								</label>
+								<input
+									type='number'
+									min={1}
+									max={60}
+									value={shortBreakMin}
+									onChange={e =>
+										setShortBreakMin(
+											parseInt(e.target.value) || 5
+										)
+									}
+									className='w-full px-3 py-2 bg-zetta-card border border-zetta-border rounded text-sm text-zetta-text focus:outline-none focus:border-zetta-text-secondary focus:ring-1 focus:ring-zetta-text-secondary/20 transition-all text-center font-mono'
+								/>
+							</div>
+							<div>
+								<label className='block text-xs text-zetta-text-secondary mb-1.5 font-medium'>
+									Long Break
+								</label>
+								<input
+									type='number'
+									min={1}
+									max={60}
+									value={longBreakMin}
+									onChange={e =>
+										setLongBreakMin(
+											parseInt(e.target.value) || 15
+										)
+									}
+									className='w-full px-3 py-2 bg-zetta-card border border-zetta-border rounded text-sm text-zetta-text focus:outline-none focus:border-zetta-text-secondary focus:ring-1 focus:ring-zetta-text-secondary/20 transition-all text-center font-mono'
+								/>
+							</div>
+						</div>
+					</div>
+
+					<h3 className='text-xs font-semibold text-zetta-text-muted uppercase tracking-wider mb-3 mt-1'>
+						Ambience Configuraiton
+					</h3>
+
+					<div className='bg-zetta-bg/50 backdrop-blur-sm rounded-lg p-3 space-y-4 border border-zetta-border/50'>
+						{/* Season & Intensity */}
+						<div className='grid grid-cols-2 gap-4'>
+							<div>
+								<label className='block text-xs text-zetta-text-secondary mb-1.5 font-medium'>
+									Seasonal Theme
+								</label>
+								<select
+									value={season}
+									onChange={e =>
+										setSeason(e.target.value)
+									}
+									className='w-full px-3 py-2 bg-zetta-card border border-zetta-border rounded text-sm text-zetta-text focus:outline-none focus:border-zetta-text-secondary focus:ring-1 focus:ring-zetta-text-secondary/20 transition-all'
+								>
+									<option value='winter'>
+										❄️ Winter
+									</option>
+									<option value='spring'>
+										🌸 Spring
+									</option>
+									<option value='summer'>
+										☀️ Summer
+									</option>
+									<option value='autumn'>
+										🍂 Autumn
+									</option>
+								</select>
+							</div>
+							<div>
+								<label className='block text-xs text-zetta-text-secondary mb-1.5 font-medium'>
+									Motion Intensity
+								</label>
+								<select
+									value={intensity}
+									onChange={e =>
+										setIntensity(e.target.value)
+									}
+									className='w-full px-3 py-2 bg-zetta-card border border-zetta-border rounded text-sm text-zetta-text focus:outline-none focus:border-zetta-text-secondary focus:ring-1 focus:ring-zetta-text-secondary/20 transition-all'
+								>
+									<option value='low'>Low</option>
+									<option value='medium'>Medium</option>
+									<option value='high'>High</option>
+								</select>
+							</div>
+						</div>
+
+						{/* Sound */}
+						<div>
+							<label className='block text-xs text-zetta-text-secondary mb-1.5 font-medium'>
+								Ambient Soundscape
+							</label>
+							<select
+								value={sound}
+								onChange={e => setSound(e.target.value)}
+								className='w-full px-3 py-2 bg-zetta-card border border-zetta-border rounded text-sm text-zetta-text focus:outline-none focus:border-zetta-text-secondary focus:ring-1 focus:ring-zetta-text-secondary/20 transition-all'
+							>
+								<option value='fireplace'>
+									🔥 Fireplace Crackling
+								</option>
+								<option value='soft_rain'>
+									🌧️ Soft Rain
+								</option>
+								<option value='light_wind'>
+									💨 Light Wind
+								</option>
+								<option value='rain_window'>
+									☔ Rain on Window
+								</option>
+							</select>
+						</div>
 					</div>
 
 					{/* Actions */}
-					<div className='flex justify-end gap-2 pt-2 border-t border-zetta-border'>
+					<div className='flex justify-end gap-3 pt-4 border-t border-zetta-border mt-2'>
 						<button
 							type='button'
 							onClick={onClose}
-							className='px-4 py-2 text-xs text-gray-400 hover:text-white transition-colors'
+							className='px-4 py-2 text-xs font-medium text-zetta-text-secondary hover:text-zetta-text transition-colors hover:bg-zetta-bg rounded-md'
 						>
 							Cancel
 						</button>
 						<button
 							type='submit'
 							disabled={isSubmitting}
-							className={`px-4 py-2 text-xs text-white rounded transition-colors disabled:opacity-50 ${
-								mode === 'edit'
-									? 'bg-amber-500 hover:bg-amber-600'
-									: 'bg-blue-500 hover:bg-blue-600'
-							}`}
+							className={`px-5 py-2 text-xs font-medium text-white rounded-md shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${mode === 'edit'
+									? 'bg-amber-600 hover:bg-amber-500 shadow-amber-500/20'
+									: 'bg-blue-600 hover:bg-blue-500 shadow-blue-500/20'
+								}`}
 						>
 							{isSubmitting ? submittingLabel : submitLabel}
 						</button>
