@@ -334,7 +334,10 @@ fn switch_profile_internal(
             app_state.timer.remaining_seconds = profile.focus_duration;
             app_state.timer.total_seconds = profile.focus_duration;
         }
-        if app_state.sound_state.is_playing && !app_state.sound_state.is_muted {
+        // Only play sound if timer is actively running (not just paused/stopped with is_playing=true)
+        if app_state.sound_state.is_playing
+            && !app_state.sound_state.is_muted
+            && app_state.timer.status == TimerStatus::Running {
             let sound_data: &[u8] = get_sound_data(&profile.sound_file);
             app_state.sound_state.current_sound = Some(profile.sound_file.clone());
             app_state.sound_state.volume = profile.default_volume;
@@ -348,3 +351,4 @@ fn switch_profile_internal(
         )
     }
 }
+

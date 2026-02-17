@@ -45,7 +45,7 @@ const DevLicensePopover = ({ onLicenseChange }: DevLicensePopoverProps) => {
 			{isOpen && (
 				<>
 					<div
-						className='fixed inset-0 z-40'
+						className='fixed inset-0 z-50'
 						onClick={() => setIsOpen(false)}
 					/>
 					<div className='absolute top-full right-0 mt-4 w-72 glass-panel rounded-xl z-50 p-4'>
