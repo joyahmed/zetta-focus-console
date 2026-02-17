@@ -7,6 +7,7 @@ export default {
 			colors: {
 				// Base structural colors
 				'zetta-bg': 'var(--bg-primary)',
+				'zetta-surface': 'var(--bg-secondary)',
 				'zetta-card': 'var(--bg-card)',
 				'zetta-panel': 'var(--bg-panel)',
 				'zetta-border': 'var(--border-color)',

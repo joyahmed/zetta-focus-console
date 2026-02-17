@@ -52,6 +52,33 @@ pub fn set_theme(
 }
 
 #[tauri::command]
+pub fn set_total_sessions(
+    total_sessions: u32,
+    state: State<EngineState>,
+    app_handle: AppHandle,
+) -> Result<String, String> {
+    if total_sessions < 1 || total_sessions > 20 {
+        return Err("Total sessions must be between 1 and 20".to_string());
+    }
+
+    let mut app_state = state.app_state.lock().map_err(|e| e.to_string())?;
+    app_state.timer.total_sessions = total_sessions;
+    // Reset current session to 1 if it exceeds the new total
+    if app_state.timer.current_session > total_sessions {
+        app_state.timer.current_session = 1;
+    }
+
+    let _ = app_handle.emit(
+        "state-updated",
+        StateEvent {
+            state: app_state.clone(),
+        },
+    );
+
+    Ok(format!("Total sessions set to {}", total_sessions))
+}
+
+#[tauri::command]
 pub fn execute_command(
     command: String,
     state: State<EngineState>,
@@ -139,6 +166,8 @@ pub fn process_command(
 
         "loop" => loop_override_command(args, app_state, is_pro),
 
+        "sessions" => sessions_command(args, app_state),
+
         "start" => start_command(app_state, sound_manager),
 
         "stop" => stop_command(app_state, sound_manager),
@@ -207,6 +236,7 @@ fn help_command(pro_features: &str) -> String {
    resume                 - Resume paused session
    status                 - Show current session status
    override clear         - Clear session override
+   sessions [count]       - Set or view sessions per cycle (1-20)
    profile list           - List all available profiles
    profile switch [id]    - Switch to a profile
    season [name]         - Change season (spring/summer/autumn/winter)
@@ -244,6 +274,8 @@ fn focus_command(
                 total_seconds,
                 status: TimerStatus::Running,
                 session_type: SessionType::Focus,
+                current_session: 1,
+                total_sessions: 4,
             };
             if !app_state.sound_state.is_muted && !app_state.sound_state.is_playing {
                 let sound_file = &app_state.active_profile.sound_file;
@@ -465,6 +497,37 @@ fn build_override_message(override_state: &SessionOverride) -> String {
     )
 }
 
+fn sessions_command(args: &[&str], app_state: &mut AppState) -> String {
+    match args.first() {
+        Some(&count_str) => {
+            match count_str.parse::<u32>() {
+                Ok(count) => {
+                    if count < 1 || count > 20 {
+                        return "Error: Sessions must be between 1 and 20.".to_string();
+                    }
+                    app_state.timer.total_sessions = count;
+                    // Reset current session to 1 if it exceeds the new total
+                    if app_state.timer.current_session > count {
+                        app_state.timer.current_session = 1;
+                    }
+                    format!("Sessions per cycle set to {}", count)
+                }
+                Err(_) => {
+                    "Error: Invalid session count. Must be a number between 1 and 20.".to_string()
+                }
+            }
+        }
+        None => {
+            format!(
+                "Sessions per cycle: {} (current: {}/{})",
+                app_state.timer.total_sessions,
+                app_state.timer.current_session,
+                app_state.timer.total_sessions
+            )
+        }
+    }
+}
+
 fn start_command(
     app_state: &mut AppState,
     sound_manager: &mut crate::sound::SoundManager,
@@ -488,11 +551,15 @@ fn start_command(
         .and_then(|o| o.focus_duration)
         .unwrap_or(app_state.active_profile.focus_duration);
 
+    let total_sessions = app_state.active_profile.sessions_per_cycle;
+
     app_state.timer = TimerState {
         remaining_seconds: focus_seconds,
         total_seconds: focus_seconds,
         status: TimerStatus::Running,
         session_type: SessionType::Focus,
+        current_session: 1,
+        total_sessions,
     };
 
     if !app_state.sound_state.is_muted && !app_state.sound_state.is_playing {
@@ -787,6 +854,8 @@ fn reset_command(
         total_seconds: 25 * 60,
         status: TimerStatus::Idle,
         session_type: SessionType::Focus,
+        current_session: 1,
+        total_sessions: 4,
     };
     app_state.session_override = None;
     app_state.stats = Stats {
@@ -851,6 +920,8 @@ fn engine_command(args: &[&str], app_state: &mut AppState, is_pro: bool) -> Stri
                 total_seconds: 25 * 60,
                 status: TimerStatus::Idle,
                 session_type: SessionType::Focus,
+                current_session: 1,
+                total_sessions: 4,
             };
             app_state.session_override = None;
             app_state.stats = Stats {

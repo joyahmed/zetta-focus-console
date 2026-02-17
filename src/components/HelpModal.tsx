@@ -74,15 +74,15 @@ export default function HelpModal({
 			/>
 
 			{/* Modal */}
-			<div className='relative bg-white dark:bg-zetta-card dark:backdrop-blur-xl border border-zetta-border rounded-lg shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col m-4'>
+			<div className='help-modal-white relative bg-zetta-card backdrop-blur-xl border border-zetta-border rounded-lg shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col m-4'>
 				{/* Header */}
 				<div className='flex items-center justify-between px-4 py-3 border-b border-zetta-border'>
 					<h2 className='text-lg font-semibold text-zetta-text flex items-center gap-2'>
-						<span className='text-green-600 dark:text-green-400'>?</span> Available
+						<span className='text-green-400'>?</span> Available
 						Commands
 					</h2>
 					<div className='flex items-center gap-2 text-xs text-zetta-text-secondary'>
-						<span className='px-1.5 py-0.5 bg-zetta-bg rounded border border-zetta-border text-zetta-text-muted'>
+						<span className='help-modal-white px-1.5 py-0.5 bg-zetta-bg rounded border border-zetta-border text-zetta-text-muted'>
 							ESC
 						</span>
 						<span>to close</span>
@@ -98,7 +98,7 @@ export default function HelpModal({
 
 						return (
 							<div key={group.title} className='mb-4 last:mb-0'>
-								<h3 className='text-xs font-medium text-zetta-text-secondary uppercase tracking-wider mb-2 sticky top-0 bg-white/95 dark:bg-zetta-card/95 backdrop-blur py-1 z-10'>
+								<h3 className='help-modal-white text-xs font-medium text-zetta-text-secondary uppercase tracking-wider mb-2 sticky top-0 bg-zetta-card/95 backdrop-blur py-1 z-10'>
 									{group.title}
 								</h3>
 								<div className='space-y-1'>
@@ -110,13 +110,18 @@ export default function HelpModal({
 											<div
 												key={cmd.cmd}
 												data-index={globalIndex}
-												className={`flex items-start gap-3 px-3 py-2 rounded transition-colors border ${isSelected
-													? 'bg-blue-500/10 dark:bg-blue-500/20 border-blue-500/20 dark:border-blue-500/30'
-													: 'border-transparent hover:bg-zetta-bg'
-													}`}
+												className={`flex items-start gap-3 px-3 py-2 rounded transition-colors border ${
+													isSelected
+														? 'bg-zetta-neon/15 border-zetta-neon/30'
+														: 'border-transparent hover:bg-zetta-bg'
+												}`}
 											>
 												<code
-													className={`text-sm font-mono ${isSelected ? 'text-green-700 dark:text-green-400' : 'text-green-600 dark:text-green-400/80'}`}
+													className={`text-sm font-mono ${
+														isSelected
+															? 'text-green-400'
+															: 'text-green-400/80'
+													}`}
 												>
 													{cmd.cmd}
 												</code>
@@ -138,10 +143,10 @@ export default function HelpModal({
 				<div className='px-4 py-3 border-t border-zetta-border flex items-center justify-between text-xs text-zetta-text-secondary'>
 					<div className='flex items-center gap-4'>
 						<span className='flex items-center gap-1'>
-							<span className='px-1.5 py-0.5 bg-zetta-bg rounded border border-zetta-border text-zetta-text-muted'>
+							<span className='help-modal-white px-1.5 py-0.5 bg-zetta-bg rounded border border-zetta-border text-zetta-text-muted'>
 								UP
 							</span>
-							<span className='px-1.5 py-0.5 bg-zetta-bg rounded border border-zetta-border text-zetta-text-muted'>
+							<span className='help-modal-white px-1.5 py-0.5 bg-zetta-bg rounded border border-zetta-border text-zetta-text-muted'>
 								DOWN
 							</span>
 							<span>navigate</span>

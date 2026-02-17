@@ -51,8 +51,8 @@ fn create_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> Stri
         }
     }
 
-    if args.len() < 8 {
-        return "Usage: profile create <name> <focus_min> <short_break_min> <long_break_min> <season> <intensity> <sound>\nExample: profile create \"My Profile\" 25 5 15 winter low fireplace".to_string();
+    if args.len() < 9 {
+        return "Usage: profile create <name> <focus_min> <short_break_min> <long_break_min> <sessions> <season> <intensity> <sound>\nExample: profile create \"My Profile\" 25 5 15 4 winter low fireplace".to_string();
     }
 
     let name = args[1].to_string();
@@ -113,8 +113,12 @@ fn create_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> Stri
         Ok(v) if v >= 1 && v <= 60 => v * 60,
         _ => return "Error: Long break must be 1-60 minutes.".to_string(),
     };
+    let sessions_per_cycle: u32 = match args[5].parse::<u32>() {
+        Ok(v) if v >= 1 && v <= 20 => v,
+        _ => return "Error: Sessions per cycle must be 1-20.".to_string(),
+    };
 
-    let season = match args[5] {
+    let season = match args[6] {
         "spring" => Season::Spring,
         "summer" => Season::Summer,
         "autumn" => Season::Autumn,
@@ -122,14 +126,14 @@ fn create_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> Stri
         _ => return "Error: Season must be spring, summer, autumn, or winter.".to_string(),
     };
 
-    let intensity = match args[6] {
+    let intensity = match args[7] {
         "low" => MotionIntensity::Low,
         "medium" => MotionIntensity::Medium,
         "high" => MotionIntensity::High,
         _ => return "Error: Intensity must be low, medium, or high.".to_string(),
     };
 
-    let sound_file = args[7].to_string();
+    let sound_file = args[8].to_string();
 
     let glow_color = match season {
         Season::Spring => "#34d399".to_string(),
@@ -147,6 +151,7 @@ fn create_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> Stri
         focus_duration: focus_min,
         short_break_duration: short_break_min,
         long_break_duration: long_break_min,
+        sessions_per_cycle,
         glow_color,
         sound_file,
         default_volume: 50,
@@ -182,8 +187,8 @@ fn delete_profile(args: &[&str], app_state: &mut AppState) -> String {
 }
 
 fn edit_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String {
-    if args.len() < 9 {
-        return "Usage: profile edit <id> <name> <focus_min> <short_break_min> <long_break_min> <season> <intensity> <sound>".to_string();
+    if args.len() < 10 {
+        return "Usage: profile edit <id> <name> <focus_min> <short_break_min> <long_break_min> <sessions> <season> <intensity> <sound>".to_string();
     }
     let profile_id = args[1];
 
@@ -227,8 +232,12 @@ fn edit_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String
         Ok(v) if v >= 1 && v <= 60 => v * 60,
         _ => return "Error: Long break must be 1-60 minutes.".to_string(),
     };
+    let sessions_per_cycle: u32 = match args[6].parse::<u32>() {
+        Ok(v) if v >= 1 && v <= 20 => v,
+        _ => return "Error: Sessions per cycle must be 1-20.".to_string(),
+    };
 
-    let season = match args[6].to_lowercase().as_str() {
+    let season = match args[7].to_lowercase().as_str() {
         "spring" => Season::Spring,
         "summer" => Season::Summer,
         "autumn" => Season::Autumn,
@@ -236,14 +245,14 @@ fn edit_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String
         _ => return "Error: Season must be spring, summer, autumn, or winter.".to_string(),
     };
 
-    let intensity = match args[7].to_lowercase().as_str() {
+    let intensity = match args[8].to_lowercase().as_str() {
         "low" => MotionIntensity::Low,
         "medium" => MotionIntensity::Medium,
         "high" => MotionIntensity::High,
         _ => return "Error: Intensity must be low, medium, or high.".to_string(),
     };
 
-    let sound_file = args[8].to_string();
+    let sound_file = args[9].to_string();
 
     let glow_color = match season {
         Season::Spring => "#34d399".to_string(),
@@ -259,6 +268,7 @@ fn edit_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String
         profile.focus_duration = focus_min;
         profile.short_break_duration = short_break_min;
         profile.long_break_duration = long_break_min;
+        profile.sessions_per_cycle = sessions_per_cycle;
         profile.glow_color = glow_color.clone();
         profile.sound_file = sound_file.clone();
 
@@ -270,6 +280,7 @@ fn edit_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String
             app_state.active_profile.focus_duration = focus_min;
             app_state.active_profile.short_break_duration = short_break_min;
             app_state.active_profile.long_break_duration = long_break_min;
+            app_state.active_profile.sessions_per_cycle = sessions_per_cycle;
             app_state.active_profile.glow_color = glow_color;
             app_state.active_profile.sound_file = sound_file;
 

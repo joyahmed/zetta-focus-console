@@ -29,11 +29,20 @@ pub struct TimerState {
     pub total_seconds: u32,
     pub status: TimerStatus,
     pub session_type: SessionType,
+    /// Current session number in the cycle (1-indexed)
+    pub current_session: u32,
+    /// Total number of sessions in the cycle
+    pub total_sessions: u32,
 }
 
 // ============================================================================
 // PROFILE TYPES
 // ============================================================================
+
+/// Default number of sessions per cycle
+fn default_sessions_per_cycle() -> u32 {
+    4
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
@@ -70,6 +79,9 @@ pub struct Profile {
     pub focus_duration: u32,
     pub short_break_duration: u32,
     pub long_break_duration: u32,
+    /// Number of focus sessions per cycle (default: 4)
+    #[serde(default = "default_sessions_per_cycle")]
+    pub sessions_per_cycle: u32,
     pub glow_color: String,
     pub sound_file: String,
     pub default_volume: u8,
@@ -354,6 +366,7 @@ impl AppState {
             focus_duration: 25 * 60,
             short_break_duration: 5 * 60,
             long_break_duration: 15 * 60,
+            sessions_per_cycle: 4,
             glow_color: "#60a5fa".to_string(),
             sound_file: "fireplace.mp3".to_string(),
             default_volume: 50,
@@ -371,6 +384,7 @@ impl AppState {
                 focus_duration: 25 * 60,
                 short_break_duration: 5 * 60,
                 long_break_duration: 15 * 60,
+                sessions_per_cycle: 4,
                 glow_color: "#fbbf24".to_string(),
                 sound_file: "soft_rain.mp3".to_string(),
                 default_volume: 40,
@@ -385,6 +399,7 @@ impl AppState {
                 focus_duration: 25 * 60,
                 short_break_duration: 5 * 60,
                 long_break_duration: 15 * 60,
+                sessions_per_cycle: 4,
                 glow_color: "#34d399".to_string(),
                 sound_file: "light_wind.mp3".to_string(),
                 default_volume: 30,
@@ -399,6 +414,7 @@ impl AppState {
                 focus_duration: 25 * 60,
                 short_break_duration: 5 * 60,
                 long_break_duration: 15 * 60,
+                sessions_per_cycle: 4,
                 glow_color: "#f97316".to_string(),
                 sound_file: "rain_window.mp3".to_string(),
                 default_volume: 35,
@@ -412,6 +428,8 @@ impl AppState {
                 total_seconds: 25 * 60,
                 status: TimerStatus::Idle,
                 session_type: SessionType::Focus,
+                current_session: 1,
+                total_sessions: 4,
             },
             active_profile: default_profile,
             profiles,

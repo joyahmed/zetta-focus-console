@@ -1,6 +1,8 @@
 interface SessionIndicatorProps {
 	sessionType: TimerState['session_type'];
 	hasOverride: boolean;
+	currentSession?: number;
+	totalSessions?: number;
 }
 
 const SessionIndicator =({

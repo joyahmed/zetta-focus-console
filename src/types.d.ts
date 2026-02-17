@@ -46,6 +46,7 @@ interface AppModelsProps {
 		focus_min: number;
 		short_break_min: number;
 		long_break_min: number;
+		sessions_per_cycle: number;
 		season: string;
 		intensity: string;
 		sound: string;
@@ -59,6 +60,10 @@ interface TimerState {
 	total_seconds: number;
 	status: 'idle' | 'running' | 'paused' | 'completed';
 	session_type: 'focus' | 'short_break' | 'long_break';
+	/** Current session number in the cycle (1-indexed) */
+	current_session: number;
+	/** Total number of sessions in the cycle */
+	total_sessions: number;
 }
 
 interface Profile {
@@ -70,6 +75,8 @@ interface Profile {
 	focus_duration: number;
 	short_break_duration: number;
 	long_break_duration: number;
+	/** Number of focus sessions per cycle */
+	sessions_per_cycle: number;
 	glow_color: string;
 	sound_file: string;
 	default_volume: number;
@@ -216,6 +223,7 @@ interface ProfileModalProps {
 		focus_min: number;
 		short_break_min: number;
 		long_break_min: number;
+		sessions_per_cycle: number;
 		season: string;
 		intensity: string;
 		sound: string;
@@ -334,6 +342,10 @@ interface TimerState {
 	total_seconds: number;
 	status: 'idle' | 'running' | 'paused' | 'completed';
 	session_type: 'focus' | 'short_break' | 'long_break';
+	/** Current session number in the cycle (1-indexed) */
+	current_session: number;
+	/** Total number of sessions in the cycle */
+	total_sessions: number;
 }
 
 interface SessionOverride {

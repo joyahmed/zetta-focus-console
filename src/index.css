@@ -69,6 +69,14 @@
 	--bg-command-hover: rgba(0, 0, 0, 0.06);
 }
 
+[data-theme='light'] .profile-modal-white {
+	background-color: #ffffff !important;
+}
+
+[data-theme='light'] .help-modal-white {
+	background-color: #ffffff !important;
+}
+
 * {
 	margin: 0;
 	padding: 0;

@@ -42,7 +42,9 @@ export default function TimerPanel({
 				<SessionIndicator
 					{...{
 						sessionType: timer.session_type,
-						hasOverride
+						hasOverride,
+						currentSession: timer.current_session,
+						totalSessions: timer.total_sessions
 					}}
 				/>
 			</Suspense>
@@ -65,7 +67,9 @@ export default function TimerPanel({
 						{...{
 							formattedTime,
 							isRunning,
-							glowColor
+							glowColor,
+							currentSession: timer.current_session,
+							totalSessions: timer.total_sessions
 						}}
 					/>
 				</Suspense>

@@ -8,7 +8,8 @@ mod types;
 use engine::{
     activate_key, can_create_profile, clear_debug_license_override, clear_license_storage,
     execute_command, get_license, get_state, get_theme, get_trial_days_remaining, get_trial_status,
-    is_pro, set_debug_license_override, set_theme, tick_system_stats, tick_timer, EngineState,
+    is_pro, set_debug_license_override, set_theme, set_total_sessions, tick_system_stats,
+    tick_timer, EngineState,
 };
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -20,6 +21,7 @@ pub fn run() {
             get_state,
             get_theme,
             set_theme,
+            set_total_sessions,
             execute_command,
             tick_timer,
             tick_system_stats,

@@ -93,6 +93,8 @@ const AppModals = ({
 									appState.active_profile.short_break_duration,
 								long_break_duration:
 									appState.active_profile.long_break_duration,
+								sessions_per_cycle:
+									appState.active_profile.sessions_per_cycle,
 								season: appState.active_profile.season,
 								motion_intensity:
 									appState.active_profile.motion_intensity,

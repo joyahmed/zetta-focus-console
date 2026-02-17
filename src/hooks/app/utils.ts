@@ -135,6 +135,7 @@ export const appUtils = ({
 			focus_min: number;
 			short_break_min: number;
 			long_break_min: number;
+			sessions_per_cycle: number;
 			season: string;
 			intensity: string;
 			sound: string;
@@ -142,10 +143,10 @@ export const appUtils = ({
 			let cmd: string;
 			if (profileData.id) {
 				// Edit mode
-				cmd = `profile edit ${profileData.id} "${profileData.name}" ${profileData.focus_min} ${profileData.short_break_min} ${profileData.long_break_min} ${profileData.season} ${profileData.intensity} ${profileData.sound}`;
+				cmd = `profile edit ${profileData.id} "${profileData.name}" ${profileData.focus_min} ${profileData.short_break_min} ${profileData.long_break_min} ${profileData.sessions_per_cycle} ${profileData.season} ${profileData.intensity} ${profileData.sound}`;
 			} else {
 				// Create mode
-				cmd = `profile create "${profileData.name}" ${profileData.focus_min} ${profileData.short_break_min} ${profileData.long_break_min} ${profileData.season} ${profileData.intensity} ${profileData.sound}`;
+				cmd = `profile create "${profileData.name}" ${profileData.focus_min} ${profileData.short_break_min} ${profileData.long_break_min} ${profileData.sessions_per_cycle} ${profileData.season} ${profileData.intensity} ${profileData.sound}`;
 			}
 			return await processCommand(cmd);
 		},

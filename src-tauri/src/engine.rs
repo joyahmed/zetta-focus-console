@@ -12,7 +12,7 @@ pub use crate::commands::{
     clear_debug_license_override, clear_license_storage, deactivate_strict_mode, execute_command,
     format_time, get_license, get_state, get_theme, get_trial_days_remaining, get_trial_status,
     is_pro, parse_command_with_quotes, parse_duration, process_command, set_debug_license_override,
-    set_theme, tick_system_stats, tick_timer,
+    set_theme, set_total_sessions, tick_system_stats, tick_timer,
 };
 
 // Re-export types from crate root
