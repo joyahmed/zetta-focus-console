@@ -254,18 +254,30 @@ fn edit_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String
 
     if let Some(profile) = app_state.profiles.iter_mut().find(|p| p.id == profile_id) {
         profile.name = new_name.clone();
-        profile.season = season;
-        profile.motion_intensity = intensity;
+        profile.season = season.clone();
+        profile.motion_intensity = intensity.clone();
         profile.focus_duration = focus_min;
         profile.short_break_duration = short_break_min;
         profile.long_break_duration = long_break_min;
-        profile.glow_color = glow_color;
-        profile.sound_file = sound_file;
+        profile.glow_color = glow_color.clone();
+        profile.sound_file = sound_file.clone();
 
-        if app_state.active_profile.id == profile_id && app_state.timer.status == TimerStatus::Idle
-        {
-            app_state.timer.remaining_seconds = focus_min;
-            app_state.timer.total_seconds = focus_min;
+        // If editing the active profile, update active_profile immediately
+        if app_state.active_profile.id == profile_id {
+            app_state.active_profile.name = new_name.clone();
+            app_state.active_profile.season = season;
+            app_state.active_profile.motion_intensity = intensity;
+            app_state.active_profile.focus_duration = focus_min;
+            app_state.active_profile.short_break_duration = short_break_min;
+            app_state.active_profile.long_break_duration = long_break_min;
+            app_state.active_profile.glow_color = glow_color;
+            app_state.active_profile.sound_file = sound_file;
+
+            // Update timer if idle
+            if app_state.timer.status == TimerStatus::Idle {
+                app_state.timer.remaining_seconds = focus_min;
+                app_state.timer.total_seconds = focus_min;
+            }
         }
 
         format!("Updated profile: {}", new_name)
@@ -337,7 +349,8 @@ fn switch_profile_internal(
         // Only play sound if timer is actively running (not just paused/stopped with is_playing=true)
         if app_state.sound_state.is_playing
             && !app_state.sound_state.is_muted
-            && app_state.timer.status == TimerStatus::Running {
+            && app_state.timer.status == TimerStatus::Running
+        {
             let sound_data: &[u8] = get_sound_data(&profile.sound_file);
             app_state.sound_state.current_sound = Some(profile.sound_file.clone());
             app_state.sound_state.volume = profile.default_volume;
@@ -351,4 +364,3 @@ fn switch_profile_internal(
         )
     }
 }
-
