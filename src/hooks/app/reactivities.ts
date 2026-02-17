@@ -111,9 +111,8 @@ export const appReactivities = ({
 			window.removeEventListener('keydown', handleGlobalKeyDown);
 	}, []);
 
+	// Timer tick and system stats intervals - stable, only cleared on unmount
 	useEffect(() => {
-		if (!appState) return;
-
 		const timerInterval = setInterval(() => {
 			invoke('tick_timer').catch(console.error);
 		}, 1000);
@@ -126,5 +125,5 @@ export const appReactivities = ({
 			clearInterval(timerInterval);
 			clearInterval(systemInterval);
 		};
-	}, [appState?.timer.status]);
+	}, []);
 };

@@ -18,7 +18,8 @@ export default function SettingsPanel({
 	onBackgroundTypeChange,
 	onResetSettings,
 	theme,
-	onThemeChange
+	onThemeChange,
+	onLicenseChange
 }: SettingsPanelProps) {
 	const isLight = theme === 'light';
 
@@ -29,7 +30,7 @@ export default function SettingsPanel({
 		licenseKey,
 		setLicenseKey,
 		licenseMessage
-	} = useSettingPanel();
+	} = useSettingPanel(onLicenseChange);
 
 	return (
 		<>

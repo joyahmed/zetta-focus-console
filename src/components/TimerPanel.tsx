@@ -10,11 +10,8 @@ export default function TimerPanel({
 	onStop,
 	theme = 'dark'
 }: TimerPanelProps) {
-	const isLight = theme === 'light';
-
 	const {
 		hasOverride,
-		getStatusLabel,
 		circumference,
 		strokeDashoffset,
 		formatTime
@@ -25,10 +22,8 @@ export default function TimerPanel({
 
 	// Dynamic glow based on timer state
 	const isRunning = timer.status === 'running';
-	const activeGlow = isRunning ? glowColor : 'var(--text-muted)';
 
 	// Stroke config
-	const strokeWidth = 6;
 	const radius = 90;
 
 	return (
@@ -108,7 +103,7 @@ export default function TimerPanel({
 				{timer.status === 'idle' && (
 					<button
 						onClick={onStart}
-						className='group relative h-16 w-16 rounded-full flex items-center justify-center border-2 border-zetta-neon bg-zetta-neon/10 text-zetta-neon transition-all duration-300 shadow-[0_0_15px_rgba(139,92,246,0.3)] hover:bg-zetta-neon/20 hover:shadow-[0_0_25px_rgba(139,92,246,0.5)] hover:scale-105 active:scale-95'
+						className='group relative h-16 w-16 rounded-full flex items-center justify-center border-2 border-zetta-neon-secondary bg-zetta-neon-secondary/10 text-zetta-neon-secondary transition-all duration-300 shadow-[0_0_15px_rgba(34,211,238,0.3)] hover:bg-zetta-neon-secondary/20 hover:shadow-[0_0_25px_rgba(34,211,238,0.5)] hover:scale-105 active:scale-95'
 						title='Start Focus'
 					>
 						<svg xmlns='http://www.w3.org/2000/svg' className='h-8 w-8 ml-1' viewBox='0 0 24 24' fill='currentColor'>
@@ -133,7 +128,7 @@ export default function TimerPanel({
 					<>
 						<button
 							onClick={timer.status === 'completed' ? onStart : onResume}
-							className='group relative h-16 w-16 rounded-full flex items-center justify-center border-2 border-zetta-neon bg-zetta-neon/10 text-zetta-neon transition-all duration-300 shadow-[0_0_15px_rgba(139,92,246,0.3)] hover:bg-zetta-neon/20 hover:shadow-[0_0_25px_rgba(139,92,246,0.5)] hover:scale-105 active:scale-95'
+							className='group relative h-16 w-16 rounded-full flex items-center justify-center border-2 border-zetta-neon-secondary bg-zetta-neon-secondary/10 text-zetta-neon-secondary transition-all duration-300 shadow-[0_0_15px_rgba(34,211,238,0.3)] hover:bg-zetta-neon-secondary/20 hover:shadow-[0_0_25px_rgba(34,211,238,0.5)] hover:scale-105 active:scale-95'
 							title={timer.status === 'completed' ? 'Restart' : 'Resume'}
 						>
 							{timer.status === 'completed' ? (

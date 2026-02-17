@@ -28,7 +28,9 @@ const AppModals = ({
 	profileModalOpen,
 	setProfileModalOpen,
 	profileModalMode,
-	handleCreateProfile
+	handleCreateProfile,
+	refreshLicenseState,
+	setProfileError
 }: AppModelsProps) => {
 	return (
 		<>
@@ -65,6 +67,7 @@ const AppModals = ({
 				onResetSettings={handleResetSettings}
 				theme={appState.theme}
 				onThemeChange={handleThemeChange}
+				onLicenseChange={refreshLicenseState}
 			/>
 
 			<HelpModal
@@ -74,7 +77,10 @@ const AppModals = ({
 
 			<ProfileModal
 				isOpen={profileModalOpen}
-				onClose={() => setProfileModalOpen(false)}
+				onClose={() => {
+					setProfileModalOpen(false);
+					setProfileError(null);
+				}}
 				mode={profileModalMode}
 				profile={
 					profileModalMode === 'edit'

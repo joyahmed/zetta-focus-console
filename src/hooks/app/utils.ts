@@ -175,6 +175,7 @@ export const appUtils = ({
 	}, []);
 
 	const openEditProfile = useCallback(() => {
+		setProfileError(null);
 		setProfileModalMode('edit');
 		setProfileModalOpen(true);
 	}, []);

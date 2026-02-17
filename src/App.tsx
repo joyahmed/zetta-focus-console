@@ -113,7 +113,9 @@ const App = () => {
 						profileModalOpen,
 						setProfileModalOpen,
 						profileModalMode,
-						handleCreateProfile
+						handleCreateProfile,
+						refreshLicenseState,
+						setProfileError
 					}}
 				/>
 			</div>

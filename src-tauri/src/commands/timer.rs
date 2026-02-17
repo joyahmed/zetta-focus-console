@@ -123,7 +123,7 @@ pub fn process_command(
    profile create/edit  - Custom profiles (Pro)
    devmode              - Developer diagnostics (Pro)
 
-   Run 'license upgrade' for Pro access."
+   Upgrade to Pro to unlock these features."
     };
 
     match cmd {
@@ -293,7 +293,7 @@ fn focus_command(
 
 fn strict_command(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String {
     if !is_pro {
-        return "Error: Strict Mode is a Pro feature. Run 'license upgrade' for Pro access."
+        return "Error: Strict Mode is a Pro feature. Upgrade to unlock unlimited access."
             .to_string();
     }
 
@@ -337,7 +337,8 @@ fn strict_command(args: &[&str], app_state: &mut AppState, is_pro: bool) -> Stri
 
 fn timer_override_command(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String {
     if !is_pro {
-        return "Error: Runtime overrides require Pro license. Run 'license upgrade' for Pro access.".to_string();
+        return "Error: Runtime overrides are a Pro feature. Upgrade to unlock unlimited access."
+            .to_string();
     }
 
     if app_state.strict_mode.is_active && app_state.timer.status == TimerStatus::Running {
@@ -374,7 +375,8 @@ fn timer_override_command(args: &[&str], app_state: &mut AppState, is_pro: bool)
 
 fn break_override_command(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String {
     if !is_pro {
-        return "Error: Runtime overrides require Pro license. Run 'license upgrade' for Pro access.".to_string();
+        return "Error: Runtime overrides are a Pro feature. Upgrade to unlock unlimited access."
+            .to_string();
     }
 
     if app_state.strict_mode.is_active && app_state.timer.status == TimerStatus::Running {
@@ -411,7 +413,8 @@ fn break_override_command(args: &[&str], app_state: &mut AppState, is_pro: bool)
 
 fn loop_override_command(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String {
     if !is_pro {
-        return "Error: Runtime overrides require Pro license. Run 'license upgrade' for Pro access.".to_string();
+        return "Error: Runtime overrides are a Pro feature. Upgrade to unlock unlimited access."
+            .to_string();
     }
 
     if app_state.strict_mode.is_active && app_state.timer.status == TimerStatus::Running {
@@ -717,7 +720,7 @@ fn stats_command(app_state: &mut AppState) -> String {
 
 fn devmode_command(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String {
     if !is_pro {
-        return "Error: Developer mode is a Pro feature. Run 'license upgrade' for Pro access."
+        return "Error: Developer mode is a Pro feature. Upgrade to unlock unlimited access."
             .to_string();
     }
 

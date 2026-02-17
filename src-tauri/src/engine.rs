@@ -46,13 +46,6 @@ impl EngineState {
         // Load license state using LicenseManager
         let license_manager = LicenseManager::new();
 
-        // Check if previous Strict Mode session was force-closed
-        // If so, mark it as failed
-        if license_manager.is_pro_enabled() {
-            // The license is Pro, so we can check for Strict Mode failure
-            // This is handled when the app starts
-        }
-
         Self {
             app_state: Mutex::new(app_state),
             sound_manager: Mutex::new(SoundManager::new()),

@@ -50,6 +50,8 @@ interface AppModelsProps {
 		intensity: string;
 		sound: string;
 	}) => Promise<string>;
+	refreshLicenseState: () => Promise<void>;
+	setProfileError: (value: SetStateAction<string | null>) => void;
 }
 
 interface TimerState {
@@ -267,6 +269,7 @@ interface SettingsPanelProps {
 	onResetSettings: () => void;
 	theme: string;
 	onThemeChange: (theme: string) => void;
+	onLicenseChange?: () => void;
 }
 
 /** Sound Control */

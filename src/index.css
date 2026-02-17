@@ -30,6 +30,10 @@
 	--accent-neon-secondary: #06b6d4;  /* Cyan Neon */
 	--accent-neon-glow: rgba(139, 92, 246, 0.5);
 
+	/* Timer Ring */
+	--color-ring-base: rgba(255, 255, 255, 0.1);
+	--color-ring-progress: #8b5cf6;
+
 	/* Command Bar */
 	--bg-command: rgba(255, 255, 255, 0.03);
 	--bg-command-hover: rgba(255, 255, 255, 0.05);

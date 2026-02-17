@@ -46,7 +46,8 @@ fn create_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> Stri
         if is_pro {
             return "Error: Cannot create more profiles.".to_string();
         } else {
-            return "Error: Free tier is limited to 1 custom profile. Upgrade to Pro for unlimited profiles.".to_string();
+            return "Error: Custom profiles are a Pro feature. Upgrade to unlock unlimited access."
+                .to_string();
         }
     }
 
@@ -191,7 +192,8 @@ fn edit_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String
         if is_pro {
             return "Error: Cannot edit this profile.".to_string();
         } else {
-            return "Error: Free tier can only edit your single custom profile. Upgrade to Pro for unlimited editing.".to_string();
+            return "Error: Custom profiles are a Pro feature. Upgrade to unlock unlimited access."
+                .to_string();
         }
     }
     let new_name = args[2].to_string();
@@ -278,7 +280,8 @@ fn duplicate_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> S
         if is_pro {
             return "Error: Cannot duplicate profile.".to_string();
         } else {
-            return "Error: Free tier is limited to 1 custom profile. Upgrade to Pro for unlimited profiles.".to_string();
+            return "Error: Custom profiles are a Pro feature. Upgrade to unlock unlimited access."
+                .to_string();
         }
     }
 

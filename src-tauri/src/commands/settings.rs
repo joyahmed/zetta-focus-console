@@ -88,8 +88,7 @@ pub fn can_create_profile(state: State<EngineState>) -> Result<CanCreateProfileR
         } else if is_pro {
             "Cannot create more profiles".to_string()
         } else {
-            "Free tier is limited to 1 custom profile. Upgrade to Pro for unlimited profiles."
-                .to_string()
+            "Custom profiles are a Pro feature. Upgrade to unlock unlimited access.".to_string()
         },
     })
 }
@@ -153,7 +152,7 @@ pub fn activate_strict_mode(
     // Use the new is_pro_enabled() function for feature gating
     if !license_manager.is_pro_enabled() {
         return Err(
-            "Strict Mode is a Pro feature. Please upgrade to Pro or Founder edition.".to_string(),
+            "Strict Mode is a Pro feature. Upgrade to unlock unlimited access.".to_string(),
         );
     }
     drop(license_manager);
