@@ -12,6 +12,7 @@
 //! - Validate license state
 
 use serde::{Deserialize, Serialize};
+use crate::pricing::{pro, founder};
 
 // ============================================================================
 // PAYMENT CONFIGURATION
@@ -125,11 +126,12 @@ pub struct PricingInfo {
 
 impl PricingInfo {
     /// Get pricing for Pro license
+    /// Uses centralized pricing constants from pricing module
     pub fn pro() -> Self {
         Self {
             product_type: ProductType::Pro,
-            price_usd: 29.0,
-            price_bdt: 2499.0,
+            price_usd: pro::PRICE_USD,
+            price_bdt: pro::PRICE_BDT,
             currency_symbol: "$".to_string(),
             is_one_time: true,
             features: vec![
@@ -140,16 +142,18 @@ impl PricingInfo {
                 "Premium sound packs".to_string(),
                 "Developer diagnostics".to_string(),
                 "Engine state inspection".to_string(),
+                "Unlimited custom profiles".to_string(),
             ],
         }
     }
 
     /// Get pricing for Founder license
+    /// Uses centralized pricing constants from pricing module
     pub fn founder() -> Self {
         Self {
             product_type: ProductType::Founder,
-            price_usd: 19.0,
-            price_bdt: 1499.0,
+            price_usd: founder::PRICE_USD,
+            price_bdt: founder::PRICE_BDT,
             currency_symbol: "$".to_string(),
             is_one_time: true,
             features: vec![
@@ -158,6 +162,7 @@ impl PricingInfo {
                 "Special signed key".to_string(),
                 "Early access privileges".to_string(),
                 "Recognition as early supporter".to_string(),
+                "Limited edition status".to_string(),
             ],
         }
     }

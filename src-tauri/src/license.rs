@@ -4,13 +4,11 @@
 //! Only LicenseManager may mutate LicenseState. All other modules must treat
 //! LicenseState as read-only.
 
+use crate::pricing::trial;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
-
-/// Trial duration in seconds (14 days)
-const TRIAL_DURATION_SECS: u64 = 14 * 24 * 60 * 60;
 
 /// Get the trial marker file path
 fn get_trial_marker_path() -> PathBuf {
@@ -356,7 +354,7 @@ impl LicenseManager {
                 .map(|d| d.as_secs())
                 .unwrap_or(0);
 
-            now > start_ts + TRIAL_DURATION_SECS
+            now > start_ts + trial::DURATION_SECS
         } else {
             true // No start timestamp means trial expired
         }
@@ -398,7 +396,7 @@ impl LicenseManager {
                 .unwrap_or(0);
 
             let elapsed = now.saturating_sub(start_ts);
-            let remaining = TRIAL_DURATION_SECS.saturating_sub(elapsed);
+            let remaining = trial::DURATION_SECS.saturating_sub(elapsed);
 
             (remaining / (24 * 60 * 60)) as u32
         } else {

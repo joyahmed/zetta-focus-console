@@ -364,3 +364,62 @@ interface TimerPanelProps {
 	onStop: () => void;
 	theme?: string;
 }
+
+// ============================================================================
+// PRICING STRATEGY TYPES
+// ============================================================================
+
+/** Feature category for license tier features */
+interface FeatureCategory {
+	core: 'core';
+	profiles: 'profiles';
+	ambience: 'ambience';
+	terminal: 'terminal';
+	developer: 'developer';
+	strict_mode: 'strict_mode';
+}
+
+/** License tier for feature checking */
+type LicenseTierForFeature = 'free' | 'trial' | 'pro' | 'founder';
+
+/** Feature definition with license tier requirements */
+interface Feature {
+	id: string;
+	name: string;
+	description: string;
+	category: 'core' | 'profiles' | 'ambience' | 'terminal' | 'developer' | 'strict_mode';
+	free: boolean;
+	trial: boolean;
+	pro: boolean;
+	founder: boolean;
+}
+
+/** Complete product pricing information */
+interface ProductPricing {
+	product_type: string;
+	name: string;
+	description: string;
+	price_usd: number;
+	price_bdt: number;
+	currency_symbol_usd: string;
+	currency_symbol_bdt: string;
+	is_one_time: boolean;
+	features: string[];
+	is_limited: boolean;
+	max_quantity: number | null;
+}
+
+/** Trial information */
+interface TrialInfo {
+	duration_days: number;
+	auto_renew: boolean;
+	description: string;
+	features: string[];
+}
+
+/** Free tier information */
+interface FreeTierInfo {
+	description: string;
+	features: string[];
+	limitations: string[];
+}
