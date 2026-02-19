@@ -490,10 +490,34 @@ impl LicenseManager {
         // In production, this would call actual cryptographic verification
 
         // For now, we'll parse the key format to determine validity
-        // Key format expected: "ZETTA-PRO-XXXX" or "ZETTA-FOUNDER-XXXX"
+        // Key format expected: "ZFC-PRO-XXXX-XXXX" or "ZFC-FOUNDER-XXXX-XXXX"
+        // Also supports legacy format: "ZETTA-PRO-XXXX" or "ZETTA-FOUNDER-XXXX"
 
         let key_upper = key.to_uppercase();
 
+        // New format: ZFC-PRO-XXXX-XXXX
+        if key_upper.starts_with("ZFC-PRO-") && key_upper.len() >= 16 {
+            let parts: Vec<&str> = key_upper.split('-').collect();
+            if parts.len() == 4 && parts[0] == "ZFC" && parts[1] == "PRO" {
+                let code = format!("{}-{}", parts[2], parts[3]);
+                if code.chars().all(|c| c.is_ascii_alphanumeric() || c == '-') {
+                    return (true, LicenseTier::Pro, key.to_string());
+                }
+            }
+        }
+
+        // New format: ZFC-FOUNDER-XXXX-XXXX
+        if key_upper.starts_with("ZFC-FOUNDER-") && key_upper.len() >= 20 {
+            let parts: Vec<&str> = key_upper.split('-').collect();
+            if parts.len() == 4 && parts[0] == "ZFC" && parts[1] == "FOUNDER" {
+                let code = format!("{}-{}", parts[2], parts[3]);
+                if code.chars().all(|c| c.is_ascii_alphanumeric() || c == '-') {
+                    return (true, LicenseTier::Founder, key.to_string());
+                }
+            }
+        }
+
+        // Legacy format: ZETTA-PRO-XXXX (backward compatibility)
         if key_upper.starts_with("ZETTA-PRO-") && key_upper.len() > 10 {
             let code = &key_upper[10..];
             if code.chars().all(|c| c.is_ascii_alphanumeric()) {
@@ -501,6 +525,7 @@ impl LicenseManager {
             }
         }
 
+        // Legacy format: ZETTA-FOUNDER-XXXX (backward compatibility)
         if key_upper.starts_with("ZETTA-FOUNDER-") && key_upper.len() > 14 {
             let code = &key_upper[14..];
             if code.chars().all(|c| c.is_ascii_alphanumeric()) {
