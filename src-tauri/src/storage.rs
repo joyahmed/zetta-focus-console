@@ -71,14 +71,23 @@ pub fn save_preferences(prefs: &Preferences) -> Result<(), String> {
 /// Load license state from disk
 pub fn load_license() -> LicenseState {
     let path = get_license_path();
+    
+    // DIAGNOSTIC: Track storage.rs license loading
+    eprintln!("[DIAGNOSTIC] storage::load_license() called");
+    eprintln!("[DIAGNOSTIC] storage.rs license path: {:?}", path);
+    eprintln!("[DIAGNOSTIC] WARNING: This path differs from LicenseManager::get_license_path()!");
 
     if !path.exists() {
+        eprintln!("[DIAGNOSTIC] License file does not exist at storage.rs path");
         return LicenseState::default();
     }
 
     match fs::read_to_string(&path) {
         Ok(content) => match serde_json::from_str::<LicenseState>(&content) {
-            Ok(license) => license,
+            Ok(license) => {
+                eprintln!("[DIAGNOSTIC] Loaded license from storage.rs: type={}", license.license_type);
+                license
+            }
             Err(e) => {
                 eprintln!("Failed to parse license: {}", e);
                 LicenseState::default()

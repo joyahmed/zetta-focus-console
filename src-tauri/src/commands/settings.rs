@@ -30,7 +30,13 @@ pub fn get_trial_status(state: State<EngineState>) -> Result<TrialStatus, String
 
 #[tauri::command]
 pub fn get_license(state: State<EngineState>) -> Result<LicenseState, String> {
+    // DIAGNOSTIC: Track get_license command
+    eprintln!("[DIAGNOSTIC] get_license command called - using shared EngineState");
+
     let license_manager = state.license_manager.lock().map_err(|e| e.to_string())?;
+
+    // DIAGNOSTIC: Log the license state being returned
+    eprintln!("[DIAGNOSTIC] Returning license from shared state: type={}", license_manager.get_license_type());
 
     // Use the license_manager from state directly instead of creating a new instance
     Ok(LicenseState {
@@ -43,8 +49,20 @@ pub fn get_license(state: State<EngineState>) -> Result<LicenseState, String> {
 
 #[tauri::command]
 pub fn activate_key(state: State<EngineState>, key: String) -> Result<String, String> {
+    // DIAGNOSTIC: Track license activation
+    eprintln!("[DIAGNOSTIC] activate_key command called");
+    eprintln!("[DIAGNOSTIC] Key (first 20 chars): {}...", &key.chars().take(20).collect::<String>());
+
     let mut license_manager = state.license_manager.lock().map_err(|e| e.to_string())?;
+
+    // DIAGNOSTIC: Log current state before activation
+    eprintln!("[DIAGNOSTIC] Current tier before activation: {:?}", license_manager.get_tier());
+
     license_manager.activate_key(&key)?;
+
+    // DIAGNOSTIC: Log new state after activation
+    eprintln!("[DIAGNOSTIC] Activation successful! New tier: {:?}", license_manager.get_tier());
+
     Ok(format!(
         "License key activated successfully! Your license type is now {}.",
         license_manager.get_license_type()

@@ -110,10 +110,19 @@ pub fn verify_webhook_signature(payload: &[u8], signature: &str, secret: &str) -
     use hmac::{Hmac, Mac};
     type HmacSha256 = Hmac<Sha256>;
 
+    // DIAGNOSTIC: Track webhook signature verification
+    eprintln!("[DIAGNOSTIC] verify_webhook_signature() called");
+    eprintln!("[DIAGNOSTIC] Payload length: {} bytes", payload.len());
+    eprintln!("[DIAGNOSTIC] Provided signature: {}", signature);
+    eprintln!("[DIAGNOSTIC] Secret length: {} chars (should not be placeholder!)", secret.len());
+
     // Create HMAC-SHA256 with signing secret
     let mut mac = match HmacSha256::new_from_slice(secret.as_bytes()) {
         Ok(m) => m,
-        Err(_) => return false,
+        Err(_) => {
+            eprintln!("[DIAGNOSTIC] Failed to create HMAC from secret");
+            return false;
+        }
     };
 
     // Update with payload
@@ -122,6 +131,10 @@ pub fn verify_webhook_signature(payload: &[u8], signature: &str, secret: &str) -
     // Get result
     let result = mac.finalize();
     let computed_signature = hex::encode(result.into_bytes());
+
+    // DIAGNOSTIC: Log computed signature for comparison
+    eprintln!("[DIAGNOSTIC] Computed signature: {}", computed_signature);
+    eprintln!("[DIAGNOSTIC] Signatures match: {}", computed_signature == signature);
 
     // Compare signatures (constant-time comparison would be better)
     computed_signature == signature
@@ -214,14 +227,28 @@ pub struct GeneratedLicense {
 /// * `Some(GeneratedLicense)` if successful
 /// * `None` if the webhook doesn't require license generation
 pub fn process_webhook(payload: &WebhookPayload) -> Option<GeneratedLicense> {
+    // DIAGNOSTIC: Track webhook processing
+    eprintln!("[DIAGNOSTIC] process_webhook() called");
+    eprintln!("[DIAGNOSTIC] Event type: {}", payload.event);
+
     // Only process order_paid events
+    // BUG: Comment says "order_paid" but code accepts both "order_paid" AND "order_created"
     if payload.event != "order_paid" && payload.event != "order_created" {
+        eprintln!("[DIAGNOSTIC] Event type not processed: {}", payload.event);
         return None;
+    }
+
+    // DIAGNOSTIC: Warn about potential issue
+    if payload.event == "order_created" {
+        eprintln!("[DIAGNOSTIC] WARNING: Processing 'order_created' event - may not be paid yet!");
     }
 
     // Check order status
     let status = payload.data.attributes.status.as_ref()?;
+    eprintln!("[DIAGNOSTIC] Order status: {}", status);
+
     if status != "paid" {
+        eprintln!("[DIAGNOSTIC] Order not paid, skipping");
         return None;
     }
 
@@ -231,13 +258,18 @@ pub fn process_webhook(payload: &WebhookPayload) -> Option<GeneratedLicense> {
 
     // Determine product tier
     let variant_name = payload.data.attributes.variant_name.as_ref()?;
+    eprintln!("[DIAGNOSTIC] Variant name: {}", variant_name);
+
     let tier = ProductTier::from_variant_name(variant_name)?;
+    eprintln!("[DIAGNOSTIC] Determined tier: {:?}", tier);
 
     // Generate license ID
     let license_id = generate_license_id();
 
     // Generate the license key with optional signing
     let (license_key, is_signed) = generate_signed_license_key(&tier, &license_id);
+
+    eprintln!("[DIAGNOSTIC] Generated license key: {} (signed: {})", license_key, is_signed);
 
     Some(GeneratedLicense {
         license_key,
@@ -443,3 +475,4 @@ mod tests {
         assert!(license.license_key.starts_with("ZFC-FOUNDER-"));
     }
 }
+

@@ -40,11 +40,16 @@ pub struct EngineState {
 
 impl EngineState {
     pub fn new() -> Self {
+        // DIAGNOSTIC: Track EngineState creation
+        eprintln!("[DIAGNOSTIC] EngineState::new() called - creating shared state");
+
         let mut app_state = AppStateType::new();
         app_state.load_preferences();
 
         // Load license state using LicenseManager
+        eprintln!("[DIAGNOSTIC] Creating LicenseManager for EngineState...");
         let license_manager = LicenseManager::new();
+        eprintln!("[DIAGNOSTIC] LicenseManager created with tier: {:?}", license_manager.get_tier());
 
         Self {
             app_state: Mutex::new(app_state),
