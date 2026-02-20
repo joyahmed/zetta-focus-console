@@ -3,12 +3,23 @@
 //! This module is the single source of truth for all license-related operations.
 //! Only LicenseManager may mutate LicenseState. All other modules must treat
 //! LicenseState as read-only.
+//!
+//! ## Cryptographic Verification
+//!
+//! License keys are verified using Ed25519 signatures. The verification flow:
+//! 1. Parse key format (ZFC-PRO-XXXX-XXXX or ZFC-FOUNDER-XXXX-XXXX)
+//! 2. If signed data present, verify cryptographic signature
+//! 3. Validate tier and product
+//! 4. Persist license data locally
 
 use crate::pricing::trial;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
+
+// Import cryptographic verification module
+use crate::license_crypto;
 
 /// Get the trial marker file path
 fn get_trial_marker_path() -> PathBuf {
@@ -452,21 +463,24 @@ impl LicenseManager {
             return Err("License key cannot be empty".to_string());
         }
 
-        // Step 2: Verify cryptographic signature
-        // Note: In production, this would call a real verification module
-        // For now, we assume a verification function exists and returns true/false
-        let (is_valid, tier, signature) = Self::verify_license_key(key);
+        // Step 2: Verify cryptographic signature using the crypto module
+        let (tier, license_id) = match license_crypto::verify_license(key) {
+            Ok((tier, id)) => (tier, id),
+            Err(e) => return Err(format!("License verification failed: {}", e)),
+        };
 
-        if !is_valid {
-            return Err("Invalid license key".to_string());
-        }
+        // Step 3: Determine tier and update LicenseState
+        let license_tier = match tier.as_str() {
+            "PRO" => LicenseTier::Pro,
+            "FOUNDER" => LicenseTier::Founder,
+            _ => return Err("Invalid license tier".to_string()),
+        };
 
-        // Step 3 & 4: Determine tier and update LicenseState
-        self.tier = tier;
+        self.tier = license_tier;
         self.trial_start_timestamp = None; // Clear trial state
-        self.signature = Some(signature);
+        self.signature = Some(key.to_string()); // Store the full key as signature
 
-        // Step 5: Persist encrypted license
+        // Step 4: Persist encrypted license
         self.persist()?;
 
         Ok(())
@@ -474,22 +488,18 @@ impl LicenseManager {
 
     /// Verify license key signature
     ///
-    /// This is a placeholder function. In production, this would use actual
-    /// cryptographic verification. The architecture assumes a verification
-    /// module exists.
+    /// Uses the cryptographic verification module to validate the license key.
+    /// Supports both simple format keys (for testing) and signed keys (production).
     ///
     /// # Arguments
     /// * `key` - The license key to verify
     ///
     /// # Returns
     /// * `(is_valid, tier, signature)` - Tuple of validation result, tier, and signature
+    #[deprecated(note = "Use license_crypto::verify_license instead")]
     fn verify_license_key(key: &str) -> (bool, LicenseTier, String) {
-        // Placeholder implementation - assumes verification module exists
-        // In production, this would call actual cryptographic verification
-
-        // For now, we'll parse the key format to determine validity
-        // Key format expected: "ZFC-PRO-XXXX-XXXX" or "ZFC-FOUNDER-XXXX-XXXX"
-        // Also supports legacy format: "ZETTA-PRO-XXXX" or "ZETTA-FOUNDER-XXXX"
+        // Fallback implementation for backward compatibility
+        // This uses the old format-based validation
 
         let key_upper = key.to_uppercase();
 

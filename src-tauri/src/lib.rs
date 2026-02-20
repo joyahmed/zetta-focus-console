@@ -1,11 +1,13 @@
 mod commands;
 mod engine;
 mod license;
+mod license_crypto;
 mod payment;
 mod pricing;
 mod sound;
 mod storage;
 mod types;
+mod webhook;
 
 use engine::{
     activate_key, can_create_profile, clear_debug_license_override, clear_license_storage,
@@ -20,6 +22,9 @@ use payment::{
 use pricing::{
     get_all_features, get_features_by_category, get_features_for_tier, is_feature_available,
     Feature, FeatureCategory, LicenseTierForFeature, ProductPricing, TrialInfo, FreeTierInfo,
+};
+use webhook::{
+    process_webhook, verify_webhook_signature, GeneratedLicense, WebhookPayload, WebhookResponse,
 };
 
 // ============================================================================
@@ -144,6 +149,39 @@ fn pricing_get_features_by_category(category: String) -> Vec<Feature> {
     get_features_by_category(feature_category)
 }
 
+// ============================================================================
+// TAURI COMMANDS - WEBHOOK HANDLING
+// ============================================================================
+
+/// Verify a Lemon Squeezy webhook signature
+/// This is used by the backend service to validate incoming webhooks
+#[tauri::command]
+fn webhook_verify_signature(payload: String, signature: String, secret: String) -> bool {
+    verify_webhook_signature(payload.as_bytes(), &signature, &secret)
+}
+
+/// Process a Lemon Squeezy webhook and generate a license key
+/// This is used by the backend service after verifying the webhook
+#[tauri::command]
+fn webhook_process(payload: WebhookPayload) -> Option<GeneratedLicense> {
+    process_webhook(&payload)
+}
+
+/// Create a webhook response
+#[tauri::command]
+fn webhook_response(success: bool, message: String, license_key: Option<String>) -> WebhookResponse {
+    let response = if success {
+        WebhookResponse::success(&message)
+    } else {
+        WebhookResponse::error(&message)
+    };
+
+    match license_key {
+        Some(key) => response.with_license_key(&key),
+        None => response,
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -179,6 +217,10 @@ pub fn run() {
             pricing_get_features_for_tier,
             pricing_is_feature_available,
             pricing_get_features_by_category,
+            // Webhook commands
+            webhook_verify_signature,
+            webhook_process,
+            webhook_response,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
