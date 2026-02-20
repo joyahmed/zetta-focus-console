@@ -3,8 +3,8 @@
 use super::parser::{format_time, parse_command_with_quotes, parse_duration};
 use crate::sound::get_sound_data;
 use crate::types::{
-    AppState, AppStateExt, SessionOverride, SessionType, StateEvent, Stats, StrictModeState,
-    TimerState, TimerStatus,
+    AppState, AppStateExt, CurrentTask, SessionOverride, SessionType, StateEvent, Stats,
+    StrictModeState, TaskCategory, TimerState, TimerStatus,
 };
 use crate::EngineState;
 use sysinfo::System;
@@ -126,6 +126,18 @@ pub fn process_command(
     args: &[&str],
     is_pro: bool,
 ) -> String {
+    // Handle command aliases
+    let cmd = match cmd {
+        // Start aliases
+        "s" | "st" => "start",
+        // Stop aliases
+        "r" => "stop",
+        // Pause aliases
+        "p" => "pause",
+        // Resume is already "resume"
+        _ => cmd,
+    };
+
     // Show Pro features in help if user has Pro
     let pro_features = if is_pro {
         "
@@ -159,6 +171,8 @@ pub fn process_command(
         "focus" => focus_command(args, app_state, sound_manager),
 
         "strict" => strict_command(args, app_state, is_pro),
+
+        "task" => task_command(args, app_state),
 
         "timer" => timer_override_command(args, app_state, is_pro),
 
@@ -366,6 +380,77 @@ fn strict_command(args: &[&str], app_state: &mut AppState, is_pro: bool) -> Stri
             };
             format!("Strict Mode: {}", status)
         }
+    }
+}
+
+fn task_command(args: &[&str], app_state: &mut AppState) -> String {
+    match args.first() {
+        Some(&"set") => {
+            // Parse: task set "title" --category coding|other
+            let mut title = String::new();
+            let mut category = TaskCategory::Coding;
+
+            let args_vec: Vec<&str> = args[1..].to_vec();
+
+            // Find the title (in quotes or until --category)
+            let mut in_title = true;
+            for arg in &args_vec {
+                if *arg == "--category" {
+                    in_title = false;
+                    continue;
+                }
+
+                if in_title {
+                    // Remove quotes if present
+                    let clean_arg = arg.trim_matches('"').trim_matches('\'');
+                    if !clean_arg.is_empty() {
+                        if !title.is_empty() {
+                            title.push(' ');
+                        }
+                        title.push_str(clean_arg);
+                    }
+                } else if *arg == "coding" {
+                    category = TaskCategory::Coding;
+                } else if *arg == "other" {
+                    category = TaskCategory::Other;
+                }
+            }
+
+            if title.is_empty() {
+                return "Error: Task title is required. Usage: task set \"your task\" --category coding|other"
+                    .to_string();
+            }
+
+            app_state.current_task = CurrentTask {
+                category,
+                title,
+            };
+
+            let category_str = match app_state.current_task.category {
+                TaskCategory::Coding => "coding",
+                TaskCategory::Other => "other",
+            };
+
+            format!("Task set: [{}] {}", category_str, app_state.current_task.title)
+        }
+        Some(&"clear") => {
+            app_state.current_task = CurrentTask::default();
+            "Task cleared.".to_string()
+        }
+        Some(&"show") | None => {
+            if app_state.current_task.is_empty() {
+                "No task set. Use 'task set \"title\" --category coding|other' to set a task."
+                    .to_string()
+            } else {
+                let category_str = match app_state.current_task.category {
+                    TaskCategory::Coding => "coding",
+                    TaskCategory::Other => "other",
+                };
+                format!("Task: [{}] {}", category_str, app_state.current_task.title)
+            }
+        }
+        _ => "Error: Unknown task command. Usage: task set \"title\" --category coding|other | task show | task clear"
+            .to_string(),
     }
 }
 
@@ -602,19 +687,9 @@ fn stop_command(
         return "Error: No active session to stop.".to_string();
     }
 
+    // Block stop during Strict Mode - user must complete the session
     if app_state.strict_mode.is_active {
-        app_state.strict_mode.was_force_closed = true;
-        app_state.strict_mode.is_active = false;
-
-        if app_state.sound_state.is_playing {
-            sound_manager.stop();
-            app_state.sound_state.is_playing = false;
-            app_state.sound_state.current_sound = None;
-        }
-        app_state.timer.status = TimerStatus::Idle;
-        app_state.timer.remaining_seconds = app_state.active_profile.focus_duration;
-
-        return "Strict Mode session marked as FAILED (manually stopped). Session reset."
+        return "Error: Stop is disabled during Strict Mode. Session must run to completion."
             .to_string();
     }
 
@@ -680,6 +755,15 @@ fn status_command(app_state: &mut AppState) -> String {
         ),
         format!("Profile: {}", app_state.active_profile.name),
     ];
+
+    // Show task info if set
+    if !app_state.current_task.is_empty() {
+        let category_str = match app_state.current_task.category {
+            TaskCategory::Coding => "coding",
+            TaskCategory::Other => "other",
+        };
+        info.push(format!("Task: [{}] {}", category_str, app_state.current_task.title));
+    }
 
     if app_state.strict_mode.is_active {
         info.push("Strict Mode: ACTIVE (cannot pause/stop)".to_string());

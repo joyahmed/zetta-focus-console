@@ -27,6 +27,8 @@ const AppPanels = ({
 						timer={appState.timer}
 						glowColor={appState.active_profile.glow_color}
 						sessionOverride={appState.session_override}
+						strictMode={appState.strict_mode}
+						currentTask={appState.current_task}
 						onStart={() => processCommand('start')}
 						onPause={() => processCommand('focus pause')}
 						onResume={() => processCommand('focus resume')}
@@ -47,6 +49,7 @@ const AppPanels = ({
 						onErrorDismiss={() => setProfileError(null)}
 						licenseType={licenseState?.license_type}
 						trialDaysRemaining={trialDaysRemaining}
+						stats={appState.stats}
 					/>
 				</div>
 

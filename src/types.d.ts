@@ -36,6 +36,7 @@ interface AppModelsProps {
 	handleResetSettings: () => Promise<void>;
 	handleThemeChange: (theme: string) => Promise<void>;
 	helpOpen: boolean;
+	licenseState: { license_type: string } | null;
 
 	profileModalOpen: boolean;
 	setProfileModalOpen: (value: SetStateAction<boolean>) => void;
@@ -114,6 +115,17 @@ interface SessionOverride {
 	loop_count: number | null;
 }
 
+interface StrictModeState {
+	is_active: boolean;
+	session_start_timestamp: number | null;
+	was_force_closed: boolean;
+}
+
+interface CurrentTask {
+	category: 'coding' | 'other';
+	title: string;
+}
+
 interface AppState {
 	timer: TimerState;
 	active_profile: Profile;
@@ -126,6 +138,8 @@ interface AppState {
 	session_override: SessionOverride | null;
 	ambience_enabled: boolean;
 	theme: string;
+	strict_mode: StrictModeState;
+	current_task: CurrentTask;
 }
 
 interface StateEvent {
@@ -255,6 +269,7 @@ interface ProfilePanelProps {
 	onErrorDismiss?: () => void;
 	licenseType?: string;
 	trialDaysRemaining?: number | null;
+	stats?: Stats;
 }
 
 /** Settings Panel */
@@ -278,6 +293,9 @@ interface SettingsPanelProps {
 	theme: string;
 	onThemeChange: (theme: string) => void;
 	onLicenseChange?: () => void;
+	strictModeActive?: boolean;
+	onStrictModeToggle?: () => void;
+	isPro?: boolean;
 }
 
 /** Sound Control */
@@ -358,6 +376,8 @@ interface TimerPanelProps {
 	timer: TimerState;
 	glowColor: string;
 	sessionOverride?: SessionOverride | null;
+	strictMode?: StrictModeState | null;
+	currentTask?: CurrentTask | null;
 	onStart: () => void;
 	onPause: () => void;
 	onResume: () => void;

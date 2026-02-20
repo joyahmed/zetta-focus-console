@@ -241,6 +241,38 @@ impl Default for StrictModeState {
 }
 
 // ============================================================================
+// TASK/INTENTION TYPES
+// ============================================================================
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum TaskCategory {
+    Coding,
+    Other,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CurrentTask {
+    pub category: TaskCategory,
+    pub title: String,
+}
+
+impl Default for CurrentTask {
+    fn default() -> Self {
+        Self {
+            category: TaskCategory::Coding,
+            title: String::new(),
+        }
+    }
+}
+
+impl CurrentTask {
+    pub fn is_empty(&self) -> bool {
+        self.title.trim().is_empty()
+    }
+}
+
+// ============================================================================
 // PREFERENCES TYPES
 // ============================================================================
 
@@ -347,6 +379,7 @@ pub struct AppState {
     pub ambience_enabled: bool,
     pub theme: String,
     pub strict_mode: StrictModeState,
+    pub current_task: CurrentTask,
 }
 
 impl Default for AppState {
@@ -447,6 +480,7 @@ impl AppState {
             ambience_enabled: true,
             theme: "dark".to_string(),
             strict_mode: StrictModeState::default(),
+            current_task: CurrentTask::default(),
         }
     }
 }

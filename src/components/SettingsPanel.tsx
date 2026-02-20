@@ -1,17 +1,36 @@
 import { lazy, Suspense } from 'react';
 import { useSettingPanel } from '../hooks/use-setting-panel';
 
-const SettingsHeader = lazy(() => import('./settings-panel/SettingsHeader'));
-const AmbientSection = lazy(() => import('./settings-panel/AmbientSection'));
-const SoundSection = lazy(() => import('./settings-panel/SoundSection'));
+const SettingsHeader = lazy(
+	() => import('./settings-panel/SettingsHeader')
+);
+const AmbientSection = lazy(
+	() => import('./settings-panel/AmbientSection')
+);
+const SoundSection = lazy(
+	() => import('./settings-panel/SoundSection')
+);
 const BackgroundSection = lazy(
 	() => import('./settings-panel/BackgroundSection')
 );
-const ThemeSection = lazy(() => import('./settings-panel/ThemeSection'));
-const DevModeSection = lazy(() => import('./settings-panel/DevModeSection'));
-const ResetSection = lazy(() => import('./settings-panel/ResetSection'));
-const LicenseSection = lazy(() => import('./settings-panel/LicenseSection'));
-const SettingsFooter = lazy(() => import('./settings-panel/SettingsFooter'));
+const ThemeSection = lazy(
+	() => import('./settings-panel/ThemeSection')
+);
+const DevModeSection = lazy(
+	() => import('./settings-panel/DevModeSection')
+);
+const StrictModeSection = lazy(
+	() => import('./settings-panel/StrictModeSection')
+);
+const ResetSection = lazy(
+	() => import('./settings-panel/ResetSection')
+);
+const LicenseSection = lazy(
+	() => import('./settings-panel/LicenseSection')
+);
+const SettingsFooter = lazy(
+	() => import('./settings-panel/SettingsFooter')
+);
 
 const SettingsPanel = ({
 	isOpen,
@@ -32,7 +51,10 @@ const SettingsPanel = ({
 	onResetSettings,
 	theme,
 	onThemeChange,
-	onLicenseChange
+	onLicenseChange,
+	strictModeActive,
+	onStrictModeToggle,
+	isPro
 }: SettingsPanelProps) => {
 	const isLight = theme === 'light';
 
@@ -107,6 +129,17 @@ const SettingsPanel = ({
 							{...{
 								devMode,
 								onDevModeToggle,
+								isLight
+							}}
+						/>
+					</Suspense>
+
+					<Suspense fallback={null}>
+						<StrictModeSection
+							{...{
+								strictModeActive: strictModeActive || false,
+								onStrictModeToggle: onStrictModeToggle || (() => {}),
+								isPro: isPro || false,
 								isLight
 							}}
 						/>

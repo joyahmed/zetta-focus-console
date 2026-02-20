@@ -9,7 +9,8 @@ export default function ProfilePanel({
 	errorMessage,
 	onErrorDismiss,
 	licenseType,
-	trialDaysRemaining
+	trialDaysRemaining,
+	stats
 }: ProfilePanelProps) {
 	const otherProfiles = profiles.filter(p => p.id !== profile.id);
 
@@ -55,7 +56,7 @@ export default function ProfilePanel({
 						{getSeasonEmoji(profile.season)}
 					</div>
 					<div className='flex-1'>
-						<div className='flex items-center gap-2'>
+						<div className='flex items-center gap-2 flex-wrap'>
 							<span
 								className='text-sm md:text-lg font-semibold'
 								style={{ color: 'var(--text-primary)' }}
@@ -83,8 +84,23 @@ export default function ProfilePanel({
 								{licenseBadge.label}
 							</span>
 						</div>
+						{/* Sessions Today */}
+						<div className='flex items-center gap-2 mt-1'>
+							<span
+								className='text-[10px] font-medium'
+								style={{ color: 'var(--text-muted)' }}
+							>
+								Sessions Today:
+							</span>
+							<span
+								className='text-[10px] font-semibold'
+								style={{ color: profile.glow_color }}
+							>
+								{stats?.sessions_today ?? 0}
+							</span>
+						</div>
 						<div
-							className='text-[10px] md:text-xs'
+							className='text-[10px] md:text-xs mt-1'
 							style={{ color: 'var(--text-muted)' }}
 						>
 							ID: {profile.id}

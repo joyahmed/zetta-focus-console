@@ -9,17 +9,22 @@
 // Re-export modules from crate root
 pub use crate::commands::{
     activate_key, activate_strict_mode, can_create_profile, check_strict_mode_failure,
-    clear_debug_license_override, clear_license_storage, deactivate_strict_mode, execute_command,
+    deactivate_strict_mode, execute_command,
     format_time, get_license, get_state, get_theme, get_trial_days_remaining, get_trial_status,
-    is_pro, parse_command_with_quotes, parse_duration, process_command, set_debug_license_override,
+    is_pro, parse_command_with_quotes, parse_duration, process_command,
     set_theme, set_total_sessions, tick_system_stats, tick_timer,
+};
+
+#[cfg(debug_assertions)]
+pub use crate::commands::{
+    clear_debug_license_override, clear_license_storage, set_debug_license_override,
 };
 
 // Re-export types from crate root
 pub use crate::types::{
-    AppState, AppStats, BackgroundType, LicenseState, MotionIntensity, Profile, Season,
-    SessionOverride, SessionType, SoundState, Stats, StrictModeState, SystemStats, TimerState,
-    TimerStatus,
+    AppState, AppStats, BackgroundType, CurrentTask, LicenseState, MotionIntensity, Profile,
+    Season, SessionOverride, SessionType, SoundState, Stats, StrictModeState, SystemStats,
+    TaskCategory, TimerState, TimerStatus,
 };
 
 // Re-export license functions

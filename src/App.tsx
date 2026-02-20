@@ -125,7 +125,8 @@ const App = () => {
 							profileModalMode,
 							handleCreateProfile,
 							refreshLicenseState,
-							setProfileError
+							setProfileError,
+							licenseState
 						}}
 					/>
 				</Suspense>

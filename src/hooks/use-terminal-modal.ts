@@ -10,6 +10,43 @@ interface UseTerminalModalProps {
 	isLight: boolean;
 }
 
+// Available commands for tab completion
+const COMMANDS = [
+	'help',
+	'start',
+	'stop',
+	'pause',
+	'resume',
+	'status',
+	'override clear',
+	'sessions',
+	'profile list',
+	'profile switch',
+	'season',
+	'config show',
+	'stats',
+	'ambience on',
+	'ambience off',
+	'sound play',
+	'sound stop',
+	'sound volume',
+	'sound mute',
+	'system',
+	'memory',
+	'cpu',
+	'theme',
+	'clear',
+	// Aliases (for display only)
+	's',
+	'st',
+	'r',
+	'p'
+];
+
+// Storage key for persistent history
+const HISTORY_STORAGE_KEY = 'zetta_terminal_history';
+const MAX_HISTORY_SIZE = 100;
+
 export const useTerminalModal = ({
 	isOpen,
 	onClose,
@@ -19,20 +56,59 @@ export const useTerminalModal = ({
 	onSummaryRead,
 	isLight
 }: UseTerminalModalProps) => {
+	// Load persisted history from localStorage
+	const loadPersistedHistory = (): string[] => {
+		try {
+			const saved = localStorage.getItem(HISTORY_STORAGE_KEY);
+			if (saved) {
+				const parsed = JSON.parse(saved);
+				if (Array.isArray(parsed)) {
+					return parsed.slice(-MAX_HISTORY_SIZE);
+				}
+			}
+		} catch (e) {
+			console.error('Failed to load terminal history:', e);
+		}
+		return [];
+	};
+
+	// Save history to localStorage
+	const saveHistory = (history: string[]) => {
+		try {
+			localStorage.setItem(
+				HISTORY_STORAGE_KEY,
+				JSON.stringify(history.slice(-MAX_HISTORY_SIZE))
+			);
+		} catch (e) {
+			console.error('Failed to save terminal history:', e);
+		}
+	};
+
 	const [history, setHistory] = useState<TerminalLine[]>([
 		{ type: 'output', content: 'Zetta Focus Console v1.0.0' },
 		{
 			type: 'output',
 			content: 'Type "help" for available commands.'
 		},
-		{ type: 'output', content: 'Press ESC to close terminal.' }
+		{ type: 'output', content: 'Press ESC to close terminal.' },
+		{
+			type: 'output',
+			content: 'Tip: Use Tab for autocomplete, ↑↓ for history.'
+		}
 	]);
 	const [input, setInput] = useState('');
-	const [commandHistory, setCommandHistory] = useState<string[]>([]);
+	const [commandHistory, setCommandHistory] = useState<string[]>(loadPersistedHistory);
 	const [historyIndex, setHistoryIndex] = useState(-1);
 	const [isExecuting, setIsExecuting] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const outputRef = useRef<HTMLDivElement>(null);
+
+	// Save history when it changes
+	useEffect(() => {
+		if (commandHistory.length > 0) {
+			saveHistory(commandHistory);
+		}
+	}, [commandHistory]);
 
 	// Handle session summary from backend
 	useEffect(() => {
@@ -78,6 +154,49 @@ export const useTerminalModal = ({
 		return () =>
 			window.removeEventListener('keydown', handleGlobalKeyDown);
 	}, [isOpen]);
+
+	// Tab completion handler
+	const handleTabCompletion = (currentInput: string): string => {
+		const inputLower = currentInput.toLowerCase().trim();
+
+		if (!inputLower) {
+			return currentInput;
+		}
+
+		// Find matching commands
+		const matches = COMMANDS.filter(cmd =>
+			cmd.toLowerCase().startsWith(inputLower)
+		);
+
+		if (matches.length === 0) {
+			return currentInput;
+		}
+
+		if (matches.length === 1) {
+			// Single match - complete it
+			return matches[0];
+		}
+
+		// Multiple matches - find the longest common prefix
+		const firstMatch = matches[0];
+		let commonPrefix = '';
+		for (let i = 0; i < firstMatch.length; i++) {
+			const char = firstMatch[i];
+			if (matches.every(m => m[i] === char)) {
+				commonPrefix += char;
+			} else {
+				break;
+			}
+		}
+
+		// If common prefix is longer than input, use it
+		if (commonPrefix.length > inputLower.length) {
+			return commonPrefix;
+		}
+
+		// Otherwise, just return the first match
+		return matches[0];
+	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -149,6 +268,13 @@ export const useTerminalModal = ({
 			} else if (historyIndex === 0) {
 				setHistoryIndex(-1);
 				setInput('');
+			}
+		} else if (e.key === 'Tab') {
+			e.preventDefault();
+			// Handle tab completion
+			const completed = handleTabCompletion(input);
+			if (completed !== input) {
+				setInput(completed);
 			}
 		} else if (e.key === 'PageUp') {
 			e.preventDefault();

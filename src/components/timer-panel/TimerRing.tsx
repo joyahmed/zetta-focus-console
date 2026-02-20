@@ -7,6 +7,7 @@ interface CircleProps {
 	strokeLinecap?: 'round' | 'butt' | 'square';
 	className?: string;
 	style?: React.CSSProperties;
+	gradientId?: string;
 }
 
 const Circle = ({
@@ -17,8 +18,28 @@ const Circle = ({
 	strokeDashoffset,
 	strokeLinecap,
 	className,
-	style
+	style,
+	gradientId
 }: CircleProps) => {
+	// If gradientId is provided, use the gradient
+	if (gradientId) {
+		return (
+			<circle
+				cx='100'
+				cy='100'
+				r={radius}
+				fill='none'
+				stroke={`url(#${gradientId})`}
+				strokeWidth={strokeWidth}
+				strokeDasharray={strokeDasharray}
+				strokeDashoffset={strokeDashoffset}
+				strokeLinecap={strokeLinecap}
+				className={className}
+				style={style}
+			/>
+		);
+	}
+
 	return (
 		<circle
 			cx='100'
@@ -34,7 +55,7 @@ const Circle = ({
 			style={style}
 		/>
 	);
-}
+};
 
 interface TimerRingProps {
 	radius: number;
@@ -42,6 +63,7 @@ interface TimerRingProps {
 	strokeDashoffset: number;
 	isRunning: boolean;
 	glowColor: string;
+	isStrictMode?: boolean;
 }
 
 const TimerRing = ({
@@ -49,18 +71,41 @@ const TimerRing = ({
 	circumference,
 	strokeDashoffset,
 	isRunning,
-	glowColor
+	glowColor,
+	isStrictMode = false
 }: TimerRingProps) => {
 	const progressStroke = isRunning ? glowColor : 'var(--text-muted)';
 	const progressStyle = isRunning
 		? { filter: `drop-shadow(0 0 6px ${glowColor})` }
 		: {};
 
+	// Use gradient for strict mode
+	const gradientId = isStrictMode
+		? 'strict-mode-gradient'
+		: undefined;
+
 	return (
 		<svg
 			className='absolute w-full h-full -rotate-90 transform'
 			viewBox='0 0 200 200'
 		>
+			{/* Define gradient for strict mode */}
+			{isStrictMode && (
+				<defs>
+					<linearGradient
+						id='strict-mode-gradient'
+						x1='0%'
+						y1='0%'
+						x2='100%'
+						y2='100%'
+					>
+						<stop offset='0%' stopColor='#ef4444' />
+						<stop offset='50%' stopColor='#dc2626' />
+						<stop offset='100%' stopColor='#b91c1c' />
+					</linearGradient>
+				</defs>
+			)}
+
 			<Circle
 				{...{
 					radius,
@@ -76,11 +121,12 @@ const TimerRing = ({
 					strokeDasharray: circumference,
 					strokeDashoffset,
 					className: 'transition-all duration-1000 ease-linear',
-					style: progressStyle
+					style: progressStyle,
+					gradientId
 				}}
 			/>
 		</svg>
 	);
-}
+};
 
 export default TimerRing;

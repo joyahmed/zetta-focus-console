@@ -1,4 +1,4 @@
-import { PlayIcon, PauseIcon, RefreshIcon, StopIcon } from './icons';
+import { PauseIcon, PlayIcon, RefreshIcon, StopIcon } from './icons';
 
 type TimerStatus = TimerState['status'];
 
@@ -7,13 +7,15 @@ interface ControlButtonProps {
 	title: string;
 	variant: 'primary' | 'secondary' | 'danger';
 	children: React.ReactNode;
+	disabled?: boolean;
 }
 
 function ControlButton({
 	onClick,
 	title,
 	variant,
-	children
+	children,
+	disabled = false
 }: ControlButtonProps) {
 	const baseStyles =
 		'h-16 w-16 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95';
@@ -27,11 +29,15 @@ function ControlButton({
 			'border border-red-500/30 bg-red-500/10 text-red-500 backdrop-blur-sm hover:bg-red-500/20 hover:border-red-500/50'
 	};
 
+	const disabledStyles =
+		'opacity-50 cursor-not-allowed hover:scale-100 active:scale-100';
+
 	return (
 		<button
 			onClick={onClick}
-			className={`${baseStyles} ${variantStyles[variant]}`}
+			className={`${baseStyles} ${variantStyles[variant]} ${disabled ? disabledStyles : ''}`}
 			title={title}
+			disabled={disabled}
 		>
 			{children}
 		</button>
@@ -44,6 +50,7 @@ interface TimerControlsProps {
 	onPause: () => void;
 	onResume: () => void;
 	onStop: () => void;
+	isStrictModeBlocking?: boolean;
 }
 
 function TimerControls({
@@ -51,8 +58,11 @@ function TimerControls({
 	onStart,
 	onPause,
 	onResume,
-	onStop
+	onStop,
+	isStrictModeBlocking = false
 }: TimerControlsProps) {
+	// When strict mode is blocking, show only the stop button as disabled
+	// and show a tooltip explaining why
 	return (
 		<div className='flex items-center gap-6 z-10'>
 			{status === 'idle' && (
@@ -71,8 +81,11 @@ function TimerControls({
 				<ControlButton
 					{...{
 						onClick: onPause,
-						title: 'Pause',
-						variant: 'secondary'
+						title: isStrictModeBlocking
+							? 'Pause disabled in Strict Mode'
+							: 'Pause',
+						variant: 'secondary',
+						disabled: isStrictModeBlocking
 					}}
 				>
 					<PauseIcon />
@@ -107,6 +120,13 @@ function TimerControls({
 						</ControlButton>
 					)}
 				</>
+			)}
+
+			{/* Strict Mode blocker overlay - shows when blocking */}
+			{isStrictModeBlocking && status === 'running' && (
+				<div className='absolute bottom-20 text-xs text-red-400 opacity-70'>
+					Strict Mode: Session cannot be paused or stopped
+				</div>
 			)}
 		</div>
 	);

@@ -7,6 +7,7 @@ export { default as SoundSection } from './SoundSection';
 export { default as BackgroundSection } from './BackgroundSection';
 export { default as ThemeSection } from './ThemeSection';
 export { default as DevModeSection } from './DevModeSection';
+export { default as StrictModeSection } from './StrictModeSection';
 export { default as ResetSection } from './ResetSection';
 export { default as LicenseSection } from './LicenseSection';
 export { default as SettingsFooter } from './SettingsFooter';

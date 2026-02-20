@@ -34,7 +34,8 @@ export const useApp = () => {
 		setLicenseState,
 		setTrialDaysRemaining,
 		setSessionSummary,
-		setTerminalOpen
+		setTerminalOpen,
+		setSettingsOpen
 	});
 
 	const {

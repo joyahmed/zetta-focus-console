@@ -1,4 +1,5 @@
 mod commands;
+mod config;
 mod engine;
 mod license;
 mod license_crypto;
@@ -10,22 +11,34 @@ mod types;
 mod webhook;
 
 use engine::{
-    activate_key, can_create_profile, clear_debug_license_override, clear_license_storage,
-    execute_command, get_license, get_state, get_theme, get_trial_days_remaining, get_trial_status,
-    is_pro, set_debug_license_override, set_theme, set_total_sessions, tick_system_stats,
-    tick_timer, EngineState,
+    activate_key, can_create_profile, execute_command, get_license, get_state, get_theme,
+    get_trial_days_remaining, get_trial_status, is_pro, set_theme, set_total_sessions,
+    tick_system_stats, tick_timer, EngineState,
+};
+
+#[cfg(debug_assertions)]
+use engine::{
+    clear_debug_license_override, clear_license_storage, set_debug_license_override,
 };
 use payment::{
     get_available_payment_options, get_checkout_info, open_checkout_in_browser, CheckoutInfo,
-    PaymentOption, PaymentProvider, ProductType, PricingInfo,
+    PaymentOption, PaymentProvider, PricingInfo, ProductType,
 };
 use pricing::{
     get_all_features, get_features_by_category, get_features_for_tier, is_feature_available,
-    Feature, FeatureCategory, LicenseTierForFeature, ProductPricing, TrialInfo, FreeTierInfo,
+    Feature, FeatureCategory, FreeTierInfo, LicenseTierForFeature, ProductPricing, TrialInfo,
 };
 use webhook::{
     process_webhook, verify_webhook_signature, GeneratedLicense, WebhookPayload, WebhookResponse,
 };
+
+use tauri::{
+    image::Image,
+    menu::{Menu, MenuItem},
+    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
+    AppHandle, Emitter, Manager,
+};
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 // ============================================================================
 // TAURI COMMANDS - PAYMENT
@@ -54,10 +67,18 @@ fn payment_get_checkout_info(
         "lemonsqueezy" | "lemon_squeezy" => PaymentProvider::LemonSqueezy,
         "bkash" => PaymentProvider::BKash,
         "stripe" => PaymentProvider::Stripe,
-        _ => return Err("Invalid payment provider. Use 'lemonsqueezy', 'bkash', or 'stripe'.".to_string()),
+        _ => {
+            return Err(
+                "Invalid payment provider. Use 'lemonsqueezy', 'bkash', or 'stripe'.".to_string(),
+            )
+        }
     };
 
-    Ok(get_checkout_info(product, payment_provider, discount_code.as_deref()))
+    Ok(get_checkout_info(
+        product,
+        payment_provider,
+        discount_code.as_deref(),
+    ))
 }
 
 /// Open checkout page in browser
@@ -169,7 +190,11 @@ fn webhook_process(payload: WebhookPayload) -> Option<GeneratedLicense> {
 
 /// Create a webhook response
 #[tauri::command]
-fn webhook_response(success: bool, message: String, license_key: Option<String>) -> WebhookResponse {
+fn webhook_response(
+    success: bool,
+    message: String,
+    license_key: Option<String>,
+) -> WebhookResponse {
     let response = if success {
         WebhookResponse::success(&message)
     } else {
@@ -182,10 +207,164 @@ fn webhook_response(success: bool, message: String, license_key: Option<String>)
     }
 }
 
+// ============================================================================
+// GLOBAL SHORTCUTS AND TRAY SETUP
+// ============================================================================
+
+/// Setup global shortcuts for the app
+fn setup_global_shortcuts(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
+    let app_handle = app.clone();
+
+    // Ctrl+Alt+S - Start/Stop timer
+    let start_stop_shortcut = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyS);
+
+    // Ctrl+Alt+P - Pause/Resume
+    let pause_resume_shortcut =
+        Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyP);
+
+    // Ctrl+T - Open terminal
+    let terminal_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyT);
+
+    app.global_shortcut()
+        .on_shortcut(start_stop_shortcut, move |_app, shortcut, event| {
+            if event.state == ShortcutState::Pressed {
+                eprintln!("[GLOBAL SHORTCUT] Ctrl+Alt+S pressed - Start/Stop timer");
+                let _ = app_handle.emit("global-shortcut", "start_stop");
+            }
+        })?;
+
+    let app_handle2 = app.clone();
+    app.global_shortcut()
+        .on_shortcut(pause_resume_shortcut, move |_app, shortcut, event| {
+            if event.state == ShortcutState::Pressed {
+                eprintln!("[GLOBAL SHORTCUT] Ctrl+Alt+P pressed - Pause/Resume");
+                let _ = app_handle2.emit("global-shortcut", "pause_resume");
+            }
+        })?;
+
+    let app_handle3 = app.clone();
+    app.global_shortcut()
+        .on_shortcut(terminal_shortcut, move |_app, shortcut, event| {
+            if event.state == ShortcutState::Pressed {
+                eprintln!("[GLOBAL SHORTCUT] Ctrl+T pressed - Toggle terminal");
+                let _ = app_handle3.emit("global-shortcut", "toggle_terminal");
+            }
+        })?;
+
+    eprintln!("[DIAGNOSTIC] Global shortcuts registered successfully");
+    Ok(())
+}
+
+/// Setup system tray
+fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
+    let start_item = MenuItem::with_id(app, "start", "Start", true, None::<&str>)?;
+    let stop_item = MenuItem::with_id(app, "stop", "Stop", true, None::<&str>)?;
+    let pause_item = MenuItem::with_id(app, "pause", "Pause", true, None::<&str>)?;
+    let resume_item = MenuItem::with_id(app, "resume", "Resume", true, None::<&str>)?;
+    let settings_item = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
+    let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+
+    let menu = Menu::with_items(
+        app,
+        &[
+            &start_item,
+            &stop_item,
+            &pause_item,
+            &resume_item,
+            &settings_item,
+            &quit_item,
+        ],
+    )?;
+
+    let app_handle = app.clone();
+    let tray = TrayIconBuilder::with_id("main")
+        .icon(app.default_window_icon().unwrap().clone())
+        .menu(&menu)
+        .tooltip("Zetta Focus Console - Idle")
+        .on_menu_event(move |app, event| {
+            eprintln!("[TRAY] Menu item clicked: {:?}", event.id.as_ref());
+            match event.id.as_ref() {
+                "start" => {
+                    let _ = app.emit("tray-action", "start");
+                }
+                "stop" => {
+                    let _ = app.emit("tray-action", "stop");
+                }
+                "pause" => {
+                    let _ = app.emit("tray-action", "pause");
+                }
+                "resume" => {
+                    let _ = app.emit("tray-action", "resume");
+                }
+                "settings" => {
+                    let _ = app.emit("tray-action", "settings");
+                }
+                "quit" => {
+                    eprintln!("[TRAY] Quit requested");
+                    app.exit(0);
+                }
+                _ => {}
+            }
+        })
+        .on_tray_icon_event(move |tray, event| {
+            if let TrayIconEvent::Click {
+                button: MouseButton::Left,
+                button_state: MouseButtonState::Up,
+                ..
+            } = event
+            {
+                let app = tray.app_handle();
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
+            }
+        })
+        .build(&app_handle)?;
+
+    eprintln!("[DIAGNOSTIC] System tray initialized successfully");
+    Ok(())
+}
+
+/// Update tray icon based on timer state
+#[tauri::command]
+fn update_tray_state(
+    app_handle: AppHandle,
+    status: String,
+    session_type: String,
+    strict_mode_active: Option<bool>,
+) -> Result<(), String> {
+    eprintln!(
+        "[TRAY] Updating tray state - status: {}, session_type: {}, strict_mode: {:?}",
+        status, session_type, strict_mode_active
+    );
+
+    let is_strict = strict_mode_active.unwrap_or(false);
+
+    let tooltip = match (status.as_str(), session_type.as_str(), is_strict) {
+        ("running", "focus", true) => "Zetta Focus Console - Strict Mode",
+        ("running", "focus", false) => "Zetta Focus Console - Focus",
+        ("running", "short_break", _) | ("running", "long_break", _) => "Zetta Focus Console - Break",
+        ("paused", _, _) => "Zetta Focus Console - Paused",
+        ("completed", _, _) => "Zetta Focus Console - Completed",
+        _ => "Zetta Focus Console - Idle",
+    };
+
+    if let Some(tray) = app_handle.tray_by_id("main") {
+        let _ = tray.set_tooltip(Some(tooltip));
+
+        // Note: Changing the actual tray icon color would require different icon assets
+        // For now, we just update the tooltip to reflect strict mode
+    }
+
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .manage(EngineState::new())
         .invoke_handler(tauri::generate_handler![
             get_state,
@@ -200,9 +379,6 @@ pub fn run() {
             is_pro,
             get_trial_days_remaining,
             get_trial_status,
-            set_debug_license_override,
-            clear_debug_license_override,
-            clear_license_storage,
             can_create_profile,
             // Payment commands
             payment_get_options,
@@ -221,7 +397,39 @@ pub fn run() {
             webhook_verify_signature,
             webhook_process,
             webhook_response,
+            // Tray commands
+            update_tray_state,
         ])
+        .setup(|app| {
+            eprintln!("[DIAGNOSTIC] Setting up Zetta Focus Console...");
+
+            // Setup global shortcuts
+            if let Err(e) = setup_global_shortcuts(app.handle()) {
+                eprintln!("[ERROR] Failed to setup global shortcuts: {}", e);
+            }
+
+            // Setup system tray
+            if let Err(e) = setup_tray(app.handle()) {
+                eprintln!("[ERROR] Failed to setup system tray: {}", e);
+            }
+
+            // Handle window close to minimize to tray
+            let app_handle = app.handle().clone();
+            if let Some(window) = app.get_webview_window("main") {
+                window.on_window_event(move |event| {
+                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                        eprintln!("[DIAGNOSTIC] Window close requested - minimizing to tray");
+                        api.prevent_close();
+                        if let Some(win) = app_handle.get_webview_window("main") {
+                            let _ = win.hide();
+                        }
+                    }
+                });
+            }
+
+            eprintln!("[DIAGNOSTIC] Setup complete");
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

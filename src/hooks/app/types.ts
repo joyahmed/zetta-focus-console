@@ -12,6 +12,7 @@ interface CommonStatesProps {
 
 export interface AppReactivitiesProps extends CommonStatesProps {
   setTerminalOpen: Dispatch<SetStateAction<boolean>>;
+	setSettingsOpen: Dispatch<SetStateAction<boolean>>;
 	setAppState: Dispatch<SetStateAction<AppState | null>>;
 	setSessionSummary: Dispatch<SetStateAction<string | null>>;
 }

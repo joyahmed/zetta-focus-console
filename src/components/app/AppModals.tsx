@@ -30,8 +30,11 @@ const AppModals = ({
 	profileModalMode,
 	handleCreateProfile,
 	refreshLicenseState,
-	setProfileError
+	setProfileError,
+	licenseState
 }: AppModelsProps) => {
+	const isPro = licenseState?.license_type === 'Pro' || licenseState?.license_type === 'Founder' || licenseState?.license_type === 'Trial';
+
 	return (
 		<>
 			{/* Terminal Modal */}
@@ -68,6 +71,14 @@ const AppModals = ({
 				theme={appState.theme}
 				onThemeChange={handleThemeChange}
 				onLicenseChange={refreshLicenseState}
+				strictModeActive={appState.strict_mode.is_active}
+				onStrictModeToggle={() => {
+					const cmd = appState.strict_mode.is_active
+						? 'strict off'
+						: 'strict on';
+					processCommand(cmd);
+				}}
+				isPro={isPro}
 			/>
 
 			<HelpModal
