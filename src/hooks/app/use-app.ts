@@ -34,7 +34,9 @@ export const useApp = () => {
 		setLicenseState,
 		setTrialDaysRemaining,
 		setSessionSummary,
-		setTerminalOpen
+		setTerminalOpen,
+		settingsOpen,
+		setSettingsOpen
 	});
 
 	const {
@@ -52,7 +54,8 @@ export const useApp = () => {
 		handleCreateProfile,
 		openCreateProfile,
 		openEditProfile,
-		refreshLicenseState
+		refreshLicenseState,
+		handleVoiceToggle
 	} = appUtils({
 		appState,
 		setTerminalKey,
@@ -66,7 +69,7 @@ export const useApp = () => {
 	return {
 		/** state */
 		appState,
-    settingsOpen,
+		settingsOpen,
 		setSettingsOpen,
 		setTerminalOpen,
 		licenseState,
@@ -83,7 +86,6 @@ export const useApp = () => {
 		setProfileModalOpen,
 		profileModalMode,
 
-
 		/** utils */
 		processCommand,
 		handleProfileSwitch,
@@ -99,6 +101,7 @@ export const useApp = () => {
 		handleCreateProfile,
 		openCreateProfile,
 		openEditProfile,
-		refreshLicenseState
+		refreshLicenseState,
+		handleVoiceToggle
 	};
 };

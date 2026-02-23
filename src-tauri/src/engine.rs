@@ -12,14 +12,14 @@ pub use crate::commands::{
     clear_debug_license_override, clear_license_storage, deactivate_strict_mode, execute_command,
     format_time, get_license, get_state, get_theme, get_trial_days_remaining, get_trial_status,
     is_pro, parse_command_with_quotes, parse_duration, process_command, set_debug_license_override,
-    set_theme, tick_system_stats, tick_timer,
+    set_theme, set_total_sessions, tick_system_stats, tick_timer,
 };
 
 // Re-export types from crate root
 pub use crate::types::{
-    AppState, AppStats, BackgroundType, LicenseState, MotionIntensity, Profile, Season,
-    SessionOverride, SessionType, SoundState, Stats, StrictModeState, SystemStats, TimerState,
-    TimerStatus,
+    AppState, AppStats, BackgroundType, CurrentTask, LicenseState, MotionIntensity, Profile,
+    Season, SessionOverride, SessionType, SoundState, Stats, StrictModeState, SystemStats,
+    TaskCategory, TimerState, TimerStatus,
 };
 
 // Re-export license functions
@@ -40,18 +40,16 @@ pub struct EngineState {
 
 impl EngineState {
     pub fn new() -> Self {
+        // DIAGNOSTIC: Track EngineState creation
+        eprintln!("[DIAGNOSTIC] EngineState::new() called - creating shared state");
+
         let mut app_state = AppStateType::new();
         app_state.load_preferences();
 
         // Load license state using LicenseManager
+        eprintln!("[DIAGNOSTIC] Creating LicenseManager for EngineState...");
         let license_manager = LicenseManager::new();
-
-        // Check if previous Strict Mode session was force-closed
-        // If so, mark it as failed
-        if license_manager.is_pro_enabled() {
-            // The license is Pro, so we can check for Strict Mode failure
-            // This is handled when the app starts
-        }
+        eprintln!("[DIAGNOSTIC] LicenseManager created with tier: {:?}", license_manager.get_tier());
 
         Self {
             app_state: Mutex::new(app_state),

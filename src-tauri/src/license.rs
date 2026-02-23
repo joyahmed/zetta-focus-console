@@ -3,14 +3,23 @@
 //! This module is the single source of truth for all license-related operations.
 //! Only LicenseManager may mutate LicenseState. All other modules must treat
 //! LicenseState as read-only.
+//!
+//! ## Cryptographic Verification
+//!
+//! License keys are verified using Ed25519 signatures. The verification flow:
+//! 1. Parse key format (ZFC-PRO-XXXX-XXXX or ZFC-FOUNDER-XXXX-XXXX)
+//! 2. If signed data present, verify cryptographic signature
+//! 3. Validate tier and product
+//! 4. Persist license data locally
 
+use crate::pricing::trial;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-/// Trial duration in seconds (14 days)
-const TRIAL_DURATION_SECS: u64 = 14 * 24 * 60 * 60;
+// Import cryptographic verification module
+use crate::license_crypto;
 
 /// Get the trial marker file path
 fn get_trial_marker_path() -> PathBuf {
@@ -242,7 +251,16 @@ impl Default for LicenseManager {
 impl LicenseManager {
     /// Create a new LicenseManager - loads from storage or initializes trial
     pub fn new() -> Self {
+        // DIAGNOSTIC: Track LicenseManager instance creation
+        eprintln!("[DIAGNOSTIC] LicenseManager::new() called - creating new instance");
+        eprintln!("[DIAGNOSTIC] License file path: {:?}", Self::get_license_path());
+        eprintln!("[DIAGNOSTIC] Trial marker path: {:?}", get_trial_marker_path());
+
         let license_data = Self::load_from_storage();
+
+        // DIAGNOSTIC: Log loaded data
+        eprintln!("[DIAGNOSTIC] Loaded license data: tier={}, trial_start={:?}",
+            license_data.license_type, license_data.trial_start_timestamp);
 
         let mut manager = Self {
             tier: LicenseTier::from_license_type(&license_data.license_type),
@@ -356,7 +374,7 @@ impl LicenseManager {
                 .map(|d| d.as_secs())
                 .unwrap_or(0);
 
-            now > start_ts + TRIAL_DURATION_SECS
+            now > start_ts + trial::DURATION_SECS
         } else {
             true // No start timestamp means trial expired
         }
@@ -398,7 +416,7 @@ impl LicenseManager {
                 .unwrap_or(0);
 
             let elapsed = now.saturating_sub(start_ts);
-            let remaining = TRIAL_DURATION_SECS.saturating_sub(elapsed);
+            let remaining = trial::DURATION_SECS.saturating_sub(elapsed);
 
             (remaining / (24 * 60 * 60)) as u32
         } else {
@@ -454,21 +472,24 @@ impl LicenseManager {
             return Err("License key cannot be empty".to_string());
         }
 
-        // Step 2: Verify cryptographic signature
-        // Note: In production, this would call a real verification module
-        // For now, we assume a verification function exists and returns true/false
-        let (is_valid, tier, signature) = Self::verify_license_key(key);
+        // Step 2: Verify cryptographic signature using the crypto module
+        let (tier, license_id) = match license_crypto::verify_license(key) {
+            Ok((tier, id)) => (tier, id),
+            Err(e) => return Err(format!("License verification failed: {}", e)),
+        };
 
-        if !is_valid {
-            return Err("Invalid license key".to_string());
-        }
+        // Step 3: Determine tier and update LicenseState
+        let license_tier = match tier.as_str() {
+            "PRO" => LicenseTier::Pro,
+            "FOUNDER" => LicenseTier::Founder,
+            _ => return Err("Invalid license tier".to_string()),
+        };
 
-        // Step 3 & 4: Determine tier and update LicenseState
-        self.tier = tier;
+        self.tier = license_tier;
         self.trial_start_timestamp = None; // Clear trial state
-        self.signature = Some(signature);
+        self.signature = Some(key.to_string()); // Store the full key as signature
 
-        // Step 5: Persist encrypted license
+        // Step 4: Persist encrypted license
         self.persist()?;
 
         Ok(())
@@ -476,24 +497,44 @@ impl LicenseManager {
 
     /// Verify license key signature
     ///
-    /// This is a placeholder function. In production, this would use actual
-    /// cryptographic verification. The architecture assumes a verification
-    /// module exists.
+    /// Uses the cryptographic verification module to validate the license key.
+    /// Supports both simple format keys (for testing) and signed keys (production).
     ///
     /// # Arguments
     /// * `key` - The license key to verify
     ///
     /// # Returns
     /// * `(is_valid, tier, signature)` - Tuple of validation result, tier, and signature
+    #[deprecated(note = "Use license_crypto::verify_license instead")]
     fn verify_license_key(key: &str) -> (bool, LicenseTier, String) {
-        // Placeholder implementation - assumes verification module exists
-        // In production, this would call actual cryptographic verification
-
-        // For now, we'll parse the key format to determine validity
-        // Key format expected: "ZETTA-PRO-XXXX" or "ZETTA-FOUNDER-XXXX"
+        // Fallback implementation for backward compatibility
+        // This uses the old format-based validation
 
         let key_upper = key.to_uppercase();
 
+        // New format: ZFC-PRO-XXXX-XXXX
+        if key_upper.starts_with("ZFC-PRO-") && key_upper.len() >= 16 {
+            let parts: Vec<&str> = key_upper.split('-').collect();
+            if parts.len() == 4 && parts[0] == "ZFC" && parts[1] == "PRO" {
+                let code = format!("{}-{}", parts[2], parts[3]);
+                if code.chars().all(|c| c.is_ascii_alphanumeric() || c == '-') {
+                    return (true, LicenseTier::Pro, key.to_string());
+                }
+            }
+        }
+
+        // New format: ZFC-FOUNDER-XXXX-XXXX
+        if key_upper.starts_with("ZFC-FOUNDER-") && key_upper.len() >= 20 {
+            let parts: Vec<&str> = key_upper.split('-').collect();
+            if parts.len() == 4 && parts[0] == "ZFC" && parts[1] == "FOUNDER" {
+                let code = format!("{}-{}", parts[2], parts[3]);
+                if code.chars().all(|c| c.is_ascii_alphanumeric() || c == '-') {
+                    return (true, LicenseTier::Founder, key.to_string());
+                }
+            }
+        }
+
+        // Legacy format: ZETTA-PRO-XXXX (backward compatibility)
         if key_upper.starts_with("ZETTA-PRO-") && key_upper.len() > 10 {
             let code = &key_upper[10..];
             if code.chars().all(|c| c.is_ascii_alphanumeric()) {
@@ -501,6 +542,7 @@ impl LicenseManager {
             }
         }
 
+        // Legacy format: ZETTA-FOUNDER-XXXX (backward compatibility)
         if key_upper.starts_with("ZETTA-FOUNDER-") && key_upper.len() > 14 {
             let code = &key_upper[14..];
             if code.chars().all(|c| c.is_ascii_alphanumeric()) {
@@ -594,7 +636,14 @@ impl LicenseManager {
 /// Note: This function creates a new LicenseManager instance. For commands,
 /// prefer using the license_manager from EngineState directly.
 pub fn get_license_state() -> crate::types::LicenseState {
+    // DIAGNOSTIC: Track when get_license_state creates a new instance
+    eprintln!("[DIAGNOSTIC] get_license_state() called - WARNING: creates new LicenseManager instance!");
+    eprintln!("[DIAGNOSTIC] This may cause stale data if EngineState has a different instance");
+
     let manager = LicenseManager::new();
+
+    // DIAGNOSTIC: Log what's being returned
+    eprintln!("[DIAGNOSTIC] Returning license_type={}", manager.get_license_type());
 
     crate::types::LicenseState {
         license_type: manager.get_license_type(),
@@ -608,3 +657,5 @@ pub fn get_license_state() -> crate::types::LicenseState {
 pub fn is_pro_enabled() -> bool {
     LicenseManager::new().is_pro_enabled()
 }
+
+

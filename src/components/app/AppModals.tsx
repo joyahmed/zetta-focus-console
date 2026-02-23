@@ -28,8 +28,15 @@ const AppModals = ({
 	profileModalOpen,
 	setProfileModalOpen,
 	profileModalMode,
-	handleCreateProfile
+	handleCreateProfile,
+	refreshLicenseState,
+	setProfileError,
+	licenseState,
+	voiceEnabled,
+	onVoiceToggle
 }: AppModelsProps) => {
+	const isPro = licenseState?.license_type === 'Pro' || licenseState?.license_type === 'Founder' || licenseState?.license_type === 'Trial';
+
 	return (
 		<>
 			{/* Terminal Modal */}
@@ -65,6 +72,17 @@ const AppModals = ({
 				onResetSettings={handleResetSettings}
 				theme={appState.theme}
 				onThemeChange={handleThemeChange}
+				onLicenseChange={refreshLicenseState}
+				strictModeActive={appState.strict_mode.is_active}
+				onStrictModeToggle={() => {
+					const cmd = appState.strict_mode.is_active
+						? 'strict off'
+						: 'strict on';
+					processCommand(cmd);
+				}}
+				isPro={isPro}
+				voiceEnabled={voiceEnabled}
+				onVoiceToggle={onVoiceToggle}
 			/>
 
 			<HelpModal
@@ -74,7 +92,10 @@ const AppModals = ({
 
 			<ProfileModal
 				isOpen={profileModalOpen}
-				onClose={() => setProfileModalOpen(false)}
+				onClose={() => {
+					setProfileModalOpen(false);
+					setProfileError(null);
+				}}
 				mode={profileModalMode}
 				profile={
 					profileModalMode === 'edit'
@@ -87,6 +108,8 @@ const AppModals = ({
 									appState.active_profile.short_break_duration,
 								long_break_duration:
 									appState.active_profile.long_break_duration,
+								sessions_per_cycle:
+									appState.active_profile.sessions_per_cycle,
 								season: appState.active_profile.season,
 								motion_intensity:
 									appState.active_profile.motion_intensity,

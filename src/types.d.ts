@@ -36,6 +36,7 @@ interface AppModelsProps {
 	handleResetSettings: () => Promise<void>;
 	handleThemeChange: (theme: string) => Promise<void>;
 	helpOpen: boolean;
+	licenseState: { license_type: string } | null;
 
 	profileModalOpen: boolean;
 	setProfileModalOpen: (value: SetStateAction<boolean>) => void;
@@ -46,10 +47,15 @@ interface AppModelsProps {
 		focus_min: number;
 		short_break_min: number;
 		long_break_min: number;
+		sessions_per_cycle: number;
 		season: string;
 		intensity: string;
 		sound: string;
 	}) => Promise<string>;
+	refreshLicenseState: () => Promise<void>;
+	setProfileError: (value: SetStateAction<string | null>) => void;
+	voiceEnabled?: boolean;
+	onVoiceToggle?: () => void;
 }
 
 interface TimerState {
@@ -57,6 +63,10 @@ interface TimerState {
 	total_seconds: number;
 	status: 'idle' | 'running' | 'paused' | 'completed';
 	session_type: 'focus' | 'short_break' | 'long_break';
+	/** Current session number in the cycle (1-indexed) */
+	current_session: number;
+	/** Total number of sessions in the cycle */
+	total_sessions: number;
 }
 
 interface Profile {
@@ -68,6 +78,8 @@ interface Profile {
 	focus_duration: number;
 	short_break_duration: number;
 	long_break_duration: number;
+	/** Number of focus sessions per cycle */
+	sessions_per_cycle: number;
 	glow_color: string;
 	sound_file: string;
 	default_volume: number;
@@ -105,6 +117,17 @@ interface SessionOverride {
 	loop_count: number | null;
 }
 
+interface StrictModeState {
+	is_active: boolean;
+	session_start_timestamp: number | null;
+	was_force_closed: boolean;
+}
+
+interface CurrentTask {
+	category: 'coding' | 'other';
+	title: string;
+}
+
 interface AppState {
 	timer: TimerState;
 	active_profile: Profile;
@@ -117,6 +140,10 @@ interface AppState {
 	session_override: SessionOverride | null;
 	ambience_enabled: boolean;
 	theme: string;
+	strict_mode: StrictModeState;
+	current_task: CurrentTask;
+	voice_enabled: boolean;
+	app_start_time: number;
 }
 
 interface StateEvent {
@@ -214,6 +241,7 @@ interface ProfileModalProps {
 		focus_min: number;
 		short_break_min: number;
 		long_break_min: number;
+		sessions_per_cycle: number;
 		season: string;
 		intensity: string;
 		sound: string;
@@ -245,6 +273,7 @@ interface ProfilePanelProps {
 	onErrorDismiss?: () => void;
 	licenseType?: string;
 	trialDaysRemaining?: number | null;
+	stats?: Stats;
 }
 
 /** Settings Panel */
@@ -267,6 +296,12 @@ interface SettingsPanelProps {
 	onResetSettings: () => void;
 	theme: string;
 	onThemeChange: (theme: string) => void;
+	onLicenseChange?: () => void;
+	strictModeActive?: boolean;
+	onStrictModeToggle?: () => void;
+	isPro?: boolean;
+	voiceEnabled?: boolean;
+	onVoiceToggle?: () => void;
 }
 
 /** Sound Control */
@@ -331,6 +366,10 @@ interface TimerState {
 	total_seconds: number;
 	status: 'idle' | 'running' | 'paused' | 'completed';
 	session_type: 'focus' | 'short_break' | 'long_break';
+	/** Current session number in the cycle (1-indexed) */
+	current_session: number;
+	/** Total number of sessions in the cycle */
+	total_sessions: number;
 }
 
 interface SessionOverride {
@@ -343,9 +382,70 @@ interface TimerPanelProps {
 	timer: TimerState;
 	glowColor: string;
 	sessionOverride?: SessionOverride | null;
+	strictMode?: StrictModeState | null;
+	currentTask?: CurrentTask | null;
 	onStart: () => void;
 	onPause: () => void;
 	onResume: () => void;
 	onStop: () => void;
 	theme?: string;
+}
+
+// ============================================================================
+// PRICING STRATEGY TYPES
+// ============================================================================
+
+/** Feature category for license tier features */
+interface FeatureCategory {
+	core: 'core';
+	profiles: 'profiles';
+	ambience: 'ambience';
+	terminal: 'terminal';
+	developer: 'developer';
+	strict_mode: 'strict_mode';
+}
+
+/** License tier for feature checking */
+type LicenseTierForFeature = 'free' | 'trial' | 'pro' | 'founder';
+
+/** Feature definition with license tier requirements */
+interface Feature {
+	id: string;
+	name: string;
+	description: string;
+	category: 'core' | 'profiles' | 'ambience' | 'terminal' | 'developer' | 'strict_mode';
+	free: boolean;
+	trial: boolean;
+	pro: boolean;
+	founder: boolean;
+}
+
+/** Complete product pricing information */
+interface ProductPricing {
+	product_type: string;
+	name: string;
+	description: string;
+	price_usd: number;
+	price_bdt: number;
+	currency_symbol_usd: string;
+	currency_symbol_bdt: string;
+	is_one_time: boolean;
+	features: string[];
+	is_limited: boolean;
+	max_quantity: number | null;
+}
+
+/** Trial information */
+interface TrialInfo {
+	duration_days: number;
+	auto_renew: boolean;
+	description: string;
+	features: string[];
+}
+
+/** Free tier information */
+interface FreeTierInfo {
+	description: string;
+	features: string[];
+	limitations: string[];
 }

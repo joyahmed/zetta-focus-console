@@ -29,11 +29,20 @@ pub struct TimerState {
     pub total_seconds: u32,
     pub status: TimerStatus,
     pub session_type: SessionType,
+    /// Current session number in the cycle (1-indexed)
+    pub current_session: u32,
+    /// Total number of sessions in the cycle
+    pub total_sessions: u32,
 }
 
 // ============================================================================
 // PROFILE TYPES
 // ============================================================================
+
+/// Default number of sessions per cycle
+fn default_sessions_per_cycle() -> u32 {
+    4
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
@@ -70,6 +79,9 @@ pub struct Profile {
     pub focus_duration: u32,
     pub short_break_duration: u32,
     pub long_break_duration: u32,
+    /// Number of focus sessions per cycle (default: 4)
+    #[serde(default = "default_sessions_per_cycle")]
+    pub sessions_per_cycle: u32,
     pub glow_color: String,
     pub sound_file: String,
     pub default_volume: u8,
@@ -229,6 +241,38 @@ impl Default for StrictModeState {
 }
 
 // ============================================================================
+// TASK/INTENTION TYPES
+// ============================================================================
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum TaskCategory {
+    Coding,
+    Other,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CurrentTask {
+    pub category: TaskCategory,
+    pub title: String,
+}
+
+impl Default for CurrentTask {
+    fn default() -> Self {
+        Self {
+            category: TaskCategory::Coding,
+            title: String::new(),
+        }
+    }
+}
+
+impl CurrentTask {
+    pub fn is_empty(&self) -> bool {
+        self.title.trim().is_empty()
+    }
+}
+
+// ============================================================================
 // PREFERENCES TYPES
 // ============================================================================
 
@@ -240,7 +284,9 @@ pub struct Preferences {
     pub is_muted: bool,
     pub dev_mode: bool,
     pub theme: String,
+    pub voice_enabled: bool,
     pub custom_profiles: Vec<Profile>,
+    pub start_minimized: bool,
 }
 
 impl Default for Preferences {
@@ -252,7 +298,9 @@ impl Default for Preferences {
             is_muted: false,
             dev_mode: false,
             theme: "dark".to_string(),
+            voice_enabled: false,
             custom_profiles: vec![],
+            start_minimized: false,
         }
     }
 }
@@ -335,6 +383,9 @@ pub struct AppState {
     pub ambience_enabled: bool,
     pub theme: String,
     pub strict_mode: StrictModeState,
+    pub current_task: CurrentTask,
+    pub voice_enabled: bool,
+    pub app_start_time: i64,
 }
 
 impl Default for AppState {
@@ -354,6 +405,7 @@ impl AppState {
             focus_duration: 25 * 60,
             short_break_duration: 5 * 60,
             long_break_duration: 15 * 60,
+            sessions_per_cycle: 4,
             glow_color: "#60a5fa".to_string(),
             sound_file: "fireplace.mp3".to_string(),
             default_volume: 50,
@@ -371,6 +423,7 @@ impl AppState {
                 focus_duration: 25 * 60,
                 short_break_duration: 5 * 60,
                 long_break_duration: 15 * 60,
+                sessions_per_cycle: 4,
                 glow_color: "#fbbf24".to_string(),
                 sound_file: "soft_rain.mp3".to_string(),
                 default_volume: 40,
@@ -385,6 +438,7 @@ impl AppState {
                 focus_duration: 25 * 60,
                 short_break_duration: 5 * 60,
                 long_break_duration: 15 * 60,
+                sessions_per_cycle: 4,
                 glow_color: "#34d399".to_string(),
                 sound_file: "light_wind.mp3".to_string(),
                 default_volume: 30,
@@ -399,6 +453,7 @@ impl AppState {
                 focus_duration: 25 * 60,
                 short_break_duration: 5 * 60,
                 long_break_duration: 15 * 60,
+                sessions_per_cycle: 4,
                 glow_color: "#f97316".to_string(),
                 sound_file: "rain_window.mp3".to_string(),
                 default_volume: 35,
@@ -412,6 +467,8 @@ impl AppState {
                 total_seconds: 25 * 60,
                 status: TimerStatus::Idle,
                 session_type: SessionType::Focus,
+                current_session: 1,
+                total_sessions: 4,
             },
             active_profile: default_profile,
             profiles,
@@ -429,6 +486,12 @@ impl AppState {
             ambience_enabled: true,
             theme: "dark".to_string(),
             strict_mode: StrictModeState::default(),
+            current_task: CurrentTask::default(),
+            voice_enabled: false,
+            app_start_time: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs() as i64,
         }
     }
 }
@@ -452,6 +515,7 @@ impl AppStateExt for AppState {
         self.sound_state.volume = prefs.volume;
         self.sound_state.is_muted = prefs.is_muted;
         self.theme = prefs.theme;
+        self.voice_enabled = prefs.voice_enabled;
 
         // Add custom profiles to the profiles list
         for profile in prefs.custom_profiles {
@@ -468,6 +532,13 @@ impl AppStateExt for AppState {
             .find(|p| p.id == prefs.active_profile_id)
         {
             self.active_profile = profile.clone();
+            // Timer state is not persisted; align startup timer with restored active profile.
+            self.timer.status = TimerStatus::Idle;
+            self.timer.session_type = SessionType::Focus;
+            self.timer.current_session = 1;
+            self.timer.total_sessions = profile.sessions_per_cycle;
+            self.timer.remaining_seconds = profile.focus_duration;
+            self.timer.total_seconds = profile.focus_duration;
         }
     }
 
@@ -490,7 +561,9 @@ impl AppStateExt for AppState {
             is_muted: self.sound_state.is_muted,
             dev_mode: self.dev_mode,
             theme: self.theme.clone(),
+            voice_enabled: self.voice_enabled,
             custom_profiles,
+            start_minimized: false,
         };
         save_preferences(&prefs)
     }

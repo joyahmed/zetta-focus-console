@@ -1,11 +1,9 @@
 const MonitorSection = ({
 	title,
-	cpuUsage,
 	memoryUsed,
 	memoryTotal
 }: {
 	title: string;
-	cpuUsage: number;
 	memoryUsed: number;
 	memoryTotal?: number;
 }) => {
@@ -14,88 +12,49 @@ const MonitorSection = ({
 			? (memoryUsed / memoryTotal) * 100
 			: 0;
 
-	const appBarWidth = memoryTotal
-		? memoryPercent
-		: Math.min(memoryUsed / 2, 30);
+	// For app memory, we visualize it relative to a reasonable cap (e.g., 500MB) for the bar/circle
+	const appMemoryCap = 500;
+	const appBarPercent = Math.min((memoryUsed / appMemoryCap) * 100, 100);
 
 	return (
-		<div className='flex-1 p-2 md:p-3 bg-zetta-bg rounded-lg border border-zetta-border flex flex-col justify-between min-h-0'>
-			<div
-				className='text-[10px] uppercase tracking-wider mb-1 md:mb-2'
-				style={{ color: 'var(--text-muted)' }}
-			>
-				{title}
+		<div className='flex-1 glass-panel p-2.5 rounded-xl border border-zetta-border bg-zetta-card hover:bg-zetta-bg transition-all flex flex-col justify-between min-h-0 relative group overflow-hidden'>
+
+			{/* Background Glow */}
+			<div className={`absolute -right-4 -bottom-4 w-16 h-16 rounded-full blur-2xl opacity-10 transition-opacity duration-500 group-hover:opacity-20 ${memoryTotal ? 'bg-cyan-500' : 'bg-purple-500'}`} />
+
+			{/* Header */}
+			<div className='flex items-center justify-between mb-2 relative z-10'>
+				<span className='text-[10px] uppercase tracking-wider font-semibold text-zetta-text-muted'>
+					{title}
+				</span>
+				<div className='flex items-center gap-1.5'>
+					<div className={`w-1.5 h-1.5 rounded-full ${memoryTotal ? 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.4)]' : 'bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.4)]'} animate-pulse`} />
+					<span className='text-xs font-mono font-medium text-zetta-text'>
+						{memoryTotal ? `${memoryPercent.toFixed(0)}%` : `${memoryUsed} MB`}
+					</span>
+				</div>
 			</div>
-			<div className='space-y-1 md:space-y-2'>
-				<div>
-					<div className='flex items-center justify-between mb-0.5 md:mb-1'>
-						<span
-							className='text-[10px] md:text-xs'
-							style={{ color: 'var(--text-secondary)' }}
-						>
-							CPU
-						</span>
-						<span
-							className='text-[10px] md:text-xs'
-							style={{ color: 'var(--text-primary)' }}
-						>
-							{cpuUsage.toFixed(1)}%
-						</span>
-					</div>
-					<div className='h-1.5 md:h-2 bg-zetta-border rounded-full overflow-hidden'>
-						<div
-							className='h-full rounded-full transition-all duration-300'
-							style={{
-								width: `${Math.min(cpuUsage, 100)}%`,
-								backgroundColor: 'var(--text-muted)'
-							}}
-						/>
-					</div>
-				</div>
-				<div>
-					<div className='flex items-center justify-between mb-0.5 md:mb-1'>
-						<span
-							className='text-[10px] md:text-xs'
-							style={{ color: 'var(--text-secondary)' }}
-						>
-							RAM
-						</span>
-						{memoryTotal ? (
-							<span
-								className='text-[10px] md:text-xs'
-								style={{ color: 'var(--text-primary)' }}
-							>
-								{memoryPercent.toFixed(0)}%
-							</span>
-						) : (
-							<span
-								className='text-[10px] md:text-xs'
-								style={{ color: 'var(--text-primary)' }}
-							>
-								{memoryUsed} MB
-							</span>
-						)}
-					</div>
-					<div className='h-1.5 md:h-2 bg-zetta-border rounded-full overflow-hidden'>
-						<div
-							className='h-full rounded-full transition-all duration-300'
-							style={{
-								width: memoryTotal
-									? `${memoryPercent}%`
-									: `${appBarWidth}%`,
-								backgroundColor: 'var(--text-muted)'
-							}}
-						/>
-					</div>
-					{memoryTotal && (
-						<div
-							className='text-[9px] md:text-[10px] mt-0.5 md:mt-1'
-							style={{ color: 'var(--text-muted)' }}
-						>
-							{memoryUsed} / {memoryTotal} MB
-						</div>
-					)}
-				</div>
+
+			{/* Visual Bar */}
+			<div className='relative h-1.5 w-full bg-zetta-border rounded-full overflow-hidden'>
+				<div
+					className={`absolute top-0 left-0 h-full rounded-full transition-all duration-700 ease-out ${memoryTotal ? 'bg-gradient-to-r from-cyan-500 to-blue-500 shadow-[0_0_10px_rgba(6,182,212,0.3)]' : 'bg-gradient-to-r from-purple-500 to-pink-500 shadow-[0_0_10px_rgba(168,85,247,0.3)]'}`}
+					style={{
+						width: `${memoryTotal ? memoryPercent : appBarPercent}%`
+					}}
+				/>
+			</div>
+
+			{/* Footer Info */}
+			<div className='mt-2 flex justify-between items-center opacity-60 group-hover:opacity-100 transition-opacity duration-300 relative z-10'>
+				<span className='text-[9px] font-medium text-zetta-text-muted uppercase tracking-wide'>
+					RAM Usage
+				</span>
+				{memoryTotal && (
+					<span className='text-[9px] font-mono text-zetta-text-muted'>
+						{memoryUsed} / {memoryTotal} MB
+					</span>
+				)}
 			</div>
 		</div>
 	);

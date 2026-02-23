@@ -1,170 +1,143 @@
+import { lazy, Suspense } from 'react';
 import { useTimerPanel } from '../hooks/use-timer-panel';
+const TimerBackground = lazy(
+	() => import('./timer-panel/TimerBackground')
+);
+const SessionIndicator = lazy(
+	() => import('./timer-panel/SessionIndicator')
+);
+const TimerRing = lazy(() => import('./timer-panel/TimerRing'));
+const TimerDisplay = lazy(() => import('./timer-panel/TimerDisplay'));
+const TimerControls = lazy(
+	() => import('./timer-panel/TimerControls')
+);
+
+const RADIUS = 90;
+
+// Red color for Strict Mode
+const STRICT_MODE_COLOR = '#ef4444';
 
 export default function TimerPanel({
 	timer,
 	glowColor,
 	sessionOverride,
+	strictMode,
+	currentTask,
 	onStart,
 	onPause,
 	onResume,
 	onStop,
-	theme = 'dark'
+	theme: _theme = 'dark'
 }: TimerPanelProps) {
-	const isLight = theme === 'light';
+	const { hasOverride, circumference, strokeDashoffset, formatTime } =
+		useTimerPanel({
+			timer,
+			sessionOverride
+		});
 
-	// Premium colors based on spec - using CSS variable tokens
-	const baseRingColor = isLight
-		? 'var(--color-ring-base)'
-		: 'var(--color-ring-base)';
-	const progressColor = 'var(--color-ring-progress)';
-	const progressGlow = isLight
-		? 'none'
-		: 'drop-shadow(0 0 5px var(--color-ring-progress))';
+	const isRunning = timer.status === 'running';
+	const formattedTime = formatTime(timer.remaining_seconds);
 
-	const {
-		hasOverride,
-		getStatusLabel,
-		circumference,
-		strokeDashoffset,
-		formatTime
-	} = useTimerPanel({
-		timer,
-		sessionOverride
-	});
+	// Determine effective glow color - use red when strict mode is active and running
+	const effectiveGlowColor =
+		strictMode?.is_active && isRunning
+			? STRICT_MODE_COLOR
+			: glowColor;
+
+	// Check if strict mode is blocking controls
+	const isStrictModeBlocking = strictMode?.is_active && isRunning;
 
 	return (
-		<div className='flex flex-col items-center justify-center p-3 md:p-4 bg-zetta-card border border-zetta-border rounded-lg h-full'>
-			{/* Override Indicator */}
-			{hasOverride && (
-				<div className='mb-2 px-3 py-1 bg-amber-500/20 border border-amber-500/40 rounded-full'>
-					<span className='text-xs font-medium text-amber-400 uppercase tracking-wider'>
-						⚡ Override Active
+		<div className='glass-panel h-full rounded-2xl p-6 flex flex-col items-center justify-center relative overflow-hidden group'>
+			{/* Strict Mode indicator */}
+			{strictMode?.is_active && (
+				<div className='absolute top-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-full bg-red-500/20 border border-red-500/40'>
+					<div className='w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse' />
+					<span className='text-xs font-medium text-red-400'>
+						Strict
 					</span>
 				</div>
 			)}
 
-			<div className='flex items-center gap-2 mb-2 md:mb-3'>
-				<span
-					className='w-2 h-2 rounded-full'
-					style={{
-						backgroundColor:
-							timer.status === 'running'
-								? glowColor
-								: 'var(--text-muted)',
-						boxShadow:
-							timer.status === 'running'
-								? `0 0 8px ${glowColor}`
-								: 'none'
+			<Suspense fallback={null}>
+				<TimerBackground
+					{...{
+						isRunning,
+						glowColor: effectiveGlowColor
 					}}
 				/>
-				<span
-					className='text-xs font-medium uppercase tracking-wider'
-					style={{ color: 'var(--text-secondary)' }}
-				>
-					{getStatusLabel(timer.status)}
-				</span>
-			</div>
+			</Suspense>
 
-			<div className='relative w-32 h-32 md:w-48 md:h-48 lg:w-56 lg:h-56 flex items-center justify-center'>
-				<svg
-					className='absolute w-full h-full -rotate-90'
-					viewBox='0 0 200 200'
-				>
-					{/* Base Ring - Background */}
-					<circle
-						cx='100'
-						cy='100'
-						r='90'
-						fill='none'
-						stroke={baseRingColor}
-						strokeWidth='7'
-					/>
-					{/* Progress Arc - Foreground */}
-					<circle
-						cx='100'
-						cy='100'
-						r='90'
-						fill='none'
-						stroke={progressColor}
-						strokeWidth='9'
-						strokeLinecap='round'
-						strokeDasharray={circumference}
-						strokeDashoffset={strokeDashoffset}
-						className={`transition-all duration-1000 ease-linear ${timer.status === 'completed' ? 'animate-pulse' : ''}`}
-						style={{
-							filter: progressGlow
+			<Suspense fallback={null}>
+				<SessionIndicator
+					{...{
+						sessionType: timer.session_type,
+						hasOverride,
+						currentSession: timer.current_session,
+						totalSessions: timer.total_sessions
+					}}
+				/>
+			</Suspense>
+
+			<div className='relative w-[12dvw] xl:w-64 aspect-square flex items-center justify-center my-6'>
+				<Suspense fallback={null}>
+					<TimerRing
+						{...{
+							radius: RADIUS,
+							circumference,
+							strokeDashoffset,
+							isRunning,
+							glowColor: effectiveGlowColor,
+							isStrictMode: strictMode?.is_active && isRunning
 						}}
 					/>
-				</svg>
-				<div
-					className='text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight'
-					style={{ color: 'var(--text-primary)' }}
-				>
-					{formatTime(timer.remaining_seconds)}
+				</Suspense>
+
+				<Suspense fallback={null}>
+					<TimerDisplay
+						{...{
+							formattedTime,
+							isRunning,
+							glowColor: effectiveGlowColor,
+							currentSession: timer.current_session,
+							totalSessions: timer.total_sessions
+						}}
+					/>
+				</Suspense>
+			</div>
+
+			{/* Task display */}
+			{currentTask && currentTask.title && isRunning && (
+				<div className='mb-4 px-3 py-2 rounded-lg bg-zetta-bg/50 border border-zetta-border/50 backdrop-blur-sm'>
+					<div className='flex items-center gap-2 text-sm'>
+						<span
+							className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+								currentTask.category === 'coding'
+									? 'bg-blue-500/20 text-blue-400'
+									: 'bg-purple-500/20 text-purple-400'
+							}`}
+						>
+							{currentTask.category}
+						</span>
+						<span className='text-zetta-text-secondary'>
+							{currentTask.title}
+						</span>
+					</div>
 				</div>
-			</div>
+			)}
 
-			<div className='flex gap-2 md:gap-3 mt-3 md:mt-4'>
-				{timer.status === 'idle' && (
-					<button
-						onClick={onStart}
-						className='px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium bg-zetta-border hover:opacity-80 rounded transition-colors'
-						style={{ color: 'var(--text-primary)' }}
-					>
-						START
-					</button>
-				)}
-				{timer.status === 'running' && (
-					<button
-						onClick={onPause}
-						className='px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium bg-zetta-border hover:opacity-80 rounded transition-colors'
-						style={{ color: 'var(--text-primary)' }}
-					>
-						PAUSE
-					</button>
-				)}
-				{timer.status === 'paused' && (
-					<>
-						<button
-							onClick={onResume}
-							className='px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium bg-zetta-border hover:opacity-80 rounded transition-colors'
-							style={{ color: 'var(--text-primary)' }}
-						>
-							RESUME
-						</button>
-						<button
-							onClick={onStop}
-							className='px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium border rounded transition-colors'
-							style={{
-								color: '#ef4444',
-								borderColor: 'rgba(239, 68, 68, 0.3)'
-							}}
-						>
-							STOP
-						</button>
-					</>
-				)}
-				{timer.status === 'completed' && (
-					<button
-						onClick={onStart}
-						className='px-4 md:px-6 py-1.5 md:py-2 text-xs md:text-sm font-medium bg-zetta-border hover:opacity-80 rounded transition-colors'
-						style={{ color: 'var(--text-primary)' }}
-					>
-						RESTART
-					</button>
-				)}
-			</div>
-
-			<div
-				className='mt-2 md:mt-3 text-xs uppercase tracking-wider'
-				style={{ color: 'var(--text-muted)' }}
-			>
-				{timer.session_type === 'focus'
-					? 'Focus Session'
-					: timer.session_type === 'short_break'
-						? 'Short Break'
-						: 'Long Break'}
-			</div>
+			<Suspense fallback={null}>
+				<TimerControls
+					{...{
+						status: timer.status,
+						onStart,
+						onPause,
+						onResume,
+						onStop,
+						isStrictModeBlocking
+					}}
+				/>
+			</Suspense>
 		</div>
 	);
 }

@@ -30,7 +30,13 @@ pub fn get_trial_status(state: State<EngineState>) -> Result<TrialStatus, String
 
 #[tauri::command]
 pub fn get_license(state: State<EngineState>) -> Result<LicenseState, String> {
+    // DIAGNOSTIC: Track get_license command
+    eprintln!("[DIAGNOSTIC] get_license command called - using shared EngineState");
+
     let license_manager = state.license_manager.lock().map_err(|e| e.to_string())?;
+
+    // DIAGNOSTIC: Log the license state being returned
+    eprintln!("[DIAGNOSTIC] Returning license from shared state: type={}", license_manager.get_license_type());
 
     // Use the license_manager from state directly instead of creating a new instance
     Ok(LicenseState {
@@ -43,8 +49,20 @@ pub fn get_license(state: State<EngineState>) -> Result<LicenseState, String> {
 
 #[tauri::command]
 pub fn activate_key(state: State<EngineState>, key: String) -> Result<String, String> {
+    // DIAGNOSTIC: Track license activation
+    eprintln!("[DIAGNOSTIC] activate_key command called");
+    eprintln!("[DIAGNOSTIC] Key (first 20 chars): {}...", &key.chars().take(20).collect::<String>());
+
     let mut license_manager = state.license_manager.lock().map_err(|e| e.to_string())?;
+
+    // DIAGNOSTIC: Log current state before activation
+    eprintln!("[DIAGNOSTIC] Current tier before activation: {:?}", license_manager.get_tier());
+
     license_manager.activate_key(&key)?;
+
+    // DIAGNOSTIC: Log new state after activation
+    eprintln!("[DIAGNOSTIC] Activation successful! New tier: {:?}", license_manager.get_tier());
+
     Ok(format!(
         "License key activated successfully! Your license type is now {}.",
         license_manager.get_license_type()
@@ -88,8 +106,7 @@ pub fn can_create_profile(state: State<EngineState>) -> Result<CanCreateProfileR
         } else if is_pro {
             "Cannot create more profiles".to_string()
         } else {
-            "Free tier is limited to 1 custom profile. Upgrade to Pro for unlimited profiles."
-                .to_string()
+            "Custom profiles are a Pro feature. Upgrade to unlock unlimited access.".to_string()
         },
     })
 }
@@ -107,39 +124,61 @@ pub struct CanCreateProfileResult {
 // DEBUG PANEL COMMANDS (Debug builds only)
 // ============================================================================
 
-#[cfg(debug_assertions)]
 #[tauri::command]
 pub fn set_debug_license_override(override_mode: String) -> Result<String, String> {
-    let mode = match override_mode.as_str() {
-        "force_free" => DevLicenseOverride::ForceFree,
-        "force_trial" => DevLicenseOverride::ForceTrial,
-        "force_pro" => DevLicenseOverride::ForcePro,
-        "force_founder" => DevLicenseOverride::ForceFounder,
-        "simulate_expired_trial" => DevLicenseOverride::SimulateExpiredTrial,
-        "none" => DevLicenseOverride::None,
-        _ => return Err(format!("Unknown override mode: {}", override_mode)),
-    };
+    #[cfg(debug_assertions)]
+    {
+        let mode = match override_mode.as_str() {
+            "force_free" => DevLicenseOverride::ForceFree,
+            "force_trial" => DevLicenseOverride::ForceTrial,
+            "force_pro" => DevLicenseOverride::ForcePro,
+            "force_founder" => DevLicenseOverride::ForceFounder,
+            "simulate_expired_trial" => DevLicenseOverride::SimulateExpiredTrial,
+            "none" => DevLicenseOverride::None,
+            _ => return Err(format!("Unknown override mode: {}", override_mode)),
+        };
 
-    DevOverrides::set_override(mode);
-    Ok(format!("Debug override set to: {}", override_mode))
+        DevOverrides::set_override(mode);
+        Ok(format!("Debug override set to: {}", override_mode))
+    }
+
+    #[cfg(not(debug_assertions))]
+    {
+        let _ = override_mode;
+        Err("Debug license override is only available in debug builds.".to_string())
+    }
 }
 
-#[cfg(debug_assertions)]
 #[tauri::command]
 pub fn clear_debug_license_override() -> Result<String, String> {
-    DevOverrides::clear();
-    Ok("Debug override cleared".to_string())
+    #[cfg(debug_assertions)]
+    {
+        DevOverrides::clear();
+        Ok("Debug override cleared".to_string())
+    }
+
+    #[cfg(not(debug_assertions))]
+    {
+        Err("Debug license override is only available in debug builds.".to_string())
+    }
 }
 
-#[cfg(debug_assertions)]
 #[tauri::command]
 pub fn clear_license_storage() -> Result<String, String> {
-    let path = LicenseManager::get_license_path();
-    if path.exists() {
-        fs::remove_file(&path).map_err(|e| e.to_string())?;
-        Ok(format!("License storage cleared: {:?}", path))
-    } else {
-        Ok("No license file to clear".to_string())
+    #[cfg(debug_assertions)]
+    {
+        let path = LicenseManager::get_license_path();
+        if path.exists() {
+            fs::remove_file(&path).map_err(|e| e.to_string())?;
+            Ok(format!("License storage cleared: {:?}", path))
+        } else {
+            Ok("No license file to clear".to_string())
+        }
+    }
+
+    #[cfg(not(debug_assertions))]
+    {
+        Err("Clearing license storage is only available in debug builds.".to_string())
     }
 }
 
@@ -153,7 +192,7 @@ pub fn activate_strict_mode(
     // Use the new is_pro_enabled() function for feature gating
     if !license_manager.is_pro_enabled() {
         return Err(
-            "Strict Mode is a Pro feature. Please upgrade to Pro or Founder edition.".to_string(),
+            "Strict Mode is a Pro feature. Upgrade to unlock unlimited access.".to_string(),
         );
     }
     drop(license_manager);

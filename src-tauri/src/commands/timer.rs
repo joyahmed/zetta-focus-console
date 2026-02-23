@@ -3,8 +3,8 @@
 use super::parser::{format_time, parse_command_with_quotes, parse_duration};
 use crate::sound::get_sound_data;
 use crate::types::{
-    AppState, AppStateExt, SessionOverride, SessionType, StateEvent, Stats, StrictModeState,
-    TimerState, TimerStatus,
+    AppState, AppStateExt, CurrentTask, SessionOverride, SessionType, StateEvent, Stats,
+    StrictModeState, TaskCategory, TimerState, TimerStatus,
 };
 use crate::EngineState;
 use sysinfo::System;
@@ -52,6 +52,33 @@ pub fn set_theme(
 }
 
 #[tauri::command]
+pub fn set_total_sessions(
+    total_sessions: u32,
+    state: State<EngineState>,
+    app_handle: AppHandle,
+) -> Result<String, String> {
+    if total_sessions < 1 || total_sessions > 20 {
+        return Err("Total sessions must be between 1 and 20".to_string());
+    }
+
+    let mut app_state = state.app_state.lock().map_err(|e| e.to_string())?;
+    app_state.timer.total_sessions = total_sessions;
+    // Reset current session to 1 if it exceeds the new total
+    if app_state.timer.current_session > total_sessions {
+        app_state.timer.current_session = 1;
+    }
+
+    let _ = app_handle.emit(
+        "state-updated",
+        StateEvent {
+            state: app_state.clone(),
+        },
+    );
+
+    Ok(format!("Total sessions set to {}", total_sessions))
+}
+
+#[tauri::command]
 pub fn execute_command(
     command: String,
     state: State<EngineState>,
@@ -72,7 +99,7 @@ pub fn execute_command(
     // Save preferences after command execution (only for preference-modifying commands)
     let should_save = matches!(
         cmd.as_str(),
-        "devmode" | "ambience" | "sound" | "profile" | "background" | "reset" | "theme"
+        "devmode" | "ambience" | "sound" | "profile" | "background" | "reset" | "theme" | "voice"
     );
     if should_save {
         let _ = app_state.save_preferences();
@@ -99,6 +126,18 @@ pub fn process_command(
     args: &[&str],
     is_pro: bool,
 ) -> String {
+    // Handle command aliases
+    let cmd = match cmd {
+        // Start aliases
+        "s" | "st" => "start",
+        // Stop aliases
+        "r" => "stop",
+        // Pause aliases
+        "p" => "pause",
+        // Resume is already "resume"
+        _ => cmd,
+    };
+
     // Show Pro features in help if user has Pro
     let pro_features = if is_pro {
         "
@@ -123,7 +162,7 @@ pub fn process_command(
    profile create/edit  - Custom profiles (Pro)
    devmode              - Developer diagnostics (Pro)
 
-   Run 'license upgrade' for Pro access."
+   Upgrade to Pro to unlock these features."
     };
 
     match cmd {
@@ -133,11 +172,15 @@ pub fn process_command(
 
         "strict" => strict_command(args, app_state, is_pro),
 
+        "task" => task_command(args, app_state),
+
         "timer" => timer_override_command(args, app_state, is_pro),
 
         "break" => break_override_command(args, app_state, is_pro),
 
         "loop" => loop_override_command(args, app_state, is_pro),
+
+        "sessions" => sessions_command(args, app_state),
 
         "start" => start_command(app_state, sound_manager),
 
@@ -181,6 +224,10 @@ pub fn process_command(
 
         "cpu" => cpu_command(),
 
+        "usage" => usage_command(app_state),
+
+        "voice" => voice_command(args, app_state),
+
         "sound" => sound_command(args, app_state, sound_manager),
 
         "clear" => "__CLEAR__".to_string(),
@@ -207,6 +254,7 @@ fn help_command(pro_features: &str) -> String {
    resume                 - Resume paused session
    status                 - Show current session status
    override clear         - Clear session override
+   sessions [count]       - Set or view sessions per cycle (1-20)
    profile list           - List all available profiles
    profile switch [id]    - Switch to a profile
    season [name]         - Change season (spring/summer/autumn/winter)
@@ -217,9 +265,11 @@ fn help_command(pro_features: &str) -> String {
    sound stop            - Stop ambient sound
    sound volume [0-100]  - Set volume level
    sound mute            - Toggle mute
+   voice on/off          - Toggle voice announcements
    system                - Show system information
    memory                - Show memory usage
    cpu                   - Show CPU usage
+   usage                 - Show app usage stats (CPU, memory, uptime)
    theme [mode]          - Set theme (dark, light, system)
    clear                 - Clear terminal
    help                  - Show this help message{}",
@@ -244,6 +294,8 @@ fn focus_command(
                 total_seconds,
                 status: TimerStatus::Running,
                 session_type: SessionType::Focus,
+                current_session: 1,
+                total_sessions: 4,
             };
             if !app_state.sound_state.is_muted && !app_state.sound_state.is_playing {
                 let sound_file = &app_state.active_profile.sound_file;
@@ -259,8 +311,10 @@ fn focus_command(
             if app_state.timer.status == TimerStatus::Idle {
                 return "Error: No active session to stop.".to_string();
             }
-            if app_state.sound_state.is_playing && !app_state.sound_state.is_muted {
-                sound_manager.pause();
+            if app_state.sound_state.is_playing {
+                sound_manager.stop();
+                app_state.sound_state.is_playing = false;
+                app_state.sound_state.current_sound = None;
             }
             app_state.timer.status = TimerStatus::Idle;
             app_state.timer.remaining_seconds = app_state.active_profile.focus_duration;
@@ -293,7 +347,7 @@ fn focus_command(
 
 fn strict_command(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String {
     if !is_pro {
-        return "Error: Strict Mode is a Pro feature. Run 'license upgrade' for Pro access."
+        return "Error: Strict Mode is a Pro feature. Upgrade to unlock unlimited access."
             .to_string();
     }
 
@@ -335,9 +389,81 @@ fn strict_command(args: &[&str], app_state: &mut AppState, is_pro: bool) -> Stri
     }
 }
 
+fn task_command(args: &[&str], app_state: &mut AppState) -> String {
+    match args.first() {
+        Some(&"set") => {
+            // Parse: task set "title" --category coding|other
+            let mut title = String::new();
+            let mut category = TaskCategory::Coding;
+
+            let args_vec: Vec<&str> = args[1..].to_vec();
+
+            // Find the title (in quotes or until --category)
+            let mut in_title = true;
+            for arg in &args_vec {
+                if *arg == "--category" {
+                    in_title = false;
+                    continue;
+                }
+
+                if in_title {
+                    // Remove quotes if present
+                    let clean_arg = arg.trim_matches('"').trim_matches('\'');
+                    if !clean_arg.is_empty() {
+                        if !title.is_empty() {
+                            title.push(' ');
+                        }
+                        title.push_str(clean_arg);
+                    }
+                } else if *arg == "coding" {
+                    category = TaskCategory::Coding;
+                } else if *arg == "other" {
+                    category = TaskCategory::Other;
+                }
+            }
+
+            if title.is_empty() {
+                return "Error: Task title is required. Usage: task set \"your task\" --category coding|other"
+                    .to_string();
+            }
+
+            app_state.current_task = CurrentTask {
+                category,
+                title,
+            };
+
+            let category_str = match app_state.current_task.category {
+                TaskCategory::Coding => "coding",
+                TaskCategory::Other => "other",
+            };
+
+            format!("Task set: [{}] {}", category_str, app_state.current_task.title)
+        }
+        Some(&"clear") => {
+            app_state.current_task = CurrentTask::default();
+            "Task cleared.".to_string()
+        }
+        Some(&"show") | None => {
+            if app_state.current_task.is_empty() {
+                "No task set. Use 'task set \"title\" --category coding|other' to set a task."
+                    .to_string()
+            } else {
+                let category_str = match app_state.current_task.category {
+                    TaskCategory::Coding => "coding",
+                    TaskCategory::Other => "other",
+                };
+                format!("Task: [{}] {}", category_str, app_state.current_task.title)
+            }
+        }
+        _ => "Error: Unknown task command. Usage: task set \"title\" --category coding|other | task show | task clear"
+            .to_string(),
+    }
+}
+
 fn timer_override_command(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String {
     if !is_pro {
-        return "Error: Runtime overrides require Pro license. Run 'license upgrade' for Pro access.".to_string();
+        return "Error: Runtime overrides are a Pro feature. Upgrade to unlock unlimited access."
+            .to_string();
     }
 
     if app_state.strict_mode.is_active && app_state.timer.status == TimerStatus::Running {
@@ -374,7 +500,8 @@ fn timer_override_command(args: &[&str], app_state: &mut AppState, is_pro: bool)
 
 fn break_override_command(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String {
     if !is_pro {
-        return "Error: Runtime overrides require Pro license. Run 'license upgrade' for Pro access.".to_string();
+        return "Error: Runtime overrides are a Pro feature. Upgrade to unlock unlimited access."
+            .to_string();
     }
 
     if app_state.strict_mode.is_active && app_state.timer.status == TimerStatus::Running {
@@ -411,7 +538,8 @@ fn break_override_command(args: &[&str], app_state: &mut AppState, is_pro: bool)
 
 fn loop_override_command(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String {
     if !is_pro {
-        return "Error: Runtime overrides require Pro license. Run 'license upgrade' for Pro access.".to_string();
+        return "Error: Runtime overrides are a Pro feature. Upgrade to unlock unlimited access."
+            .to_string();
     }
 
     if app_state.strict_mode.is_active && app_state.timer.status == TimerStatus::Running {
@@ -460,6 +588,37 @@ fn build_override_message(override_state: &SessionOverride) -> String {
     )
 }
 
+fn sessions_command(args: &[&str], app_state: &mut AppState) -> String {
+    match args.first() {
+        Some(&count_str) => {
+            match count_str.parse::<u32>() {
+                Ok(count) => {
+                    if count < 1 || count > 20 {
+                        return "Error: Sessions must be between 1 and 20.".to_string();
+                    }
+                    app_state.timer.total_sessions = count;
+                    // Reset current session to 1 if it exceeds the new total
+                    if app_state.timer.current_session > count {
+                        app_state.timer.current_session = 1;
+                    }
+                    format!("Sessions per cycle set to {}", count)
+                }
+                Err(_) => {
+                    "Error: Invalid session count. Must be a number between 1 and 20.".to_string()
+                }
+            }
+        }
+        None => {
+            format!(
+                "Sessions per cycle: {} (current: {}/{})",
+                app_state.timer.total_sessions,
+                app_state.timer.current_session,
+                app_state.timer.total_sessions
+            )
+        }
+    }
+}
+
 fn start_command(
     app_state: &mut AppState,
     sound_manager: &mut crate::sound::SoundManager,
@@ -483,11 +642,15 @@ fn start_command(
         .and_then(|o| o.focus_duration)
         .unwrap_or(app_state.active_profile.focus_duration);
 
+    let total_sessions = app_state.active_profile.sessions_per_cycle;
+
     app_state.timer = TimerState {
         remaining_seconds: focus_seconds,
         total_seconds: focus_seconds,
         status: TimerStatus::Running,
         session_type: SessionType::Focus,
+        current_session: 1,
+        total_sessions,
     };
 
     if !app_state.sound_state.is_muted && !app_state.sound_state.is_playing {
@@ -530,22 +693,16 @@ fn stop_command(
         return "Error: No active session to stop.".to_string();
     }
 
+    // Block stop during Strict Mode - user must complete the session
     if app_state.strict_mode.is_active {
-        app_state.strict_mode.was_force_closed = true;
-        app_state.strict_mode.is_active = false;
-
-        if app_state.sound_state.is_playing && !app_state.sound_state.is_muted {
-            sound_manager.pause();
-        }
-        app_state.timer.status = TimerStatus::Idle;
-        app_state.timer.remaining_seconds = app_state.active_profile.focus_duration;
-
-        return "Strict Mode session marked as FAILED (manually stopped). Session reset."
+        return "Error: Stop is disabled during Strict Mode. Session must run to completion."
             .to_string();
     }
 
-    if app_state.sound_state.is_playing && !app_state.sound_state.is_muted {
-        sound_manager.pause();
+    if app_state.sound_state.is_playing {
+        sound_manager.stop();
+        app_state.sound_state.is_playing = false;
+        app_state.sound_state.current_sound = None;
     }
     app_state.timer.status = TimerStatus::Idle;
     app_state.timer.remaining_seconds = app_state.active_profile.focus_duration;
@@ -604,6 +761,18 @@ fn status_command(app_state: &mut AppState) -> String {
         ),
         format!("Profile: {}", app_state.active_profile.name),
     ];
+
+    // Show task info if set
+    if !app_state.current_task.is_empty() {
+        let category_str = match app_state.current_task.category {
+            TaskCategory::Coding => "coding",
+            TaskCategory::Other => "other",
+        };
+        info.push(format!(
+            "Task: [{}] {}",
+            category_str, app_state.current_task.title
+        ));
+    }
 
     if app_state.strict_mode.is_active {
         info.push("Strict Mode: ACTIVE (cannot pause/stop)".to_string());
@@ -717,7 +886,7 @@ fn stats_command(app_state: &mut AppState) -> String {
 
 fn devmode_command(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String {
     if !is_pro {
-        return "Error: Developer mode is a Pro feature. Run 'license upgrade' for Pro access."
+        return "Error: Developer mode is a Pro feature. Upgrade to unlock unlimited access."
             .to_string();
     }
 
@@ -778,6 +947,8 @@ fn reset_command(
         total_seconds: 25 * 60,
         status: TimerStatus::Idle,
         session_type: SessionType::Focus,
+        current_session: 1,
+        total_sessions: 4,
     };
     app_state.session_override = None;
     app_state.stats = Stats {
@@ -815,8 +986,18 @@ fn theme_command(args: &[&str], app_state: &mut AppState) -> String {
             app_state.theme = "system".to_string();
             "Theme set to system.".to_string()
         }
+        Some(&"toggle") => {
+            // Toggle between dark and light (ignore system)
+            let new_theme = if app_state.theme == "dark" {
+                "light"
+            } else {
+                "dark"
+            };
+            app_state.theme = new_theme.to_string();
+            format!("Theme toggled to {}.", new_theme)
+        }
         _ => format!(
-            "Current theme: {}. Usage: theme dark|light|system",
+            "Current theme: {}. Usage: theme dark|light|system|toggle",
             app_state.theme
         ),
     }
@@ -842,6 +1023,8 @@ fn engine_command(args: &[&str], app_state: &mut AppState, is_pro: bool) -> Stri
                 total_seconds: 25 * 60,
                 status: TimerStatus::Idle,
                 session_type: SessionType::Focus,
+                current_session: 1,
+                total_sessions: 4,
             };
             app_state.session_override = None;
             app_state.stats = Stats {
@@ -911,6 +1094,56 @@ fn cpu_command() -> String {
     )
 }
 
+fn usage_command(app_state: &AppState) -> String {
+    // Calculate uptime
+    let current_time = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as i64;
+    let uptime_seconds = current_time - app_state.app_start_time;
+
+    let hours = uptime_seconds / 3600;
+    let minutes = (uptime_seconds % 3600) / 60;
+    let seconds = uptime_seconds % 60;
+
+    let uptime_str = if hours > 0 {
+        format!("{}h {}m {}s", hours, minutes, seconds)
+    } else if minutes > 0 {
+        format!("{}m {}s", minutes, seconds)
+    } else {
+        format!("{}s", seconds)
+    };
+
+    format!(
+        "App Usage:\n  CPU: {:.1}%\n  Memory: {} MB\n  Uptime: {}",
+        app_state.app_stats.cpu_usage, app_state.app_stats.memory_used, uptime_str
+    )
+}
+
+fn voice_command(args: &[&str], app_state: &mut AppState) -> String {
+    match args.first() {
+        Some(&"on") => {
+            app_state.voice_enabled = true;
+            "Voice announcements enabled.".to_string()
+        }
+        Some(&"off") => {
+            app_state.voice_enabled = false;
+            "Voice announcements disabled.".to_string()
+        }
+        _ => {
+            let status = if app_state.voice_enabled {
+                "enabled"
+            } else {
+                "disabled"
+            };
+            format!(
+                "Voice: {}\nUse 'voice on' or 'voice off' to toggle.",
+                status
+            )
+        }
+    }
+}
+
 fn sound_command(
     args: &[&str],
     app_state: &mut AppState,
@@ -940,13 +1173,29 @@ fn sound_command(
         }
         Some(&"volume") => {
             if let Some(vol_str) = args.get(1) {
-                if let Ok(vol) = vol_str.parse::<u8>() {
-                    let vol = vol.min(100);
-                    app_state.sound_state.volume = vol;
-                    sound_manager.set_volume(vol);
-                    return format!("Volume set to {}%", vol);
-                } else {
-                    return "Error: Invalid volume value. Use 0-100".to_string();
+                match *vol_str {
+                    "up" => {
+                        let new_vol = (app_state.sound_state.volume + 10).min(100);
+                        app_state.sound_state.volume = new_vol;
+                        sound_manager.set_volume(new_vol);
+                        return format!("Volume increased to {}%", new_vol);
+                    }
+                    "down" => {
+                        let new_vol = app_state.sound_state.volume.saturating_sub(10);
+                        app_state.sound_state.volume = new_vol;
+                        sound_manager.set_volume(new_vol);
+                        return format!("Volume decreased to {}%", new_vol);
+                    }
+                    _ => {
+                        if let Ok(vol) = vol_str.parse::<u8>() {
+                            let vol = vol.min(100);
+                            app_state.sound_state.volume = vol;
+                            sound_manager.set_volume(vol);
+                            return format!("Volume set to {}%", vol);
+                        } else {
+                            return "Error: Invalid volume value. Use 0-100, or 'up'/'down'".to_string();
+                        }
+                    }
                 }
             }
             format!("Current volume: {}%", app_state.sound_state.volume)

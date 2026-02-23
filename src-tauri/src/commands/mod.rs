@@ -9,8 +9,8 @@ mod timer;
 
 pub use parser::{format_time, parse_command_with_quotes, parse_duration};
 pub use timer::{
-    execute_command, get_state, get_theme, process_command, set_theme, tick_system_stats,
-    tick_timer,
+    execute_command, get_state, get_theme, process_command, set_theme, set_total_sessions,
+    tick_system_stats, tick_timer,
 };
 
 pub use settings::{

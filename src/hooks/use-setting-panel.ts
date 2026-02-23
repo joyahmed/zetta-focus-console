@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from 'react';
 
-export const useSettingPanel = () => {
+export const useSettingPanel = (onLicenseChange?: () => void) => {
 	const [licenseKey, setLicenseKey] = useState('');
 	const [licenseMessage, setLicenseMessage] = useState('');
 	const [currentLicense, setCurrentLicense] =
@@ -49,6 +49,10 @@ export const useSettingPanel = () => {
 			setLicenseMessage(result);
 			setLicenseKey('');
 			await fetchLicenseState();
+			// Refresh global license state after activation
+			if (onLicenseChange) {
+				onLicenseChange();
+			}
 		} catch (error) {
 			setLicenseMessage(`Error: ${error}`);
 		}

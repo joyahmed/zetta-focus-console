@@ -46,12 +46,13 @@ fn create_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> Stri
         if is_pro {
             return "Error: Cannot create more profiles.".to_string();
         } else {
-            return "Error: Free tier is limited to 1 custom profile. Upgrade to Pro for unlimited profiles.".to_string();
+            return "Error: Custom profiles are a Pro feature. Upgrade to unlock unlimited access."
+                .to_string();
         }
     }
 
-    if args.len() < 8 {
-        return "Usage: profile create <name> <focus_min> <short_break_min> <long_break_min> <season> <intensity> <sound>\nExample: profile create \"My Profile\" 25 5 15 winter low fireplace".to_string();
+    if args.len() < 9 {
+        return "Usage: profile create <name> <focus_min> <short_break_min> <long_break_min> <sessions> <season> <intensity> <sound>\nExample: profile create \"My Profile\" 25 5 15 4 winter low fireplace".to_string();
     }
 
     let name = args[1].to_string();
@@ -112,8 +113,12 @@ fn create_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> Stri
         Ok(v) if v >= 1 && v <= 60 => v * 60,
         _ => return "Error: Long break must be 1-60 minutes.".to_string(),
     };
+    let sessions_per_cycle: u32 = match args[5].parse::<u32>() {
+        Ok(v) if v >= 1 && v <= 20 => v,
+        _ => return "Error: Sessions per cycle must be 1-20.".to_string(),
+    };
 
-    let season = match args[5] {
+    let season = match args[6] {
         "spring" => Season::Spring,
         "summer" => Season::Summer,
         "autumn" => Season::Autumn,
@@ -121,14 +126,14 @@ fn create_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> Stri
         _ => return "Error: Season must be spring, summer, autumn, or winter.".to_string(),
     };
 
-    let intensity = match args[6] {
+    let intensity = match args[7] {
         "low" => MotionIntensity::Low,
         "medium" => MotionIntensity::Medium,
         "high" => MotionIntensity::High,
         _ => return "Error: Intensity must be low, medium, or high.".to_string(),
     };
 
-    let sound_file = args[7].to_string();
+    let sound_file = args[8].to_string();
 
     let glow_color = match season {
         Season::Spring => "#34d399".to_string(),
@@ -146,14 +151,31 @@ fn create_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> Stri
         focus_duration: focus_min,
         short_break_duration: short_break_min,
         long_break_duration: long_break_min,
+        sessions_per_cycle,
         glow_color,
         sound_file,
         default_volume: 50,
         is_preset: false,
     };
 
-    app_state.profiles.push(new_profile);
-    format!("Created custom profile '{}' with ID: {}", name, new_id)
+    app_state.profiles.push(new_profile.clone());
+    app_state.active_profile = new_profile;
+    app_state.session_override = None;
+
+    // Refresh timer for the next run when not actively in a session.
+    if app_state.timer.status != TimerStatus::Running {
+        app_state.timer.status = TimerStatus::Idle;
+        app_state.timer.remaining_seconds = focus_min;
+        app_state.timer.total_seconds = focus_min;
+        app_state.timer.session_type = crate::types::SessionType::Focus;
+        app_state.timer.current_session = 1;
+        app_state.timer.total_sessions = sessions_per_cycle;
+    }
+
+    format!(
+        "Created custom profile '{}' with ID: {} and switched to it.",
+        name, new_id
+    )
 }
 
 fn delete_profile(args: &[&str], app_state: &mut AppState) -> String {
@@ -181,8 +203,8 @@ fn delete_profile(args: &[&str], app_state: &mut AppState) -> String {
 }
 
 fn edit_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String {
-    if args.len() < 9 {
-        return "Usage: profile edit <id> <name> <focus_min> <short_break_min> <long_break_min> <season> <intensity> <sound>".to_string();
+    if args.len() < 10 {
+        return "Usage: profile edit <id> <name> <focus_min> <short_break_min> <long_break_min> <sessions> <season> <intensity> <sound>".to_string();
     }
     let profile_id = args[1];
 
@@ -191,7 +213,8 @@ fn edit_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String
         if is_pro {
             return "Error: Cannot edit this profile.".to_string();
         } else {
-            return "Error: Free tier can only edit your single custom profile. Upgrade to Pro for unlimited editing.".to_string();
+            return "Error: Custom profiles are a Pro feature. Upgrade to unlock unlimited access."
+                .to_string();
         }
     }
     let new_name = args[2].to_string();
@@ -225,8 +248,12 @@ fn edit_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String
         Ok(v) if v >= 1 && v <= 60 => v * 60,
         _ => return "Error: Long break must be 1-60 minutes.".to_string(),
     };
+    let sessions_per_cycle: u32 = match args[6].parse::<u32>() {
+        Ok(v) if v >= 1 && v <= 20 => v,
+        _ => return "Error: Sessions per cycle must be 1-20.".to_string(),
+    };
 
-    let season = match args[6].to_lowercase().as_str() {
+    let season = match args[7].to_lowercase().as_str() {
         "spring" => Season::Spring,
         "summer" => Season::Summer,
         "autumn" => Season::Autumn,
@@ -234,14 +261,14 @@ fn edit_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String
         _ => return "Error: Season must be spring, summer, autumn, or winter.".to_string(),
     };
 
-    let intensity = match args[7].to_lowercase().as_str() {
+    let intensity = match args[8].to_lowercase().as_str() {
         "low" => MotionIntensity::Low,
         "medium" => MotionIntensity::Medium,
         "high" => MotionIntensity::High,
         _ => return "Error: Intensity must be low, medium, or high.".to_string(),
     };
 
-    let sound_file = args[8].to_string();
+    let sound_file = args[9].to_string();
 
     let glow_color = match season {
         Season::Spring => "#34d399".to_string(),
@@ -252,18 +279,37 @@ fn edit_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String
 
     if let Some(profile) = app_state.profiles.iter_mut().find(|p| p.id == profile_id) {
         profile.name = new_name.clone();
-        profile.season = season;
-        profile.motion_intensity = intensity;
+        profile.season = season.clone();
+        profile.motion_intensity = intensity.clone();
         profile.focus_duration = focus_min;
         profile.short_break_duration = short_break_min;
         profile.long_break_duration = long_break_min;
-        profile.glow_color = glow_color;
-        profile.sound_file = sound_file;
+        profile.sessions_per_cycle = sessions_per_cycle;
+        profile.glow_color = glow_color.clone();
+        profile.sound_file = sound_file.clone();
 
-        if app_state.active_profile.id == profile_id && app_state.timer.status == TimerStatus::Idle
-        {
-            app_state.timer.remaining_seconds = focus_min;
-            app_state.timer.total_seconds = focus_min;
+        // If editing the active profile, update active_profile immediately
+        if app_state.active_profile.id == profile_id {
+            app_state.active_profile.name = new_name.clone();
+            app_state.active_profile.season = season;
+            app_state.active_profile.motion_intensity = intensity;
+            app_state.active_profile.focus_duration = focus_min;
+            app_state.active_profile.short_break_duration = short_break_min;
+            app_state.active_profile.long_break_duration = long_break_min;
+            app_state.active_profile.sessions_per_cycle = sessions_per_cycle;
+            app_state.active_profile.glow_color = glow_color;
+            app_state.active_profile.sound_file = sound_file;
+            app_state.session_override = None;
+
+            // Update timer for the next run when not actively in a session.
+            if app_state.timer.status != TimerStatus::Running {
+                app_state.timer.status = TimerStatus::Idle;
+                app_state.timer.remaining_seconds = focus_min;
+                app_state.timer.total_seconds = focus_min;
+                app_state.timer.session_type = crate::types::SessionType::Focus;
+                app_state.timer.current_session = 1;
+                app_state.timer.total_sessions = sessions_per_cycle;
+            }
         }
 
         format!("Updated profile: {}", new_name)
@@ -278,7 +324,8 @@ fn duplicate_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> S
         if is_pro {
             return "Error: Cannot duplicate profile.".to_string();
         } else {
-            return "Error: Free tier is limited to 1 custom profile. Upgrade to Pro for unlimited profiles.".to_string();
+            return "Error: Custom profiles are a Pro feature. Upgrade to unlock unlimited access."
+                .to_string();
         }
     }
 
@@ -327,11 +374,20 @@ fn switch_profile_internal(
         .find(|p| p.id.as_str() == profile_id)
     {
         app_state.active_profile = profile.clone();
-        if app_state.timer.status == TimerStatus::Idle {
+        app_state.session_override = None;
+        if app_state.timer.status != TimerStatus::Running {
+            app_state.timer.status = TimerStatus::Idle;
             app_state.timer.remaining_seconds = profile.focus_duration;
             app_state.timer.total_seconds = profile.focus_duration;
+            app_state.timer.session_type = crate::types::SessionType::Focus;
+            app_state.timer.current_session = 1;
+            app_state.timer.total_sessions = profile.sessions_per_cycle;
         }
-        if app_state.sound_state.is_playing && !app_state.sound_state.is_muted {
+        // Only play sound if timer is actively running (not just paused/stopped with is_playing=true)
+        if app_state.sound_state.is_playing
+            && !app_state.sound_state.is_muted
+            && app_state.timer.status == TimerStatus::Running
+        {
             let sound_data: &[u8] = get_sound_data(&profile.sound_file);
             app_state.sound_state.current_sound = Some(profile.sound_file.clone());
             app_state.sound_state.volume = profile.default_volume;

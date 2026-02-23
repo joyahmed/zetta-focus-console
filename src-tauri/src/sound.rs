@@ -53,11 +53,9 @@ impl SoundManager {
     }
 
     pub fn play(&mut self, sound_data: &'static [u8], volume: u8) -> Result<(), String> {
-        if !self.is_initialized.load(Ordering::SeqCst) {
-            self.initialize()?;
-        }
-
-        self.stop();
+        // Always reinitialize the audio stream to ensure clean playback
+        // This fixes issues where the stream becomes invalid after stop()
+        self.reinitialize()?;
 
         let cursor = Cursor::new(sound_data);
         let source = Decoder::new(cursor).map_err(|e| format!("Failed to decode audio: {}", e))?;
@@ -79,9 +77,29 @@ impl SoundManager {
         Ok(())
     }
 
+    /// Reinitialize the audio stream - needed after stop() to ensure clean playback
+    fn reinitialize(&mut self) -> Result<(), String> {
+        // Clear existing sink first
+        if let Some(sink) = self.sink.take() {
+            sink.stop();
+        }
+
+        // Create a fresh audio stream
+        match OutputStream::try_default() {
+            Ok((stream, stream_handle)) => {
+                self._stream = Some(stream);
+                self.stream_handle = Some(stream_handle);
+                self.is_initialized.store(true, Ordering::SeqCst);
+                Ok(())
+            }
+            Err(e) => Err(format!("Failed to initialize audio: {}", e)),
+        }
+    }
+
     pub fn stop(&mut self) {
         if let Some(sink) = self.sink.take() {
             sink.stop();
+            // sink is dropped here, which is fine - stream_handle remains valid
         }
     }
 
@@ -120,3 +138,4 @@ impl Default for SoundManager {
         Self::new()
     }
 }
+
