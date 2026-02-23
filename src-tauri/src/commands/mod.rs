@@ -15,10 +15,6 @@ pub use timer::{
 
 pub use settings::{
     activate_key, activate_strict_mode, can_create_profile, check_strict_mode_failure,
-    deactivate_strict_mode, get_license, get_trial_days_remaining, get_trial_status, is_pro,
-};
-
-#[cfg(debug_assertions)]
-pub use settings::{
-    clear_debug_license_override, clear_license_storage, set_debug_license_override,
+    clear_debug_license_override, clear_license_storage, deactivate_strict_mode, get_license,
+    get_trial_days_remaining, get_trial_status, is_pro, set_debug_license_override,
 };

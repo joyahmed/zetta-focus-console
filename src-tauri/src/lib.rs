@@ -11,14 +11,10 @@ mod types;
 mod webhook;
 
 use engine::{
-    activate_key, can_create_profile, execute_command, get_license, get_state, get_theme,
-    get_trial_days_remaining, get_trial_status, is_pro, set_theme, set_total_sessions,
+    activate_key, can_create_profile, clear_debug_license_override, clear_license_storage,
+    execute_command, get_license, get_state, get_theme, get_trial_days_remaining,
+    get_trial_status, is_pro, set_debug_license_override, set_theme, set_total_sessions,
     tick_system_stats, tick_timer, EngineState,
-};
-
-#[cfg(debug_assertions)]
-use engine::{
-    clear_debug_license_override, clear_license_storage, set_debug_license_override,
 };
 use payment::{
     get_available_payment_options, get_checkout_info, open_checkout_in_browser, CheckoutInfo,
@@ -38,6 +34,7 @@ use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     AppHandle, Emitter, Manager,
 };
+use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 // ============================================================================
@@ -213,45 +210,39 @@ fn webhook_response(
 
 /// Setup global shortcuts for the app
 fn setup_global_shortcuts(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
-    let app_handle = app.clone();
+    // Global shortcuts
+    let toggle_window_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyH);
+    let toggle_particles_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyB);
 
-    // Ctrl+Alt+S - Start/Stop timer
-    let start_stop_shortcut = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyS);
+    eprintln!("[DIAGNOSTIC] Registering global shortcuts...");
 
-    // Ctrl+Alt+P - Pause/Resume
-    let pause_resume_shortcut =
-        Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyP);
-
-    // Ctrl+T - Open terminal
-    let terminal_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyT);
-
+    // Ctrl+H - Hide/Show window
     app.global_shortcut()
-        .on_shortcut(start_stop_shortcut, move |_app, shortcut, event| {
+        .on_shortcut(toggle_window_shortcut, move |app, _shortcut, event| {
             if event.state == ShortcutState::Pressed {
-                eprintln!("[GLOBAL SHORTCUT] Ctrl+Alt+S pressed - Start/Stop timer");
-                let _ = app_handle.emit("global-shortcut", "start_stop");
+                if let Some(window) = app.get_webview_window("main") {
+                    if window.is_visible().unwrap_or(false) {
+                        let _ = window.hide();
+                    } else {
+                        let _ = window.show();
+                        let _ = window.set_focus();
+                    }
+                }
             }
         })?;
 
-    let app_handle2 = app.clone();
-    app.global_shortcut()
-        .on_shortcut(pause_resume_shortcut, move |_app, shortcut, event| {
+    // Ctrl+B - Toggle background particles
+    let app_handle_particles = app.clone();
+    app.global_shortcut().on_shortcut(
+        toggle_particles_shortcut,
+        move |_app, _shortcut, event| {
             if event.state == ShortcutState::Pressed {
-                eprintln!("[GLOBAL SHORTCUT] Ctrl+Alt+P pressed - Pause/Resume");
-                let _ = app_handle2.emit("global-shortcut", "pause_resume");
+                let _ = app_handle_particles.emit("global-shortcut", "toggle_particles");
             }
-        })?;
+        },
+    )?;
 
-    let app_handle3 = app.clone();
-    app.global_shortcut()
-        .on_shortcut(terminal_shortcut, move |_app, shortcut, event| {
-            if event.state == ShortcutState::Pressed {
-                eprintln!("[GLOBAL SHORTCUT] Ctrl+T pressed - Toggle terminal");
-                let _ = app_handle3.emit("global-shortcut", "toggle_terminal");
-            }
-        })?;
-
-    eprintln!("[DIAGNOSTIC] Global shortcuts registered successfully");
+    eprintln!("[DIAGNOSTIC] Global shortcuts registered (Ctrl+H, Ctrl+B)");
     Ok(())
 }
 
@@ -277,7 +268,7 @@ fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     )?;
 
     let app_handle = app.clone();
-    let tray = TrayIconBuilder::with_id("main")
+    let _tray = TrayIconBuilder::with_id("main")
         .icon(app.default_window_icon().unwrap().clone())
         .menu(&menu)
         .tooltip("Zetta Focus Console - Idle")
@@ -334,17 +325,19 @@ fn update_tray_state(
     session_type: String,
     strict_mode_active: Option<bool>,
 ) -> Result<(), String> {
-    eprintln!(
-        "[TRAY] Updating tray state - status: {}, session_type: {}, strict_mode: {:?}",
-        status, session_type, strict_mode_active
-    );
+    // eprintln!(
+    //     "[TRAY] Updating tray state - status: {}, session_type: {}, strict_mode: {:?}",
+    //     status, session_type, strict_mode_active
+    // );
 
     let is_strict = strict_mode_active.unwrap_or(false);
 
     let tooltip = match (status.as_str(), session_type.as_str(), is_strict) {
         ("running", "focus", true) => "Zetta Focus Console - Strict Mode",
         ("running", "focus", false) => "Zetta Focus Console - Focus",
-        ("running", "short_break", _) | ("running", "long_break", _) => "Zetta Focus Console - Break",
+        ("running", "short_break", _) | ("running", "long_break", _) => {
+            "Zetta Focus Console - Break"
+        }
         ("paused", _, _) => "Zetta Focus Console - Paused",
         ("completed", _, _) => "Zetta Focus Console - Completed",
         _ => "Zetta Focus Console - Idle",
@@ -360,11 +353,60 @@ fn update_tray_state(
     Ok(())
 }
 
+// ============================================================================
+// AUTOSTART COMMANDS
+// ============================================================================
+
+/// Get the current autostart status
+#[tauri::command]
+fn get_autostart_enabled(app_handle: AppHandle) -> bool {
+    use tauri_plugin_autostart::ManagerExt;
+
+    let app = app_handle.autolaunch();
+    app.is_enabled().unwrap_or(false)
+}
+
+/// Enable or disable autostart
+#[tauri::command]
+fn set_autostart_enabled(app_handle: AppHandle, enabled: bool) -> Result<(), String> {
+    use tauri_plugin_autostart::ManagerExt;
+
+    let app = app_handle.autolaunch();
+    if enabled {
+        app.enable()
+            .map_err(|e: tauri_plugin_autostart::Error| e.to_string())?;
+    } else {
+        app.disable()
+            .map_err(|e: tauri_plugin_autostart::Error| e.to_string())?;
+    }
+    Ok(())
+}
+
+/// Get the start minimized preference - checks if app should start minimized
+#[tauri::command]
+fn get_start_minimized() -> bool {
+    // Load preferences and check start_minimized
+    let prefs = crate::storage::load_preferences();
+    prefs.start_minimized
+}
+
+/// Set the start minimized preference
+#[tauri::command]
+fn set_start_minimized(enabled: bool) -> Result<(), String> {
+    let mut prefs = crate::storage::load_preferences();
+    prefs.start_minimized = enabled;
+    crate::storage::save_preferences(&prefs).map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .plugin(tauri_plugin_autostart::init(
+            MacosLauncher::LaunchAgent,
+            Some(vec!["--minimized"]),
+        ))
         .manage(EngineState::new())
         .invoke_handler(tauri::generate_handler![
             get_state,
@@ -380,6 +422,10 @@ pub fn run() {
             get_trial_days_remaining,
             get_trial_status,
             can_create_profile,
+            // Debug license override commands
+            set_debug_license_override,
+            clear_debug_license_override,
+            clear_license_storage,
             // Payment commands
             payment_get_options,
             payment_get_checkout_info,
@@ -399,9 +445,23 @@ pub fn run() {
             webhook_response,
             // Tray commands
             update_tray_state,
+            // Autostart commands
+            get_autostart_enabled,
+            set_autostart_enabled,
+            get_start_minimized,
+            set_start_minimized,
         ])
         .setup(|app| {
             eprintln!("[DIAGNOSTIC] Setting up Zetta Focus Console...");
+
+            // Check if app should start minimized based on preference
+            let prefs = crate::storage::load_preferences();
+            if prefs.start_minimized {
+                eprintln!("[DIAGNOSTIC] Starting minimized to tray (preference enabled)");
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.hide();
+                }
+            }
 
             // Setup global shortcuts
             if let Err(e) = setup_global_shortcuts(app.handle()) {

@@ -124,39 +124,61 @@ pub struct CanCreateProfileResult {
 // DEBUG PANEL COMMANDS (Debug builds only)
 // ============================================================================
 
-#[cfg(debug_assertions)]
 #[tauri::command]
 pub fn set_debug_license_override(override_mode: String) -> Result<String, String> {
-    let mode = match override_mode.as_str() {
-        "force_free" => DevLicenseOverride::ForceFree,
-        "force_trial" => DevLicenseOverride::ForceTrial,
-        "force_pro" => DevLicenseOverride::ForcePro,
-        "force_founder" => DevLicenseOverride::ForceFounder,
-        "simulate_expired_trial" => DevLicenseOverride::SimulateExpiredTrial,
-        "none" => DevLicenseOverride::None,
-        _ => return Err(format!("Unknown override mode: {}", override_mode)),
-    };
+    #[cfg(debug_assertions)]
+    {
+        let mode = match override_mode.as_str() {
+            "force_free" => DevLicenseOverride::ForceFree,
+            "force_trial" => DevLicenseOverride::ForceTrial,
+            "force_pro" => DevLicenseOverride::ForcePro,
+            "force_founder" => DevLicenseOverride::ForceFounder,
+            "simulate_expired_trial" => DevLicenseOverride::SimulateExpiredTrial,
+            "none" => DevLicenseOverride::None,
+            _ => return Err(format!("Unknown override mode: {}", override_mode)),
+        };
 
-    DevOverrides::set_override(mode);
-    Ok(format!("Debug override set to: {}", override_mode))
+        DevOverrides::set_override(mode);
+        Ok(format!("Debug override set to: {}", override_mode))
+    }
+
+    #[cfg(not(debug_assertions))]
+    {
+        let _ = override_mode;
+        Err("Debug license override is only available in debug builds.".to_string())
+    }
 }
 
-#[cfg(debug_assertions)]
 #[tauri::command]
 pub fn clear_debug_license_override() -> Result<String, String> {
-    DevOverrides::clear();
-    Ok("Debug override cleared".to_string())
+    #[cfg(debug_assertions)]
+    {
+        DevOverrides::clear();
+        Ok("Debug override cleared".to_string())
+    }
+
+    #[cfg(not(debug_assertions))]
+    {
+        Err("Debug license override is only available in debug builds.".to_string())
+    }
 }
 
-#[cfg(debug_assertions)]
 #[tauri::command]
 pub fn clear_license_storage() -> Result<String, String> {
-    let path = LicenseManager::get_license_path();
-    if path.exists() {
-        fs::remove_file(&path).map_err(|e| e.to_string())?;
-        Ok(format!("License storage cleared: {:?}", path))
-    } else {
-        Ok("No license file to clear".to_string())
+    #[cfg(debug_assertions)]
+    {
+        let path = LicenseManager::get_license_path();
+        if path.exists() {
+            fs::remove_file(&path).map_err(|e| e.to_string())?;
+            Ok(format!("License storage cleared: {:?}", path))
+        } else {
+            Ok("No license file to clear".to_string())
+        }
+    }
+
+    #[cfg(not(debug_assertions))]
+    {
+        Err("Clearing license storage is only available in debug builds.".to_string())
     }
 }
 

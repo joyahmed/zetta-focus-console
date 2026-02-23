@@ -10,6 +10,7 @@ const SettingsButton = lazy(() => import('./header/SettingsButton'));
 const DevLicensePopover = lazy(
 	() => import('./header/DevLicensePopover')
 );
+const ShortcutsMenu = lazy(() => import('./header/ShortcutsMenu'));
 
 const Header = ({
 	activeProfileName,
@@ -70,6 +71,10 @@ const Header = ({
 
 					<Suspense fallback={null}>
 						<SettingsButton onClick={onSettingsClick} />
+					</Suspense>
+
+					<Suspense fallback={null}>
+						<ShortcutsMenu />
 					</Suspense>
 
 					{isDevBuild && (

@@ -11,3 +11,5 @@ export { default as StrictModeSection } from './StrictModeSection';
 export { default as ResetSection } from './ResetSection';
 export { default as LicenseSection } from './LicenseSection';
 export { default as SettingsFooter } from './SettingsFooter';
+export { default as VoiceSection } from './VoiceSection';
+export { default as StartupSection } from './StartupSection';

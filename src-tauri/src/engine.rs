@@ -9,15 +9,10 @@
 // Re-export modules from crate root
 pub use crate::commands::{
     activate_key, activate_strict_mode, can_create_profile, check_strict_mode_failure,
-    deactivate_strict_mode, execute_command,
+    clear_debug_license_override, clear_license_storage, deactivate_strict_mode, execute_command,
     format_time, get_license, get_state, get_theme, get_trial_days_remaining, get_trial_status,
-    is_pro, parse_command_with_quotes, parse_duration, process_command,
+    is_pro, parse_command_with_quotes, parse_duration, process_command, set_debug_license_override,
     set_theme, set_total_sessions, tick_system_stats, tick_timer,
-};
-
-#[cfg(debug_assertions)]
-pub use crate::commands::{
-    clear_debug_license_override, clear_license_storage, set_debug_license_override,
 };
 
 // Re-export types from crate root

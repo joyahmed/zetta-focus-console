@@ -1,11 +1,13 @@
 import { lazy, Suspense } from 'react';
 import { useApp } from './hooks/app/use-app';
-
+//import { useVoiceCues } from './hooks/use-voice-cues';
 const AppPanels = lazy(() => import('./components/app/AppPanels'));
 const AppModals = lazy(() => import('./components/app/AppModals'));
 const Header = lazy(() => import('./components/Header'));
 const AppLoading = lazy(() => import('./components/app/AppLoading'));
-const MeshBackground = lazy(() => import('./components/app/MeshBackground'));
+const MeshBackground = lazy(
+	() => import('./components/app/MeshBackground')
+);
 
 const App = () => {
 	const {
@@ -43,8 +45,14 @@ const App = () => {
 		handleCreateProfile,
 		openCreateProfile,
 		openEditProfile,
-		refreshLicenseState
+		refreshLicenseState,
+		handleVoiceToggle
 	} = useApp();
+
+	// Initialize voice cues
+	//useVoiceCues();
+
+
 
 	if (!appState) {
 		return (
@@ -126,7 +134,9 @@ const App = () => {
 							handleCreateProfile,
 							refreshLicenseState,
 							setProfileError,
-							licenseState
+							licenseState,
+							voiceEnabled: appState.voice_enabled,
+							onVoiceToggle: handleVoiceToggle
 						}}
 					/>
 				</Suspense>

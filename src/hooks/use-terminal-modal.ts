@@ -31,9 +31,12 @@ const COMMANDS = [
 	'sound stop',
 	'sound volume',
 	'sound mute',
+	'voice on',
+	'voice off',
 	'system',
 	'memory',
 	'cpu',
+	'usage',
 	'theme',
 	'clear',
 	// Aliases (for display only)
@@ -51,7 +54,7 @@ export const useTerminalModal = ({
 	isOpen,
 	onClose,
 	onCommand,
-	onHelp,
+	onHelp: _onHelp,
 	sessionSummary,
 	onSummaryRead,
 	isLight
@@ -97,7 +100,9 @@ export const useTerminalModal = ({
 		}
 	]);
 	const [input, setInput] = useState('');
-	const [commandHistory, setCommandHistory] = useState<string[]>(loadPersistedHistory);
+	const [commandHistory, setCommandHistory] = useState<string[]>(
+		loadPersistedHistory
+	);
 	const [historyIndex, setHistoryIndex] = useState(-1);
 	const [isExecuting, setIsExecuting] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
@@ -202,7 +207,6 @@ export const useTerminalModal = ({
 		e.preventDefault();
 		if (!input.trim() || isExecuting) return;
 
-		const cmd = input.trim().toLowerCase();
 		setHistory(prev => [
 			...prev,
 			{ type: 'input', content: `$ ${input.trim()}` }
@@ -210,12 +214,6 @@ export const useTerminalModal = ({
 		setCommandHistory(prev => [...prev, input.trim()]);
 		setHistoryIndex(-1);
 		setInput('');
-
-		// Handle help command specially
-		if (cmd === 'help') {
-			onHelp();
-			return;
-		}
 
 		setIsExecuting(true);
 

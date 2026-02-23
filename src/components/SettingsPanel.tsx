@@ -31,6 +31,12 @@ const LicenseSection = lazy(
 const SettingsFooter = lazy(
 	() => import('./settings-panel/SettingsFooter')
 );
+const VoiceSection = lazy(
+	() => import('./settings-panel/VoiceSection')
+);
+const StartupSection = lazy(
+	() => import('./settings-panel/StartupSection')
+);
 
 const SettingsPanel = ({
 	isOpen,
@@ -54,7 +60,9 @@ const SettingsPanel = ({
 	onLicenseChange,
 	strictModeActive,
 	onStrictModeToggle,
-	isPro
+	isPro,
+	voiceEnabled,
+	onVoiceToggle
 }: SettingsPanelProps) => {
 	const isLight = theme === 'light';
 
@@ -80,7 +88,7 @@ const SettingsPanel = ({
 					<SettingsHeader onClose={onClose} />
 				</Suspense>
 
-				<div className='p-3 sm:p-4 space-y-4 sm:space-y-6 overflow-y-auto h-[calc(100%-60px)]'>
+				<div className='p-3 sm:p-4 space-y-4 overflow-y-auto h-[calc(100%-60px)]'>
 					<Suspense fallback={null}>
 						<AmbientSection
 							{...{
@@ -101,6 +109,16 @@ const SettingsPanel = ({
 								isPlaying,
 								onSoundPlay,
 								onSoundStop,
+								isLight
+							}}
+						/>
+					</Suspense>
+
+					<Suspense fallback={null}>
+						<VoiceSection
+							{...{
+								voiceEnabled: voiceEnabled || false,
+								onVoiceToggle: onVoiceToggle || (() => {}),
 								isLight
 							}}
 						/>
@@ -160,6 +178,10 @@ const SettingsPanel = ({
 								handleActivateLicense
 							}}
 						/>
+					</Suspense>
+
+					<Suspense fallback={null}>
+						<StartupSection isLight={isLight} />
 					</Suspense>
 
 					<Suspense fallback={null}>

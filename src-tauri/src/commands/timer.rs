@@ -99,7 +99,7 @@ pub fn execute_command(
     // Save preferences after command execution (only for preference-modifying commands)
     let should_save = matches!(
         cmd.as_str(),
-        "devmode" | "ambience" | "sound" | "profile" | "background" | "reset" | "theme"
+        "devmode" | "ambience" | "sound" | "profile" | "background" | "reset" | "theme" | "voice"
     );
     if should_save {
         let _ = app_state.save_preferences();
@@ -224,6 +224,10 @@ pub fn process_command(
 
         "cpu" => cpu_command(),
 
+        "usage" => usage_command(app_state),
+
+        "voice" => voice_command(args, app_state),
+
         "sound" => sound_command(args, app_state, sound_manager),
 
         "clear" => "__CLEAR__".to_string(),
@@ -261,9 +265,11 @@ fn help_command(pro_features: &str) -> String {
    sound stop            - Stop ambient sound
    sound volume [0-100]  - Set volume level
    sound mute            - Toggle mute
+   voice on/off          - Toggle voice announcements
    system                - Show system information
    memory                - Show memory usage
    cpu                   - Show CPU usage
+   usage                 - Show app usage stats (CPU, memory, uptime)
    theme [mode]          - Set theme (dark, light, system)
    clear                 - Clear terminal
    help                  - Show this help message{}",
@@ -762,7 +768,10 @@ fn status_command(app_state: &mut AppState) -> String {
             TaskCategory::Coding => "coding",
             TaskCategory::Other => "other",
         };
-        info.push(format!("Task: [{}] {}", category_str, app_state.current_task.title));
+        info.push(format!(
+            "Task: [{}] {}",
+            category_str, app_state.current_task.title
+        ));
     }
 
     if app_state.strict_mode.is_active {
@@ -977,8 +986,18 @@ fn theme_command(args: &[&str], app_state: &mut AppState) -> String {
             app_state.theme = "system".to_string();
             "Theme set to system.".to_string()
         }
+        Some(&"toggle") => {
+            // Toggle between dark and light (ignore system)
+            let new_theme = if app_state.theme == "dark" {
+                "light"
+            } else {
+                "dark"
+            };
+            app_state.theme = new_theme.to_string();
+            format!("Theme toggled to {}.", new_theme)
+        }
         _ => format!(
-            "Current theme: {}. Usage: theme dark|light|system",
+            "Current theme: {}. Usage: theme dark|light|system|toggle",
             app_state.theme
         ),
     }
@@ -1075,6 +1094,56 @@ fn cpu_command() -> String {
     )
 }
 
+fn usage_command(app_state: &AppState) -> String {
+    // Calculate uptime
+    let current_time = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as i64;
+    let uptime_seconds = current_time - app_state.app_start_time;
+
+    let hours = uptime_seconds / 3600;
+    let minutes = (uptime_seconds % 3600) / 60;
+    let seconds = uptime_seconds % 60;
+
+    let uptime_str = if hours > 0 {
+        format!("{}h {}m {}s", hours, minutes, seconds)
+    } else if minutes > 0 {
+        format!("{}m {}s", minutes, seconds)
+    } else {
+        format!("{}s", seconds)
+    };
+
+    format!(
+        "App Usage:\n  CPU: {:.1}%\n  Memory: {} MB\n  Uptime: {}",
+        app_state.app_stats.cpu_usage, app_state.app_stats.memory_used, uptime_str
+    )
+}
+
+fn voice_command(args: &[&str], app_state: &mut AppState) -> String {
+    match args.first() {
+        Some(&"on") => {
+            app_state.voice_enabled = true;
+            "Voice announcements enabled.".to_string()
+        }
+        Some(&"off") => {
+            app_state.voice_enabled = false;
+            "Voice announcements disabled.".to_string()
+        }
+        _ => {
+            let status = if app_state.voice_enabled {
+                "enabled"
+            } else {
+                "disabled"
+            };
+            format!(
+                "Voice: {}\nUse 'voice on' or 'voice off' to toggle.",
+                status
+            )
+        }
+    }
+}
+
 fn sound_command(
     args: &[&str],
     app_state: &mut AppState,
@@ -1104,13 +1173,29 @@ fn sound_command(
         }
         Some(&"volume") => {
             if let Some(vol_str) = args.get(1) {
-                if let Ok(vol) = vol_str.parse::<u8>() {
-                    let vol = vol.min(100);
-                    app_state.sound_state.volume = vol;
-                    sound_manager.set_volume(vol);
-                    return format!("Volume set to {}%", vol);
-                } else {
-                    return "Error: Invalid volume value. Use 0-100".to_string();
+                match *vol_str {
+                    "up" => {
+                        let new_vol = (app_state.sound_state.volume + 10).min(100);
+                        app_state.sound_state.volume = new_vol;
+                        sound_manager.set_volume(new_vol);
+                        return format!("Volume increased to {}%", new_vol);
+                    }
+                    "down" => {
+                        let new_vol = app_state.sound_state.volume.saturating_sub(10);
+                        app_state.sound_state.volume = new_vol;
+                        sound_manager.set_volume(new_vol);
+                        return format!("Volume decreased to {}%", new_vol);
+                    }
+                    _ => {
+                        if let Ok(vol) = vol_str.parse::<u8>() {
+                            let vol = vol.min(100);
+                            app_state.sound_state.volume = vol;
+                            sound_manager.set_volume(vol);
+                            return format!("Volume set to {}%", vol);
+                        } else {
+                            return "Error: Invalid volume value. Use 0-100, or 'up'/'down'".to_string();
+                        }
+                    }
                 }
             }
             format!("Current volume: {}%", app_state.sound_state.volume)

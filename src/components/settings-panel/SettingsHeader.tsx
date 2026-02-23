@@ -25,14 +25,14 @@ const SettingsHeader = ({ onClose }: SettingsHeaderProps) => (
 		style={{ borderBottom: '1px solid var(--border-color)' }}
 	>
 		<h2
-			className='text-base sm:text-lg font-semibold'
+			className='text-base font-semibold'
 			style={{ color: 'var(--text-primary)' }}
 		>
 			Settings
 		</h2>
 		<button
 			onClick={onClose}
-			className='p-1 transition-colors'
+			className='p-1 transition-colors rounded-full'
 			style={{ color: 'var(--text-secondary)' }}
 		>
 			<CloseIcon />

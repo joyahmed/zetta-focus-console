@@ -31,7 +31,9 @@ const AppModals = ({
 	handleCreateProfile,
 	refreshLicenseState,
 	setProfileError,
-	licenseState
+	licenseState,
+	voiceEnabled,
+	onVoiceToggle
 }: AppModelsProps) => {
 	const isPro = licenseState?.license_type === 'Pro' || licenseState?.license_type === 'Founder' || licenseState?.license_type === 'Trial';
 
@@ -79,6 +81,8 @@ const AppModals = ({
 					processCommand(cmd);
 				}}
 				isPro={isPro}
+				voiceEnabled={voiceEnabled}
+				onVoiceToggle={onVoiceToggle}
 			/>
 
 			<HelpModal

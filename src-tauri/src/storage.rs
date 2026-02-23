@@ -25,7 +25,7 @@ pub fn get_license_path() -> PathBuf {
 pub fn load_preferences() -> Preferences {
     let path = get_preferences_path();
 
-    eprintln!("[DEBUG] Loading preferences from: {:?}", path);
+    // eprintln!("[DEBUG] Loading preferences from: {:?}", path);
 
     if !path.exists() {
         eprintln!("[DEBUG] Preferences file does not exist, using defaults");
@@ -34,7 +34,7 @@ pub fn load_preferences() -> Preferences {
 
     match fs::read_to_string(&path) {
         Ok(content) => {
-            eprintln!("[DEBUG] Preferences content: {}", content);
+            // eprintln!("[DEBUG] Preferences content: {}", content);
             match serde_json::from_str::<Preferences>(&content) {
                 Ok(prefs) => prefs,
                 Err(e) => {
@@ -71,7 +71,7 @@ pub fn save_preferences(prefs: &Preferences) -> Result<(), String> {
 /// Load license state from disk
 pub fn load_license() -> LicenseState {
     let path = get_license_path();
-    
+
     // DIAGNOSTIC: Track storage.rs license loading
     eprintln!("[DIAGNOSTIC] storage::load_license() called");
     eprintln!("[DIAGNOSTIC] storage.rs license path: {:?}", path);
@@ -85,7 +85,10 @@ pub fn load_license() -> LicenseState {
     match fs::read_to_string(&path) {
         Ok(content) => match serde_json::from_str::<LicenseState>(&content) {
             Ok(license) => {
-                eprintln!("[DIAGNOSTIC] Loaded license from storage.rs: type={}", license.license_type);
+                eprintln!(
+                    "[DIAGNOSTIC] Loaded license from storage.rs: type={}",
+                    license.license_type
+                );
                 license
             }
             Err(e) => {

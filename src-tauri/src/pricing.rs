@@ -56,8 +56,8 @@ pub mod trial {
     /// Trial duration in days
     pub const DURATION_DAYS: u64 = 14;
 
-    /// Trial duration in seconds (14 days)
-    pub const DURATION_SECS: u64 = 14 * 24 * 60 * 60;
+    /// Trial duration in seconds (30 days)
+    pub const DURATION_SECS: u64 = 30 * 24 * 60 * 60;
 
     /// Whether trial auto-renews (false)
     pub const AUTO_RENEW: bool = false;

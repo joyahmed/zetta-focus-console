@@ -158,8 +158,24 @@ fn create_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> Stri
         is_preset: false,
     };
 
-    app_state.profiles.push(new_profile);
-    format!("Created custom profile '{}' with ID: {}", name, new_id)
+    app_state.profiles.push(new_profile.clone());
+    app_state.active_profile = new_profile;
+    app_state.session_override = None;
+
+    // Refresh timer for the next run when not actively in a session.
+    if app_state.timer.status != TimerStatus::Running {
+        app_state.timer.status = TimerStatus::Idle;
+        app_state.timer.remaining_seconds = focus_min;
+        app_state.timer.total_seconds = focus_min;
+        app_state.timer.session_type = crate::types::SessionType::Focus;
+        app_state.timer.current_session = 1;
+        app_state.timer.total_sessions = sessions_per_cycle;
+    }
+
+    format!(
+        "Created custom profile '{}' with ID: {} and switched to it.",
+        name, new_id
+    )
 }
 
 fn delete_profile(args: &[&str], app_state: &mut AppState) -> String {
@@ -283,11 +299,16 @@ fn edit_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String
             app_state.active_profile.sessions_per_cycle = sessions_per_cycle;
             app_state.active_profile.glow_color = glow_color;
             app_state.active_profile.sound_file = sound_file;
+            app_state.session_override = None;
 
-            // Update timer if idle
-            if app_state.timer.status == TimerStatus::Idle {
+            // Update timer for the next run when not actively in a session.
+            if app_state.timer.status != TimerStatus::Running {
+                app_state.timer.status = TimerStatus::Idle;
                 app_state.timer.remaining_seconds = focus_min;
                 app_state.timer.total_seconds = focus_min;
+                app_state.timer.session_type = crate::types::SessionType::Focus;
+                app_state.timer.current_session = 1;
+                app_state.timer.total_sessions = sessions_per_cycle;
             }
         }
 
@@ -353,9 +374,14 @@ fn switch_profile_internal(
         .find(|p| p.id.as_str() == profile_id)
     {
         app_state.active_profile = profile.clone();
-        if app_state.timer.status == TimerStatus::Idle {
+        app_state.session_override = None;
+        if app_state.timer.status != TimerStatus::Running {
+            app_state.timer.status = TimerStatus::Idle;
             app_state.timer.remaining_seconds = profile.focus_duration;
             app_state.timer.total_seconds = profile.focus_duration;
+            app_state.timer.session_type = crate::types::SessionType::Focus;
+            app_state.timer.current_session = 1;
+            app_state.timer.total_sessions = profile.sessions_per_cycle;
         }
         // Only play sound if timer is actively running (not just paused/stopped with is_playing=true)
         if app_state.sound_state.is_playing

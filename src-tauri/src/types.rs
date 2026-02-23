@@ -284,7 +284,9 @@ pub struct Preferences {
     pub is_muted: bool,
     pub dev_mode: bool,
     pub theme: String,
+    pub voice_enabled: bool,
     pub custom_profiles: Vec<Profile>,
+    pub start_minimized: bool,
 }
 
 impl Default for Preferences {
@@ -296,7 +298,9 @@ impl Default for Preferences {
             is_muted: false,
             dev_mode: false,
             theme: "dark".to_string(),
+            voice_enabled: false,
             custom_profiles: vec![],
+            start_minimized: false,
         }
     }
 }
@@ -380,6 +384,8 @@ pub struct AppState {
     pub theme: String,
     pub strict_mode: StrictModeState,
     pub current_task: CurrentTask,
+    pub voice_enabled: bool,
+    pub app_start_time: i64,
 }
 
 impl Default for AppState {
@@ -481,6 +487,11 @@ impl AppState {
             theme: "dark".to_string(),
             strict_mode: StrictModeState::default(),
             current_task: CurrentTask::default(),
+            voice_enabled: false,
+            app_start_time: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs() as i64,
         }
     }
 }
@@ -504,6 +515,7 @@ impl AppStateExt for AppState {
         self.sound_state.volume = prefs.volume;
         self.sound_state.is_muted = prefs.is_muted;
         self.theme = prefs.theme;
+        self.voice_enabled = prefs.voice_enabled;
 
         // Add custom profiles to the profiles list
         for profile in prefs.custom_profiles {
@@ -520,6 +532,13 @@ impl AppStateExt for AppState {
             .find(|p| p.id == prefs.active_profile_id)
         {
             self.active_profile = profile.clone();
+            // Timer state is not persisted; align startup timer with restored active profile.
+            self.timer.status = TimerStatus::Idle;
+            self.timer.session_type = SessionType::Focus;
+            self.timer.current_session = 1;
+            self.timer.total_sessions = profile.sessions_per_cycle;
+            self.timer.remaining_seconds = profile.focus_duration;
+            self.timer.total_seconds = profile.focus_duration;
         }
     }
 
@@ -542,7 +561,9 @@ impl AppStateExt for AppState {
             is_muted: self.sound_state.is_muted,
             dev_mode: self.dev_mode,
             theme: self.theme.clone(),
+            voice_enabled: self.voice_enabled,
             custom_profiles,
+            start_minimized: false,
         };
         save_preferences(&prefs)
     }

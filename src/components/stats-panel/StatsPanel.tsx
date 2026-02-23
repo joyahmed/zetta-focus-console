@@ -55,7 +55,7 @@ export default function StatsPanel({
 				<div className='grid grid-cols-2 xl:grid-cols-4 gap-2 md:gap-3 w-full'>
 					{/* Sessions Card */}
 					<div className='p-2.5 md:p-3 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
-						<div className='absolute right-2 top-2 opacity-10 group-hover:opacity-20 transition-opacity'>
+						<div className='absolute right-2 top-2 opacity-20 group-hover:opacity-30 transition-opacity'>
 							<svg
 								xmlns='http://www.w3.org/2000/svg'
 								className='h-8 w-8 text-blue-400'
@@ -83,7 +83,7 @@ export default function StatsPanel({
 
 					{/* Focus Time Card */}
 					<div className='p-2.5 md:p-3 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden min-h-0'>
-						<div className='absolute right-2 top-2 opacity-10 group-hover:opacity-20 transition-opacity'>
+						<div className='absolute right-2 top-2 opacity-20 group-hover:opacity-30 transition-opacity'>
 							<svg
 								xmlns='http://www.w3.org/2000/svg'
 								className='h-8 w-8 text-purple-400'
@@ -110,7 +110,7 @@ export default function StatsPanel({
 
 					{/* Streak Card */}
 					<div className='p-2.5 md:p-3 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
-						<div className='absolute right-2 top-2 opacity-10 group-hover:opacity-20 transition-opacity'>
+						<div className='absolute right-2 top-2 opacity-20 group-hover:opacity-30 transition-opacity'>
 							<svg
 								xmlns='http://www.w3.org/2000/svg'
 								className='h-8 w-8 text-orange-400'
@@ -138,7 +138,7 @@ export default function StatsPanel({
 
 					{/* Last Session Card */}
 					<div className='p-2.5 md:p-3 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
-						<div className='absolute right-2 top-2 opacity-10 group-hover:opacity-20 transition-opacity'>
+						<div className='absolute right-2 top-2 opacity-20 group-hover:opacity-30 transition-opacity'>
 							<svg
 								xmlns='http://www.w3.org/2000/svg'
 								className='h-8 w-8 text-emerald-400'

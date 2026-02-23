@@ -202,6 +202,16 @@ export const appUtils = ({
 		}
 	}, []);
 
+	const handleVoiceToggle = useCallback(async () => {
+		if (!appState) return;
+		const cmd = appState.voice_enabled ? 'voice off' : 'voice on';
+		try {
+			await invoke('execute_command', { command: cmd });
+		} catch (error) {
+			console.error(error);
+		}
+	}, [appState?.voice_enabled]);
+
   return {
     processCommand,
 		handleProfileSwitch,
@@ -217,6 +227,7 @@ export const appUtils = ({
 		handleCreateProfile,
 		openCreateProfile,
 		openEditProfile,
-		refreshLicenseState
+		refreshLicenseState,
+		handleVoiceToggle
 	};
 };

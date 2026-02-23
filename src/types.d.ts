@@ -54,6 +54,8 @@ interface AppModelsProps {
 	}) => Promise<string>;
 	refreshLicenseState: () => Promise<void>;
 	setProfileError: (value: SetStateAction<string | null>) => void;
+	voiceEnabled?: boolean;
+	onVoiceToggle?: () => void;
 }
 
 interface TimerState {
@@ -140,6 +142,8 @@ interface AppState {
 	theme: string;
 	strict_mode: StrictModeState;
 	current_task: CurrentTask;
+	voice_enabled: boolean;
+	app_start_time: number;
 }
 
 interface StateEvent {
@@ -296,6 +300,8 @@ interface SettingsPanelProps {
 	strictModeActive?: boolean;
 	onStrictModeToggle?: () => void;
 	isPro?: boolean;
+	voiceEnabled?: boolean;
+	onVoiceToggle?: () => void;
 }
 
 /** Sound Control */
