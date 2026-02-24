@@ -90,7 +90,7 @@ const StartupSection = ({ isLight }: StartupSectionProps) => {
 			>
 				{/* Start with Windows */}
 				<div
-					className='flex items-center justify-between p-3 rounded-lg border glass-panel bg-black/5 backdrop-blur-xl'
+					className='flex items-center justify-between p-3 rounded-lg border glass-panel  backdrop-blur-xl'
 					style={{
 						borderColor: 'var(--border-color)'
 					}}
@@ -118,7 +118,7 @@ const StartupSection = ({ isLight }: StartupSectionProps) => {
 
 				{/* Start Minimized */}
 				<div
-					className='flex items-center justify-between p-3 rounded-lg border glass-panel bg-black/5 backdrop-blur-xl'
+					className='flex items-center justify-between p-3 rounded-lg border glass-panel backdrop-blur-xl'
 					style={{
 						borderColor: 'var(--border-color)'
 					}}

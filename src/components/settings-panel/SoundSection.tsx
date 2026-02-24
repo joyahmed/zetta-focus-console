@@ -84,7 +84,7 @@ const SoundSection = ({
 			}}
 		>
 			<div
-				className='p-3 rounded-lg border glass-panel bg-black/5 backdrop-blur-xl'
+				className='p-3 rounded-lg border glass-panel backdrop-blur-xl'
 				style={{
 					borderColor: 'var(--border-color)'
 				}}
@@ -121,7 +121,7 @@ const SoundSection = ({
 			</div>
 
 			<div
-				className='flex items-center justify-between p-3 rounded-lg border glass-panel glass-panel bg-black/5 backdrop-blur-xl'
+				className='flex items-center justify-between p-3 rounded-lg border glass-panel glass-panel backdrop-blur-xl'
 				style={{
 					borderColor: 'var(--border-color)'
 				}}
@@ -151,7 +151,7 @@ const SoundSection = ({
 
 			<button
 				onClick={isPlaying ? onSoundStop : onSoundPlay}
-				className={`w-full p-3 rounded-lg border transition-colors glass-panel bg-black/5 backdrop-blur-xl ${
+				className={`w-full p-3 rounded-lg border transition-colors glass-panel  backdrop-blur-xl ${
 					isPlaying
 						? 'bg-red-500/10 border-red-500/30 text-red-400'
 						: 'border-opacity-50'

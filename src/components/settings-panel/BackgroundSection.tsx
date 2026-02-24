@@ -29,7 +29,7 @@ const BackgroundSection = ({
 					checked: backgroundType === 'gradient',
 					onChange: () => onBackgroundTypeChange('gradient'),
 					label: 'Gradient Theme',
-					className:' glass-panel bg-black/5 backdrop-blur-xl'
+					className:' glass-panel  backdrop-blur-xl'
 				}}
 			/>
 			<RadioOption
@@ -39,7 +39,7 @@ const BackgroundSection = ({
 					checked: backgroundType === 'particles',
 					onChange: () => onBackgroundTypeChange('particles'),
 					label: 'Subtle Particles',
-					className:' glass-panel bg-black/5 backdrop-blur-xl'
+					className:' glass-panel backdrop-blur-xl'
 				}}
 			/>
 		</div>
