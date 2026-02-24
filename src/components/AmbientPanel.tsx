@@ -57,32 +57,46 @@ const AmbientPanel = ({
 		switch (season) {
 			case 'winter':
 				return (
-					<WinterScene
-						{...{
-							...sceneProps,
-							snowParticles
-						}}
-					/>
+					<>
+						<GradientBackground {...{ glowColor, isLight, timer }} />
+						<WinterScene
+							{...{
+								...sceneProps,
+								snowParticles
+							}}
+						/>
+					</>
 				);
 			case 'summer':
-				return <SummerScene {...{ glowColor, isLight }} />;
+				return (
+					<>
+						<GradientBackground {...{ glowColor, isLight, timer }} />
+						<SummerScene {...{ glowColor, isLight }} />
+					</>
+				);
 			case 'spring':
 				return (
-					<SpringScene
-						{...{
-							...sceneProps,
-							springParticles
-						}}
-					/>
+					<>
+						<GradientBackground {...{ glowColor, isLight, timer }} />
+						<SpringScene
+							{...{
+								...sceneProps,
+								springParticles
+							}}
+						/>
+					</>
 				);
 			case 'autumn':
 				return (
-					<AutumnScene
-						{...{
-							...sceneProps,
-							leaves
-						}}
-					/>
+					<>
+						<GradientBackground {...{ glowColor, isLight, timer }} />
+						<AutumnScene
+							{...{
+								...sceneProps,
+								leaves
+							}}
+						/>
+					</>
 				);
 		}
 	};

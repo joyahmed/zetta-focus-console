@@ -30,35 +30,55 @@ const GradientBackground = ({
 	const pulseDuration = isRunning ? (isBreakSession ? '10s' : '6s') : '18s';
 	const playState = isPaused ? 'paused' : 'running';
 	const pulseOpacity = isRunning ? (isBreakSession ? 0.45 : 0.6) : 0.25;
+	const accentOpacityA = isBreakSession ? '18' : '22';
+	const accentOpacityB = isBreakSession ? '12' : '16';
+	const spreadOpacity = isBreakSession ? '08' : '0d';
 
 	return (
 		<div className='relative w-full h-full overflow-hidden'>
 			<div
 				className='absolute inset-0 pointer-events-none'
 				style={{
-					background: `
-						radial-gradient(circle at 25% 18%, ${getGlowColor('26')} 0%, transparent 42%),
-						radial-gradient(circle at 78% 82%, ${getGlowColor(isBreakSession ? '14' : '18')} 0%, transparent 52%),
-						radial-gradient(circle at 52% 58%, ${getGlowColor(isBreakSession ? '10' : '16')} 0%, transparent 62%)
-					`,
-					filter: 'blur(64px)',
+					background: `linear-gradient(155deg, ${getGlowColor(baseOpacity)} 0%, transparent 56%, ${getGlowColor(midOpacity)} 100%)`,
+					filter: 'blur(42px)',
 					animation: `ambientGradientDrift ${driftDuration} ease-in-out infinite alternate`,
 					animationPlayState: playState
 				}}
 			/>
 			<div
-				className='absolute inset-0'
+				className='absolute -top-[28%] left-1/2 -translate-x-1/2 w-[92%] h-[92%] rounded-full pointer-events-none'
 				style={{
-					background: `linear-gradient(135deg, ${getGlowColor(baseOpacity)} 0%, transparent 58%, ${getGlowColor(midOpacity)} 100%)`,
+					background: `radial-gradient(ellipse at center, ${getGlowColor(accentOpacityA)} 0%, transparent 68%)`,
+					filter: 'blur(54px)',
 					animation: `ambientGradientPulse ${pulseDuration} ease-in-out infinite`,
 					animationPlayState: playState,
-					opacity: pulseOpacity
+					opacity: pulseOpacity,
+					mixBlendMode: 'screen'
+				}}
+			/>
+			<div
+				className='absolute -bottom-[34%] left-1/2 -translate-x-1/2 w-[88%] h-[88%] rounded-full pointer-events-none'
+				style={{
+					background: `radial-gradient(ellipse at center, ${getGlowColor(accentOpacityB)} 0%, transparent 70%)`,
+					filter: 'blur(58px)',
+					animation: `ambientGradientDrift ${isBreakSession ? '38s' : '28s'} ease-in-out infinite alternate-reverse`,
+					animationPlayState: playState,
+					opacity: isRunning ? 0.85 : 0.5,
+					mixBlendMode: 'screen'
 				}}
 			/>
 			<div
 				className='absolute inset-0 pointer-events-none'
 				style={{
-					background: `radial-gradient(circle at 50% 60%, ${getGlowColor('22')} 0%, transparent 68%)`,
+					background: `radial-gradient(circle at 50% 54%, ${getGlowColor(spreadOpacity)} 0%, transparent 72%)`,
+					filter: 'blur(30px)',
+					opacity: isRunning ? 0.8 : 0.45
+				}}
+			/>
+			<div
+				className='absolute inset-0 pointer-events-none'
+				style={{
+					background: `radial-gradient(circle at 50% 56%, ${getGlowColor('22')} 0%, transparent 68%)`,
 					opacity: nearEndUrgency * 0.7,
 					animation: 'ambientUrgencyBloom 3.5s ease-in-out infinite',
 					animationPlayState: playState
