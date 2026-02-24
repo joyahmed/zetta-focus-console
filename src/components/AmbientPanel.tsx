@@ -20,11 +20,12 @@ const AmbientPanel = ({
 	motionIntensity,
 	backgroundType,
 	glowColor,
-	isRunning,
+	timer,
 	isEnabled,
 	theme = 'dark'
 }: AmbientPanelProps) => {
 	const isLight = theme === 'light';
+	const isRunning = timer.status === 'running';
 
 	const { isPaused, speedMultiplier, snowParticles, leaves, springParticles } =
 		useAmbientPanel({
@@ -50,38 +51,52 @@ const AmbientPanel = ({
 		};
 
 		if (backgroundType === 'gradient') {
-			return <GradientBackground {...{ glowColor, isLight }} />;
+			return <GradientBackground {...{ glowColor, isLight, timer }} />;
 		}
 
 		switch (season) {
 			case 'winter':
 				return (
-					<WinterScene
-						{...{
-							...sceneProps,
-							snowParticles
-						}}
-					/>
+					<>
+						<GradientBackground {...{ glowColor, isLight, timer }} />
+						<WinterScene
+							{...{
+								...sceneProps,
+								snowParticles
+							}}
+						/>
+					</>
 				);
 			case 'summer':
-				return <SummerScene {...{ glowColor, isLight }} />;
+				return (
+					<>
+						<GradientBackground {...{ glowColor, isLight, timer }} />
+						<SummerScene {...{ glowColor, isLight }} />
+					</>
+				);
 			case 'spring':
 				return (
-					<SpringScene
-						{...{
-							...sceneProps,
-							springParticles
-						}}
-					/>
+					<>
+						<GradientBackground {...{ glowColor, isLight, timer }} />
+						<SpringScene
+							{...{
+								...sceneProps,
+								springParticles
+							}}
+						/>
+					</>
 				);
 			case 'autumn':
 				return (
-					<AutumnScene
-						{...{
-							...sceneProps,
-							leaves
-						}}
-					/>
+					<>
+						<GradientBackground {...{ glowColor, isLight, timer }} />
+						<AutumnScene
+							{...{
+								...sceneProps,
+								leaves
+							}}
+						/>
+					</>
 				);
 		}
 	};

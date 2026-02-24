@@ -89,6 +89,38 @@ export const AMBIENT_ANIMATIONS = `
 		}
 	}
 
+	@keyframes ambientGradientDrift {
+		0% {
+			transform: translate3d(-3%, -2%, 0) scale(1);
+		}
+		50% {
+			transform: translate3d(2%, 1.5%, 0) scale(1.06);
+		}
+		100% {
+			transform: translate3d(4%, -1%, 0) scale(1.02);
+		}
+	}
+
+	@keyframes ambientGradientPulse {
+		0%, 100% {
+			transform: scale(1);
+			filter: saturate(1);
+		}
+		50% {
+			transform: scale(1.04);
+			filter: saturate(1.2);
+		}
+	}
+
+	@keyframes ambientUrgencyBloom {
+		0%, 100% {
+			transform: scale(0.98);
+		}
+		50% {
+			transform: scale(1.06);
+		}
+	}
+
 	.animation-paused {
 		animation-play-state: paused !important;
 	}

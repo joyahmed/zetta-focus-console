@@ -74,7 +74,7 @@ const AppPanels = ({
 						motionIntensity={appState.active_profile.motion_intensity}
 						backgroundType={appState.active_profile.background_type}
 						glowColor={appState.active_profile.glow_color}
-						isRunning={appState.timer.status === 'running'}
+						timer={appState.timer}
 						isEnabled={appState.ambience_enabled}
 						theme={appState.theme}
 					/>
