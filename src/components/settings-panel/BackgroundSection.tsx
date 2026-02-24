@@ -16,14 +16,20 @@ const BackgroundSection = ({
 		>
 			Background Mode
 		</h3>
-		<div className='space-y-2'>
+		<div className='space-y-2 p-2 rounded-lg'
+		style={{
+					backgroundColor: 'var(--bg-primary)',
+					borderColor: 'var(--border-color)'
+			}}>
+
 			<RadioOption
 				{...{
 					name: 'bg',
 					value: 'gradient',
 					checked: backgroundType === 'gradient',
 					onChange: () => onBackgroundTypeChange('gradient'),
-					label: 'Gradient Theme'
+					label: 'Gradient Theme',
+					className:' glass-panel bg-black/5 backdrop-blur-xl'
 				}}
 			/>
 			<RadioOption
@@ -32,7 +38,8 @@ const BackgroundSection = ({
 					value: 'particles',
 					checked: backgroundType === 'particles',
 					onChange: () => onBackgroundTypeChange('particles'),
-					label: 'Subtle Particles'
+					label: 'Subtle Particles',
+					className:' glass-panel bg-black/5 backdrop-blur-xl'
 				}}
 			/>
 		</div>

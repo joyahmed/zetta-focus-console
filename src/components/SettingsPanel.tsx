@@ -82,7 +82,7 @@ const SettingsPanel = ({
 				onClick={onClose}
 			/>
 			<div
-				className={`fixed top-0 right-0 h-full w-80 max-sm:w-full sm:w-72 md:w-80 z-50 transform transition-transform duration-300 glass-panel border-l border-zetta-border ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+				className={`fixed top-0 right-0 h-full w-80 max-sm:w-full sm:w-72 md:w-96 z-50 transform transition-transform duration-300 glass-panel border-l border-zetta-border ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
 			>
 				<Suspense fallback={null}>
 					<SettingsHeader onClose={onClose} />

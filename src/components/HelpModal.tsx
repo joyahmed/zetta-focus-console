@@ -90,7 +90,10 @@ export default function HelpModal({
 				</div>
 
 				{/* Command List */}
-				<div ref={listRef} className='flex-1 overflow-y-auto p-4 custom-scrollbar'>
+				<div
+					ref={listRef}
+					className='flex-1 overflow-y-auto p-4 custom-scrollbar'
+				>
 					{commandGroups.map((group, groupIndex) => {
 						const startIndex = commandGroups
 							.slice(0, groupIndex)

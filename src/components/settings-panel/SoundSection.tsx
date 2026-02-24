@@ -70,23 +70,36 @@ const SoundSection = ({
 	<section>
 		<h3
 			className='text-sm font-medium uppercase tracking-wider mb-3'
-			style={{ color: 'var(--text-secondary)' }}
+			style={{
+				color: 'var(--text-secondary)'
+			}}
 		>
 			Sound
 		</h3>
-		<div className='space-y-3'>
+		<div
+			className='space-y-3 p-2 rounded-lg'
+			style={{
+				backgroundColor: 'var(--bg-primary)',
+				borderColor: 'var(--border-color)'
+			}}
+		>
 			<div
-				className='p-3 rounded-lg border'
+				className='p-3 rounded-lg border glass-panel bg-black/5 backdrop-blur-xl'
 				style={{
-					backgroundColor: 'var(--bg-primary)',
 					borderColor: 'var(--border-color)'
 				}}
 			>
 				<div className='flex items-center justify-between mb-2'>
-					<span className='text-sm' style={{ color: 'var(--text-primary)' }}>
+					<span
+						className='text-sm'
+						style={{ color: 'var(--text-primary)' }}
+					>
 						Volume
 					</span>
-					<span className='text-xs' style={{ color: 'var(--text-muted)' }}>
+					<span
+						className='text-xs'
+						style={{ color: 'var(--text-muted)' }}
+					>
 						{soundVolume}%
 					</span>
 				</div>
@@ -95,24 +108,35 @@ const SoundSection = ({
 					min='0'
 					max='100'
 					value={soundVolume}
-					onChange={(e) => onVolumeChange(parseInt(e.target.value))}
+					onChange={e => onVolumeChange(parseInt(e.target.value))}
 					className='w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-blue-500'
-					style={{ backgroundColor: isLight ? '#d1d5db' : '#374151' }}
+					style={{
+						background: `linear-gradient(to right,
+      var(--accent-neon-secondary) 0%,
+      var(--accent-neon-secondary) ${soundVolume}%,
+      ${isLight ? '#d1d5db' : '#374151'} ${soundVolume}%,
+      ${isLight ? '#d1d5db' : '#374151'} 100%)`
+					}}
 				/>
 			</div>
 
 			<div
-				className='flex items-center justify-between p-3 rounded-lg border'
+				className='flex items-center justify-between p-3 rounded-lg border glass-panel glass-panel bg-black/5 backdrop-blur-xl'
 				style={{
-					backgroundColor: 'var(--bg-primary)',
 					borderColor: 'var(--border-color)'
 				}}
 			>
 				<div>
-					<span className='text-sm' style={{ color: 'var(--text-primary)' }}>
+					<span
+						className='text-sm'
+						style={{ color: 'var(--text-primary)' }}
+					>
 						Mute
 					</span>
-					<div className='text-xs mt-0.5' style={{ color: 'var(--text-muted)' }}>
+					<div
+						className='text-xs mt-0.5'
+						style={{ color: 'var(--text-muted)' }}
+					>
 						Silence ambient sound
 					</div>
 				</div>
@@ -127,13 +151,12 @@ const SoundSection = ({
 
 			<button
 				onClick={isPlaying ? onSoundStop : onSoundPlay}
-				className={`w-full p-3 rounded-lg border transition-colors ${
+				className={`w-full p-3 rounded-lg border transition-colors glass-panel bg-black/5 backdrop-blur-xl ${
 					isPlaying
 						? 'bg-red-500/10 border-red-500/30 text-red-400'
 						: 'border-opacity-50'
 				}`}
 				style={{
-					backgroundColor: isPlaying ? undefined : 'var(--bg-primary)',
 					borderColor: isPlaying ? undefined : 'var(--border-color)',
 					color: isPlaying ? undefined : 'var(--text-primary)'
 				}}
