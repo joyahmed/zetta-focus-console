@@ -7,10 +7,10 @@ use std::io::Cursor;
 /// Returns the embedded sound data for the given sound file name
 pub fn get_sound_data(sound_file: &str) -> &'static [u8] {
     match sound_file {
-        "fireplace.mp3" => include_bytes!("../sounds/fireplace.mp3"),
-        "soft_rain.mp3" => include_bytes!("../sounds/soft_rain.mp3"),
-        "light_wind.mp3" => include_bytes!("../sounds/light_wind.mp3"),
-        "rain_window.mp3" => include_bytes!("../sounds/rain_window.mp3"),
+        "fireplace.mp3" | "fireplace" => include_bytes!("../sounds/fireplace.mp3"),
+        "soft_rain.mp3" | "soft_rain" => include_bytes!("../sounds/soft_rain.mp3"),
+        "light_wind.mp3" | "light_wind" => include_bytes!("../sounds/light_wind.mp3"),
+        "rain_window.mp3" | "rain_window" => include_bytes!("../sounds/rain_window.mp3"),
         _ => include_bytes!("../sounds/fireplace.mp3"), // Default fallback
     }
 }

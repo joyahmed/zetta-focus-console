@@ -284,11 +284,14 @@ fn help_command(pro_features: &str) -> String {
 fn focus_command(args: &[&str], app_state: &mut AppState) -> String {
     match args.first() {
         Some(&"start") => {
-            let minutes = args.get(1).and_then(|m| m.parse().ok()).unwrap_or(25);
-            if minutes <= 0 {
+            let minutes = args
+                .get(1)
+                .and_then(|m| m.parse::<f64>().ok())
+                .unwrap_or(25.0);
+            if !minutes.is_finite() || minutes <= 0.0 {
                 return "Error: Invalid duration. Usage: focus start [minutes]".to_string();
             }
-            let total_seconds = minutes * 60;
+            let total_seconds = (minutes * 60.0).round() as u32;
             app_state.timer = TimerState {
                 remaining_seconds: total_seconds,
                 total_seconds,

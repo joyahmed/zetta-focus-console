@@ -13,6 +13,8 @@ export default function ProfilePanel({
 	stats
 }: ProfilePanelProps) {
 	const otherProfiles = profiles.filter(p => p.id !== profile.id);
+	const formatMinutes = (seconds: number) =>
+		`${Number((seconds / 60).toFixed(2))}m`;
 
 	const {
 		getSeasonEmoji,
@@ -98,6 +100,18 @@ export default function ProfilePanel({
 							>
 								{stats?.sessions_today ?? 0}
 							</span>
+							<span
+								className='text-[10px] font-medium ml-2'
+								style={{ color: 'var(--text-muted)' }}
+							>
+								Profile Sessions:
+							</span>
+							<span
+								className='text-[10px] font-semibold'
+								style={{ color: profile.glow_color }}
+							>
+								{profile.sessions_per_cycle}
+							</span>
 						</div>
 						<div
 							className='text-[10px] md:text-xs mt-1'
@@ -163,23 +177,29 @@ export default function ProfilePanel({
 					</div>
 
 					<div className='pt-2 border-t border-zetta-border'>
-						<div className='grid grid-cols-3 gap-1 md:gap-2 text-xs'>
+						<div className='grid grid-cols-4 gap-1 md:gap-2 text-xs'>
 							<div>
 								<div style={{ color: 'var(--text-muted)' }}>Focus</div>
 								<div style={{ color: 'var(--text-primary)' }}>
-									{profile.focus_duration / 60}m
+									{formatMinutes(profile.focus_duration)}
 								</div>
 							</div>
 							<div>
 								<div style={{ color: 'var(--text-muted)' }}>Short</div>
 								<div style={{ color: 'var(--text-primary)' }}>
-									{profile.short_break_duration / 60}m
+									{formatMinutes(profile.short_break_duration)}
 								</div>
 							</div>
 							<div>
 								<div style={{ color: 'var(--text-muted)' }}>Long</div>
 								<div style={{ color: 'var(--text-primary)' }}>
-									{profile.long_break_duration / 60}m
+									{formatMinutes(profile.long_break_duration)}
+								</div>
+							</div>
+							<div>
+								<div style={{ color: 'var(--text-muted)' }}>Sessions</div>
+								<div style={{ color: 'var(--text-primary)' }}>
+									{profile.sessions_per_cycle}
 								</div>
 							</div>
 						</div>
