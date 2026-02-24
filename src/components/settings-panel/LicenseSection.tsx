@@ -100,12 +100,17 @@ const LicenseSection = ({
 			>
 				License
 			</h3>
-
+	<div className='space-y-3 p-2 rounded-lg'
+			style={{
+					backgroundColor: 'var(--bg-primary)',
+					borderColor: 'var(--border-color)'
+				}}
+			>
 			{/* Current License Status */}
 			<div
-				className='p-3 rounded-lg border mb-3'
+				className='p-3 rounded-lg border glass-panel bg-black/5 backdrop-blur-xl'
 				style={{
-					backgroundColor: 'var(--bg-primary)',
+
 					borderColor: 'var(--border-color)'
 				}}
 			>
@@ -121,22 +126,21 @@ const LicenseSection = ({
 
 			{/* License Key Activation */}
 			<form onSubmit={handleActivateLicense} className='mb-4'>
-				<div className='flex gap-2'>
+				<div className='flex gap-2 min-w-0'>
 					<input
 						type='text'
 						value={licenseKey}
 						onChange={(e) => setLicenseKey(e.target.value)}
 						placeholder='ZFC-PRO-XXXX-XXXX or ZFC-FOUNDER-XXXX-XXXX'
-						className='flex-1 p-2 rounded-lg border text-sm'
+						className='flex-1 min-w-0 p-2 rounded-lg border text-sm glass-panel bg-black/5 backdrop-blur-xl '
 						style={{
-							backgroundColor: 'var(--bg-primary)',
 							borderColor: 'var(--border-color)',
 							color: 'var(--text-primary)'
 						}}
 					/>
 					<button
 						type='submit'
-						className='px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors'
+						className=' px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors'
 					>
 						Activate
 					</button>
@@ -378,8 +382,10 @@ const LicenseSection = ({
 							</div>
 						</div>
 					</div>
+					</div>
+
+				)}
 				</div>
-			)}
 		</section>
 	);
 };
