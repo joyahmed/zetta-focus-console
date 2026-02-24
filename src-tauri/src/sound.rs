@@ -2,7 +2,6 @@
 
 use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink, Source};
 use std::io::Cursor;
-use std::sync::atomic::{AtomicBool, Ordering};
 
 /// Get sound data based on sound file name
 /// Returns the embedded sound data for the given sound file name
@@ -21,8 +20,6 @@ pub struct SoundManager {
     sink: Option<Sink>,
     _stream: Option<OutputStream>,
     stream_handle: Option<OutputStreamHandle>,
-    is_initialized: AtomicBool,
-    current_sound_file: Option<String>,
 }
 
 impl SoundManager {
@@ -31,30 +28,11 @@ impl SoundManager {
             sink: None,
             _stream: None,
             stream_handle: None,
-            is_initialized: AtomicBool::new(false),
-            current_sound_file: None,
-        }
-    }
-
-    pub fn initialize(&mut self) -> Result<(), String> {
-        if self.is_initialized.load(Ordering::SeqCst) {
-            return Ok(());
-        }
-
-        match OutputStream::try_default() {
-            Ok((stream, stream_handle)) => {
-                self._stream = Some(stream);
-                self.stream_handle = Some(stream_handle);
-                self.is_initialized.store(true, Ordering::SeqCst);
-                Ok(())
-            }
-            Err(e) => Err(format!("Failed to initialize audio: {}", e)),
         }
     }
 
     pub fn play(&mut self, sound_data: &'static [u8], volume: u8) -> Result<(), String> {
-        // Always reinitialize the audio stream to ensure clean playback
-        // This fixes issues where the stream becomes invalid after stop()
+        // Recreate output stream to recover from invalidated audio backends after stop().
         self.reinitialize()?;
 
         let cursor = Cursor::new(sound_data);
@@ -70,26 +48,21 @@ impl SoundManager {
 
         let volume_float = (volume as f32) / 100.0;
         sink.set_volume(volume_float);
-        // Loop the ambient sound indefinitely
         sink.append(source.repeat_infinite());
 
         self.sink = Some(sink);
         Ok(())
     }
 
-    /// Reinitialize the audio stream - needed after stop() to ensure clean playback
     fn reinitialize(&mut self) -> Result<(), String> {
-        // Clear existing sink first
         if let Some(sink) = self.sink.take() {
             sink.stop();
         }
 
-        // Create a fresh audio stream
         match OutputStream::try_default() {
             Ok((stream, stream_handle)) => {
                 self._stream = Some(stream);
                 self.stream_handle = Some(stream_handle);
-                self.is_initialized.store(true, Ordering::SeqCst);
                 Ok(())
             }
             Err(e) => Err(format!("Failed to initialize audio: {}", e)),
@@ -138,4 +111,3 @@ impl Default for SoundManager {
         Self::new()
     }
 }
-

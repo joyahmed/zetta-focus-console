@@ -383,8 +383,8 @@ fn switch_profile_internal(
             app_state.timer.current_session = 1;
             app_state.timer.total_sessions = profile.sessions_per_cycle;
         }
-        // Only play sound if timer is actively running (not just paused/stopped with is_playing=true)
-        if app_state.sound_state.is_playing
+        // Keep output in sync with ambient preference when switching profile mid-session.
+        if app_state.sound_state.play_ambient_sound
             && !app_state.sound_state.is_muted
             && app_state.timer.status == TimerStatus::Running
         {

@@ -11,6 +11,7 @@ const DebugPanel = () => {
 	// Fetch current license state on mount
 	useEffect(() => {
 		fetchLicenseState();
+		fetchCurrentOverride();
 	}, []);
 
 	const fetchLicenseState = async () => {
@@ -22,6 +23,15 @@ const DebugPanel = () => {
 		}
 	};
 
+	const fetchCurrentOverride = async () => {
+		try {
+			const value = await invoke<string>('get_debug_license_override');
+			setCurrentOverride(value);
+		} catch (error) {
+			console.error('Failed to fetch debug override:', error);
+		}
+	};
+
 	const handleOverrideChange = async (overrideMode: string) => {
 		try {
 			if (overrideMode === 'none') {
@@ -29,7 +39,6 @@ const DebugPanel = () => {
 					'clear_debug_license_override'
 				);
 				setMessage(result);
-				setCurrentOverride('none');
 			} else {
 				const result = await invoke<string>(
 					'set_debug_license_override',
@@ -38,8 +47,8 @@ const DebugPanel = () => {
 					}
 				);
 				setMessage(result);
-				setCurrentOverride(overrideMode);
 			}
+			await fetchCurrentOverride();
 			// Refresh license state after override change
 			await fetchLicenseState();
 		} catch (error) {

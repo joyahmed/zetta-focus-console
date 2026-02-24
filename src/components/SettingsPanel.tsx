@@ -49,7 +49,7 @@ const SettingsPanel = ({
 	onVolumeChange,
 	isMuted,
 	onMuteToggle,
-	isPlaying,
+	playAmbientSound,
 	onSoundPlay,
 	onSoundStop,
 	backgroundType,
@@ -57,6 +57,8 @@ const SettingsPanel = ({
 	onResetSettings,
 	theme,
 	onThemeChange,
+	licenseState,
+	trialDaysRemaining,
 	onLicenseChange,
 	strictModeActive,
 	onStrictModeToggle,
@@ -65,10 +67,9 @@ const SettingsPanel = ({
 	onVoiceToggle
 }: SettingsPanelProps) => {
 	const isLight = theme === 'light';
+	const currentLicense = licenseState?.license_type || 'Free';
 
 	const {
-		currentLicense,
-		trialDaysRemaining,
 		handleActivateLicense,
 		licenseKey,
 		setLicenseKey,
@@ -106,7 +107,7 @@ const SettingsPanel = ({
 								onVolumeChange,
 								isMuted,
 								onMuteToggle,
-								isPlaying,
+								playAmbientSound,
 								onSoundPlay,
 								onSoundStop,
 								isLight

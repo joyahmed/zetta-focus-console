@@ -135,6 +135,7 @@ const App = () => {
 							refreshLicenseState,
 							setProfileError,
 							licenseState,
+							trialDaysRemaining,
 							voiceEnabled: appState.voice_enabled,
 							onVoiceToggle: handleVoiceToggle
 						}}

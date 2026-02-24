@@ -51,7 +51,7 @@ interface SoundSectionProps {
 	onVolumeChange: (volume: number) => void;
 	isMuted: boolean;
 	onMuteToggle: () => void;
-	isPlaying: boolean;
+	playAmbientSound: boolean;
 	onSoundPlay: () => void;
 	onSoundStop: () => void;
 	isLight: boolean;
@@ -62,7 +62,7 @@ const SoundSection = ({
 	onVolumeChange,
 	isMuted,
 	onMuteToggle,
-	isPlaying,
+	playAmbientSound,
 	onSoundPlay,
 	onSoundStop,
 	isLight
@@ -150,21 +150,23 @@ const SoundSection = ({
 			</div>
 
 			<button
-				onClick={isPlaying ? onSoundStop : onSoundPlay}
+				onClick={playAmbientSound ? onSoundStop : onSoundPlay}
 				className={`w-full p-3 rounded-lg border transition-colors glass-panel  backdrop-blur-xl ${
-					isPlaying
+					playAmbientSound
 						? 'bg-red-500/10 border-red-500/30 text-red-400'
 						: 'border-opacity-50'
 				}`}
 				style={{
-					borderColor: isPlaying ? undefined : 'var(--border-color)',
-					color: isPlaying ? undefined : 'var(--text-primary)'
+					borderColor: playAmbientSound ? undefined : 'var(--border-color)',
+					color: playAmbientSound ? undefined : 'var(--text-primary)'
 				}}
 			>
 				<div className='flex items-center justify-center gap-2'>
-					{isPlaying ? <StopIcon /> : <PlayIcon />}
+					{playAmbientSound ? <StopIcon /> : <PlayIcon />}
 					<span className='text-sm'>
-						{isPlaying ? 'Stop Ambient Sound' : 'Play Ambient Sound'}
+						{playAmbientSound
+							? 'Stop Ambient Sound'
+							: 'Play Ambient Sound'}
 					</span>
 				</div>
 			</button>

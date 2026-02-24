@@ -114,7 +114,10 @@ pub fn verify_webhook_signature(payload: &[u8], signature: &str, secret: &str) -
     eprintln!("[DIAGNOSTIC] verify_webhook_signature() called");
     eprintln!("[DIAGNOSTIC] Payload length: {} bytes", payload.len());
     eprintln!("[DIAGNOSTIC] Provided signature: {}", signature);
-    eprintln!("[DIAGNOSTIC] Secret length: {} chars (should not be placeholder!)", secret.len());
+    eprintln!(
+        "[DIAGNOSTIC] Secret length: {} chars (should not be placeholder!)",
+        secret.len()
+    );
 
     // Create HMAC-SHA256 with signing secret
     let mut mac = match HmacSha256::new_from_slice(secret.as_bytes()) {
@@ -134,7 +137,10 @@ pub fn verify_webhook_signature(payload: &[u8], signature: &str, secret: &str) -
 
     // DIAGNOSTIC: Log computed signature for comparison
     eprintln!("[DIAGNOSTIC] Computed signature: {}", computed_signature);
-    eprintln!("[DIAGNOSTIC] Signatures match: {}", computed_signature == signature);
+    eprintln!(
+        "[DIAGNOSTIC] Signatures match: {}",
+        computed_signature == signature
+    );
 
     // Compare signatures (constant-time comparison would be better)
     computed_signature == signature
@@ -269,7 +275,10 @@ pub fn process_webhook(payload: &WebhookPayload) -> Option<GeneratedLicense> {
     // Generate the license key with optional signing
     let (license_key, is_signed) = generate_signed_license_key(&tier, &license_id);
 
-    eprintln!("[DIAGNOSTIC] Generated license key: {} (signed: {})", license_key, is_signed);
+    eprintln!(
+        "[DIAGNOSTIC] Generated license key: {} (signed: {})",
+        license_key, is_signed
+    );
 
     Some(GeneratedLicense {
         license_key,
@@ -302,11 +311,12 @@ fn generate_signed_license_key(tier: &ProductTier, license_id: &str) -> (String,
     #[cfg(feature = "signing")]
     {
         use crate::license_crypto::SignedLicense;
-        use std::sync::LazyLock;
         use ed25519_dalek::SigningKey;
+        use std::sync::LazyLock;
 
         // Create the license payload
-        let payload = LicensePayload::new(tier.to_license_tier().to_string(), license_id.to_string());
+        let payload =
+            LicensePayload::new(tier.to_license_tier().to_string(), license_id.to_string());
 
         // The signing key would be loaded from secure storage
         // This is a placeholder - in production, load from environment or secure storage
@@ -379,10 +389,22 @@ mod tests {
 
     #[test]
     fn test_product_tier_from_variant() {
-        assert_eq!(ProductTier::from_variant_name("Pro License"), Some(ProductTier::Pro));
-        assert_eq!(ProductTier::from_variant_name("Founder Edition"), Some(ProductTier::Founder));
-        assert_eq!(ProductTier::from_variant_name("PRO"), Some(ProductTier::Pro));
-        assert_eq!(ProductTier::from_variant_name("FOUNDER"), Some(ProductTier::Founder));
+        assert_eq!(
+            ProductTier::from_variant_name("Pro License"),
+            Some(ProductTier::Pro)
+        );
+        assert_eq!(
+            ProductTier::from_variant_name("Founder Edition"),
+            Some(ProductTier::Founder)
+        );
+        assert_eq!(
+            ProductTier::from_variant_name("PRO"),
+            Some(ProductTier::Pro)
+        );
+        assert_eq!(
+            ProductTier::from_variant_name("FOUNDER"),
+            Some(ProductTier::Founder)
+        );
         assert_eq!(ProductTier::from_variant_name("Unknown"), None);
     }
 
@@ -475,4 +497,3 @@ mod tests {
         assert!(license.license_key.starts_with("ZFC-FOUNDER-"));
     }
 }
-

@@ -35,11 +35,10 @@ fn ensure_dotenv_loaded() {
 /// Get Lemon Squeezy signing secret from environment
 pub fn get_lemon_squeezy_signing_secret() -> String {
     ensure_dotenv_loaded();
-    std::env::var("LEMON_SQUEEZY_SIGNING_SECRET")
-        .unwrap_or_else(|_| {
-            eprintln!("[CONFIG] Warning: LEMON_SQUEEZY_SIGNING_SECRET not set, using placeholder");
-            "your_signing_secret_here".to_string()
-        })
+    std::env::var("LEMON_SQUEEZY_SIGNING_SECRET").unwrap_or_else(|_| {
+        eprintln!("[CONFIG] Warning: LEMON_SQUEEZY_SIGNING_SECRET not set, using placeholder");
+        "your_signing_secret_here".to_string()
+    })
 }
 
 /// Get Lemon Squeezy store ID from environment
@@ -52,27 +51,21 @@ pub fn get_lemon_squeezy_store_id() -> Option<String> {
 pub fn get_pro_checkout_url() -> String {
     ensure_dotenv_loaded();
     std::env::var("LEMON_SQUEEZY_PRO_CHECKOUT_URL")
-        .unwrap_or_else(|_| {
-            "https://zetta-focus.lemonsqueezy.com/checkout/buy/pro".to_string()
-        })
+        .unwrap_or_else(|_| "https://zetta-focus.lemonsqueezy.com/checkout/buy/pro".to_string())
 }
 
 /// Get Founder checkout URL from environment
 pub fn get_founder_checkout_url() -> String {
     ensure_dotenv_loaded();
     std::env::var("LEMON_SQUEEZY_FOUNDER_CHECKOUT_URL")
-        .unwrap_or_else(|_| {
-            "https://zetta-focus.lemonsqueezy.com/checkout/buy/founder".to_string()
-        })
+        .unwrap_or_else(|_| "https://zetta-focus.lemonsqueezy.com/checkout/buy/founder".to_string())
 }
 
 /// Get store URL from environment
 pub fn get_store_url() -> String {
     ensure_dotenv_loaded();
     std::env::var("LEMON_SQUEEZY_STORE_URL")
-        .unwrap_or_else(|_| {
-            "https://zetta-focus.lemonsqueezy.com".to_string()
-        })
+        .unwrap_or_else(|_| "https://zetta-focus.lemonsqueezy.com".to_string())
 }
 
 // ============================================================================
@@ -84,11 +77,10 @@ pub fn get_store_url() -> String {
 pub fn get_license_public_key() -> [u8; 32] {
     ensure_dotenv_loaded();
 
-    let key_hex = std::env::var("LICENSE_PUBLIC_KEY")
-        .unwrap_or_else(|_| {
-            // Default placeholder key - MUST be replaced in production
-            "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f".to_string()
-        });
+    let key_hex = std::env::var("LICENSE_PUBLIC_KEY").unwrap_or_else(|_| {
+        // Default placeholder key - MUST be replaced in production
+        "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f".to_string()
+    });
 
     // Parse hex string to bytes
     match hex::decode(&key_hex) {
@@ -98,7 +90,10 @@ pub fn get_license_public_key() -> [u8; 32] {
                 arr.copy_from_slice(&bytes);
                 arr
             } else {
-                eprintln!("[CONFIG] Error: LICENSE_PUBLIC_KEY must be 32 bytes, got {}", bytes.len());
+                eprintln!(
+                    "[CONFIG] Error: LICENSE_PUBLIC_KEY must be 32 bytes, got {}",
+                    bytes.len()
+                );
                 fallback_public_key()
             }
         }
@@ -112,10 +107,9 @@ pub fn get_license_public_key() -> [u8; 32] {
 /// Fallback public key (placeholder - should never be used in production)
 fn fallback_public_key() -> [u8; 32] {
     [
-        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-        0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-        0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
-        0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
+        0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d,
+        0x1e, 0x1f,
     ]
 }
 
@@ -126,15 +120,13 @@ fn fallback_public_key() -> [u8; 32] {
 /// Get bKash merchant number from environment
 pub fn get_bkash_merchant_number() -> String {
     ensure_dotenv_loaded();
-    std::env::var("BKASH_MERCHANT_NUMBER")
-        .unwrap_or_else(|_| "+880-1XXXXXXXXX".to_string())
+    std::env::var("BKASH_MERCHANT_NUMBER").unwrap_or_else(|_| "+880-1XXXXXXXXX".to_string())
 }
 
 /// Get bKash contact email from environment
 pub fn get_bkash_contact_email() -> String {
     ensure_dotenv_loaded();
-    std::env::var("BKASH_CONTACT_EMAIL")
-        .unwrap_or_else(|_| "support@zettafocus.com".to_string())
+    std::env::var("BKASH_CONTACT_EMAIL").unwrap_or_else(|_| "support@zettafocus.com".to_string())
 }
 
 // ============================================================================

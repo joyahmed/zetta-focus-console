@@ -11,8 +11,8 @@
 //! - Control engine logic
 //! - Validate license state
 
+use crate::pricing::{founder, pro};
 use serde::{Deserialize, Serialize};
-use crate::pricing::{pro, founder};
 
 // ============================================================================
 // PAYMENT CONFIGURATION
@@ -402,7 +402,9 @@ mod tests {
     fn test_available_payment_options() {
         let options = get_available_payment_options();
         assert_eq!(options.len(), 2);
-        assert!(options.iter().any(|o| o.provider == PaymentProvider::LemonSqueezy));
+        assert!(options
+            .iter()
+            .any(|o| o.provider == PaymentProvider::LemonSqueezy));
         assert!(options.iter().any(|o| o.provider == PaymentProvider::BKash));
     }
 }
