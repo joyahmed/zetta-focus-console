@@ -182,6 +182,24 @@ function KeyboardIcon({ className }: IconProps) {
 		</svg>
 	);
 }
+function RefreshIcon({ className }: IconProps) {
+	return (
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			className={className}
+			fill="none"
+			viewBox="0 0 24 24"
+			stroke="currentColor"
+		>
+			<path
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				strokeWidth={2}
+				d="M4 4v6h6M20 20v-6h-6M5.64 18.36A9 9 0 1118.36 5.64"
+			/>
+		</svg>
+	);
+}
 
 export {
 	TerminalIcon,
@@ -192,5 +210,6 @@ export {
 	DesktopIcon,
 	SettingsIcon,
 	InfoIcon,
-	KeyboardIcon
+	KeyboardIcon,
+	RefreshIcon
 };
