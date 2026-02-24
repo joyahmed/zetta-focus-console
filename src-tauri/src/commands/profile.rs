@@ -3,6 +3,27 @@
 use crate::sound::{get_sound_data, SoundManager};
 use crate::types::{AppState, BackgroundType, MotionIntensity, Profile, Season, TimerStatus};
 
+fn parse_minutes_to_seconds(raw: &str, min: f64, max: f64, label: &str) -> Result<u32, String> {
+    let minutes = raw
+        .parse::<f64>()
+        .map_err(|_| format!("Error: {} must be {}-{} minutes.", label, min, max))?;
+
+    if !minutes.is_finite() || minutes < min || minutes > max {
+        return Err(format!("Error: {} must be {}-{} minutes.", label, min, max));
+    }
+
+    Ok((minutes * 60.0).round() as u32)
+}
+
+fn normalize_sound_file(raw: &str) -> String {
+    let trimmed = raw.trim();
+    if trimmed.ends_with(".mp3") {
+        trimmed.to_string()
+    } else {
+        format!("{}.mp3", trimmed)
+    }
+}
+
 pub fn profile_command(
     args: &[&str],
     app_state: &mut AppState,
@@ -11,9 +32,9 @@ pub fn profile_command(
 ) -> String {
     match args.first() {
         Some(&"list") => list_profiles(app_state),
-        Some(&"create") => create_profile(args, app_state, is_pro),
+        Some(&"create") => create_profile(args, app_state, sound_manager, is_pro),
         Some(&"delete") => delete_profile(args, app_state),
-        Some(&"edit") => edit_profile(args, app_state, is_pro),
+        Some(&"edit") => edit_profile(args, app_state, sound_manager, is_pro),
         Some(&"duplicate") => duplicate_profile(args, app_state, is_pro),
         Some(&"switch") => switch_profile(args, app_state, sound_manager),
         None => format!(
@@ -40,7 +61,12 @@ fn list_profiles(app_state: &AppState) -> String {
     format!("Available profiles:\n{}", profiles_list.join("\n"))
 }
 
-fn create_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String {
+fn create_profile(
+    args: &[&str],
+    app_state: &mut AppState,
+    sound_manager: &mut SoundManager,
+    is_pro: bool,
+) -> String {
     // Check if user can create profile based on their tier
     if !app_state.can_create_profile(is_pro) {
         if is_pro {
@@ -101,17 +127,17 @@ fn create_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> Stri
         suffix += 1;
     }
 
-    let focus_min: u32 = match args[2].parse::<u32>() {
-        Ok(v) if v >= 1 && v <= 180 => v * 60,
-        _ => return "Error: Focus duration must be 1-180 minutes.".to_string(),
+    let focus_min: u32 = match parse_minutes_to_seconds(args[2], 0.5, 180.0, "Focus duration") {
+        Ok(v) => v,
+        Err(e) => return e,
     };
-    let short_break_min: u32 = match args[3].parse::<u32>() {
-        Ok(v) if v >= 1 && v <= 60 => v * 60,
-        _ => return "Error: Short break must be 1-60 minutes.".to_string(),
+    let short_break_min: u32 = match parse_minutes_to_seconds(args[3], 0.5, 60.0, "Short break") {
+        Ok(v) => v,
+        Err(e) => return e,
     };
-    let long_break_min: u32 = match args[4].parse::<u32>() {
-        Ok(v) if v >= 1 && v <= 60 => v * 60,
-        _ => return "Error: Long break must be 1-60 minutes.".to_string(),
+    let long_break_min: u32 = match parse_minutes_to_seconds(args[4], 0.5, 60.0, "Long break") {
+        Ok(v) => v,
+        Err(e) => return e,
     };
     let sessions_per_cycle: u32 = match args[5].parse::<u32>() {
         Ok(v) if v >= 1 && v <= 20 => v,
@@ -133,7 +159,7 @@ fn create_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> Stri
         _ => return "Error: Intensity must be low, medium, or high.".to_string(),
     };
 
-    let sound_file = args[8].to_string();
+    let sound_file = normalize_sound_file(args[8]);
 
     let glow_color = match season {
         Season::Spring => "#34d399".to_string(),
@@ -161,6 +187,13 @@ fn create_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> Stri
     app_state.profiles.push(new_profile.clone());
     app_state.active_profile = new_profile;
     app_state.session_override = None;
+    if app_state.sound_state.play_ambient_sound {
+        app_state.sound_state.current_sound = Some(app_state.active_profile.sound_file.clone());
+        if app_state.timer.status == TimerStatus::Running && !app_state.sound_state.is_muted {
+            let sound_data = get_sound_data(&app_state.active_profile.sound_file);
+            let _ = sound_manager.play(sound_data, app_state.sound_state.volume);
+        }
+    }
 
     // Refresh timer for the next run when not actively in a session.
     if app_state.timer.status != TimerStatus::Running {
@@ -202,7 +235,12 @@ fn delete_profile(args: &[&str], app_state: &mut AppState) -> String {
     }
 }
 
-fn edit_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String {
+fn edit_profile(
+    args: &[&str],
+    app_state: &mut AppState,
+    sound_manager: &mut SoundManager,
+    is_pro: bool,
+) -> String {
     if args.len() < 10 {
         return "Usage: profile edit <id> <name> <focus_min> <short_break_min> <long_break_min> <sessions> <season> <intensity> <sound>".to_string();
     }
@@ -236,17 +274,17 @@ fn edit_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String
         return format!("Error: A profile with name '{}' already exists.", new_name);
     }
 
-    let focus_min: u32 = match args[3].parse::<u32>() {
-        Ok(v) if v >= 1 && v <= 180 => v * 60,
-        _ => return "Error: Focus duration must be 1-180 minutes.".to_string(),
+    let focus_min: u32 = match parse_minutes_to_seconds(args[3], 0.5, 180.0, "Focus duration") {
+        Ok(v) => v,
+        Err(e) => return e,
     };
-    let short_break_min: u32 = match args[4].parse::<u32>() {
-        Ok(v) if v >= 1 && v <= 60 => v * 60,
-        _ => return "Error: Short break must be 1-60 minutes.".to_string(),
+    let short_break_min: u32 = match parse_minutes_to_seconds(args[4], 0.5, 60.0, "Short break") {
+        Ok(v) => v,
+        Err(e) => return e,
     };
-    let long_break_min: u32 = match args[5].parse::<u32>() {
-        Ok(v) if v >= 1 && v <= 60 => v * 60,
-        _ => return "Error: Long break must be 1-60 minutes.".to_string(),
+    let long_break_min: u32 = match parse_minutes_to_seconds(args[5], 0.5, 60.0, "Long break") {
+        Ok(v) => v,
+        Err(e) => return e,
     };
     let sessions_per_cycle: u32 = match args[6].parse::<u32>() {
         Ok(v) if v >= 1 && v <= 20 => v,
@@ -268,7 +306,7 @@ fn edit_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String
         _ => return "Error: Intensity must be low, medium, or high.".to_string(),
     };
 
-    let sound_file = args[9].to_string();
+    let sound_file = normalize_sound_file(args[9]);
 
     let glow_color = match season {
         Season::Spring => "#34d399".to_string(),
@@ -300,6 +338,16 @@ fn edit_profile(args: &[&str], app_state: &mut AppState, is_pro: bool) -> String
             app_state.active_profile.glow_color = glow_color;
             app_state.active_profile.sound_file = sound_file;
             app_state.session_override = None;
+            if app_state.sound_state.play_ambient_sound {
+                app_state.sound_state.current_sound =
+                    Some(app_state.active_profile.sound_file.clone());
+                if app_state.timer.status == TimerStatus::Running && !app_state.sound_state.is_muted
+                {
+                    let sound_data = get_sound_data(&app_state.active_profile.sound_file);
+                    let _ = sound_manager.play(sound_data, app_state.sound_state.volume);
+                    app_state.sound_state.is_playing = true;
+                }
+            }
 
             // Update timer for the next run when not actively in a session.
             if app_state.timer.status != TimerStatus::Running {
@@ -375,6 +423,9 @@ fn switch_profile_internal(
     {
         app_state.active_profile = profile.clone();
         app_state.session_override = None;
+        if app_state.sound_state.play_ambient_sound {
+            app_state.sound_state.current_sound = Some(profile.sound_file.clone());
+        }
         if app_state.timer.status != TimerStatus::Running {
             app_state.timer.status = TimerStatus::Idle;
             app_state.timer.remaining_seconds = profile.focus_duration;
@@ -383,13 +434,12 @@ fn switch_profile_internal(
             app_state.timer.current_session = 1;
             app_state.timer.total_sessions = profile.sessions_per_cycle;
         }
-        // Only play sound if timer is actively running (not just paused/stopped with is_playing=true)
-        if app_state.sound_state.is_playing
+        // Keep output in sync with ambient preference when switching profile mid-session.
+        if app_state.sound_state.play_ambient_sound
             && !app_state.sound_state.is_muted
             && app_state.timer.status == TimerStatus::Running
         {
             let sound_data: &[u8] = get_sound_data(&profile.sound_file);
-            app_state.sound_state.current_sound = Some(profile.sound_file.clone());
             app_state.sound_state.volume = profile.default_volume;
             let _ = sound_manager.play(sound_data, app_state.sound_state.volume);
         }

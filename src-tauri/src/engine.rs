@@ -10,9 +10,10 @@
 pub use crate::commands::{
     activate_key, activate_strict_mode, can_create_profile, check_strict_mode_failure,
     clear_debug_license_override, clear_license_storage, deactivate_strict_mode, execute_command,
-    format_time, get_license, get_state, get_theme, get_trial_days_remaining, get_trial_status,
-    is_pro, parse_command_with_quotes, parse_duration, process_command, set_debug_license_override,
-    set_theme, set_total_sessions, tick_system_stats, tick_timer,
+    format_time, get_debug_license_override, get_license, get_state, get_theme,
+    get_trial_days_remaining, get_trial_status, is_pro, parse_command_with_quotes, parse_duration,
+    process_command, set_debug_license_override, set_theme, set_total_sessions, tick_system_stats,
+    tick_timer,
 };
 
 // Re-export types from crate root
@@ -25,10 +26,8 @@ pub use crate::types::{
 // Re-export license functions
 pub use crate::license::{is_pro_enabled, LicenseManager};
 
-// Import from crate root
-use crate::license::get_license_state;
 use crate::sound::SoundManager;
-use crate::types::{AppState as AppStateType, AppStateExt};
+use crate::state::{AppState as AppStateType, AppStateExt};
 use std::sync::Mutex;
 
 /// Engine state that holds all application state
@@ -49,7 +48,10 @@ impl EngineState {
         // Load license state using LicenseManager
         eprintln!("[DIAGNOSTIC] Creating LicenseManager for EngineState...");
         let license_manager = LicenseManager::new();
-        eprintln!("[DIAGNOSTIC] LicenseManager created with tier: {:?}", license_manager.get_tier());
+        eprintln!(
+            "[DIAGNOSTIC] LicenseManager created with tier: {:?}",
+            license_manager.get_tier()
+        );
 
         Self {
             app_state: Mutex::new(app_state),

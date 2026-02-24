@@ -3,7 +3,8 @@
 use std::fs;
 use std::path::PathBuf;
 
-use crate::types::{LicenseState, Preferences};
+use crate::state::Preferences;
+use crate::types::LicenseState;
 
 /// Get the app data directory for the current OS
 pub fn get_app_data_dir() -> PathBuf {

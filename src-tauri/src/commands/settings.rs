@@ -3,11 +3,19 @@
 use crate::license::LicenseManager;
 #[cfg(debug_assertions)]
 use crate::license::{DevLicenseOverride, DevOverrides};
-use crate::types::{LicenseState, StateEvent, StrictModeState, TimerStatus};
+use crate::state::StateEvent;
+use crate::types::{LicenseState, StrictModeState, TimerStatus};
 use crate::EngineState;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use tauri::{AppHandle, Emitter, State};
+
+#[cfg(debug_assertions)]
+fn persist_debug_override(value: Option<&str>) -> Result<(), String> {
+    let mut prefs = crate::storage::load_preferences();
+    prefs.debug_license_override = value.map(ToString::to_string);
+    crate::storage::save_preferences(&prefs)
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TrialStatus {
@@ -36,7 +44,10 @@ pub fn get_license(state: State<EngineState>) -> Result<LicenseState, String> {
     let license_manager = state.license_manager.lock().map_err(|e| e.to_string())?;
 
     // DIAGNOSTIC: Log the license state being returned
-    eprintln!("[DIAGNOSTIC] Returning license from shared state: type={}", license_manager.get_license_type());
+    eprintln!(
+        "[DIAGNOSTIC] Returning license from shared state: type={}",
+        license_manager.get_license_type()
+    );
 
     // Use the license_manager from state directly instead of creating a new instance
     Ok(LicenseState {
@@ -51,17 +62,26 @@ pub fn get_license(state: State<EngineState>) -> Result<LicenseState, String> {
 pub fn activate_key(state: State<EngineState>, key: String) -> Result<String, String> {
     // DIAGNOSTIC: Track license activation
     eprintln!("[DIAGNOSTIC] activate_key command called");
-    eprintln!("[DIAGNOSTIC] Key (first 20 chars): {}...", &key.chars().take(20).collect::<String>());
+    eprintln!(
+        "[DIAGNOSTIC] Key (first 20 chars): {}...",
+        &key.chars().take(20).collect::<String>()
+    );
 
     let mut license_manager = state.license_manager.lock().map_err(|e| e.to_string())?;
 
     // DIAGNOSTIC: Log current state before activation
-    eprintln!("[DIAGNOSTIC] Current tier before activation: {:?}", license_manager.get_tier());
+    eprintln!(
+        "[DIAGNOSTIC] Current tier before activation: {:?}",
+        license_manager.get_tier()
+    );
 
     license_manager.activate_key(&key)?;
 
     // DIAGNOSTIC: Log new state after activation
-    eprintln!("[DIAGNOSTIC] Activation successful! New tier: {:?}", license_manager.get_tier());
+    eprintln!(
+        "[DIAGNOSTIC] Activation successful! New tier: {:?}",
+        license_manager.get_tier()
+    );
 
     Ok(format!(
         "License key activated successfully! Your license type is now {}.",
@@ -139,6 +159,15 @@ pub fn set_debug_license_override(override_mode: String) -> Result<String, Strin
         };
 
         DevOverrides::set_override(mode);
+        let persisted = match mode {
+            DevLicenseOverride::None => None,
+            DevLicenseOverride::ForceFree => Some("force_free"),
+            DevLicenseOverride::ForceTrial => Some("force_trial"),
+            DevLicenseOverride::ForcePro => Some("force_pro"),
+            DevLicenseOverride::ForceFounder => Some("force_founder"),
+            DevLicenseOverride::SimulateExpiredTrial => Some("simulate_expired_trial"),
+        };
+        persist_debug_override(persisted)?;
         Ok(format!("Debug override set to: {}", override_mode))
     }
 
@@ -154,7 +183,30 @@ pub fn clear_debug_license_override() -> Result<String, String> {
     #[cfg(debug_assertions)]
     {
         DevOverrides::clear();
+        persist_debug_override(None)?;
         Ok("Debug override cleared".to_string())
+    }
+
+    #[cfg(not(debug_assertions))]
+    {
+        Err("Debug license override is only available in debug builds.".to_string())
+    }
+}
+
+#[tauri::command]
+pub fn get_debug_license_override() -> Result<String, String> {
+    #[cfg(debug_assertions)]
+    {
+        let mode = DevOverrides::get().override_mode;
+        let value = match mode {
+            DevLicenseOverride::None => "none",
+            DevLicenseOverride::ForceFree => "force_free",
+            DevLicenseOverride::ForceTrial => "force_trial",
+            DevLicenseOverride::ForcePro => "force_pro",
+            DevLicenseOverride::ForceFounder => "force_founder",
+            DevLicenseOverride::SimulateExpiredTrial => "simulate_expired_trial",
+        };
+        Ok(value.to_string())
     }
 
     #[cfg(not(debug_assertions))]

@@ -6,15 +6,16 @@ mod license_crypto;
 mod payment;
 mod pricing;
 mod sound;
+mod state;
 mod storage;
 mod types;
 mod webhook;
 
 use engine::{
     activate_key, can_create_profile, clear_debug_license_override, clear_license_storage,
-    execute_command, get_license, get_state, get_theme, get_trial_days_remaining,
-    get_trial_status, is_pro, set_debug_license_override, set_theme, set_total_sessions,
-    tick_system_stats, tick_timer, EngineState,
+    execute_command, get_debug_license_override, get_license, get_state, get_theme,
+    get_trial_days_remaining, get_trial_status, is_pro, set_debug_license_override, set_theme,
+    set_total_sessions, tick_system_stats, tick_timer, EngineState,
 };
 use payment::{
     get_available_payment_options, get_checkout_info, open_checkout_in_browser, CheckoutInfo,
@@ -425,6 +426,7 @@ pub fn run() {
             // Debug license override commands
             set_debug_license_override,
             clear_debug_license_override,
+            get_debug_license_override,
             clear_license_storage,
             // Payment commands
             payment_get_options,

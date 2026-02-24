@@ -253,14 +253,22 @@ impl LicenseManager {
     pub fn new() -> Self {
         // DIAGNOSTIC: Track LicenseManager instance creation
         eprintln!("[DIAGNOSTIC] LicenseManager::new() called - creating new instance");
-        eprintln!("[DIAGNOSTIC] License file path: {:?}", Self::get_license_path());
-        eprintln!("[DIAGNOSTIC] Trial marker path: {:?}", get_trial_marker_path());
+        eprintln!(
+            "[DIAGNOSTIC] License file path: {:?}",
+            Self::get_license_path()
+        );
+        eprintln!(
+            "[DIAGNOSTIC] Trial marker path: {:?}",
+            get_trial_marker_path()
+        );
 
         let license_data = Self::load_from_storage();
 
         // DIAGNOSTIC: Log loaded data
-        eprintln!("[DIAGNOSTIC] Loaded license data: tier={}, trial_start={:?}",
-            license_data.license_type, license_data.trial_start_timestamp);
+        eprintln!(
+            "[DIAGNOSTIC] Loaded license data: tier={}, trial_start={:?}",
+            license_data.license_type, license_data.trial_start_timestamp
+        );
 
         let mut manager = Self {
             tier: LicenseTier::from_license_type(&license_data.license_type),
@@ -630,32 +638,7 @@ impl LicenseManager {
     }
 }
 
-/// Get the current license state as a LicenseState-compatible struct
-/// This is for backward compatibility with the existing types
-///
-/// Note: This function creates a new LicenseManager instance. For commands,
-/// prefer using the license_manager from EngineState directly.
-pub fn get_license_state() -> crate::types::LicenseState {
-    // DIAGNOSTIC: Track when get_license_state creates a new instance
-    eprintln!("[DIAGNOSTIC] get_license_state() called - WARNING: creates new LicenseManager instance!");
-    eprintln!("[DIAGNOSTIC] This may cause stale data if EngineState has a different instance");
-
-    let manager = LicenseManager::new();
-
-    // DIAGNOSTIC: Log what's being returned
-    eprintln!("[DIAGNOSTIC] Returning license_type={}", manager.get_license_type());
-
-    crate::types::LicenseState {
-        license_type: manager.get_license_type(),
-        issued_at: None,
-        expires_at: None,
-        signature: manager.get_signature(),
-    }
-}
-
 /// Check if Pro features are enabled (global function)
 pub fn is_pro_enabled() -> bool {
     LicenseManager::new().is_pro_enabled()
 }
-
-

@@ -28,7 +28,7 @@ interface CheckoutInfo {
 
 interface LicenseSectionProps {
 	currentLicense: string;
-	trialDaysRemaining: number | null;
+	trialDaysRemaining?: number | null;
 	licenseKey: string;
 	setLicenseKey: (key: string) => void;
 	licenseMessage: string;
@@ -144,7 +144,7 @@ const LicenseSection = ({
 						className='text-lg font-semibold'
 						style={{ color: 'var(--text-primary)' }}
 					>
-						{currentLicense === 'Trial' && trialDaysRemaining !== null
+						{currentLicense === 'Trial' && trialDaysRemaining != null
 							? `Trial - ${trialDaysRemaining} days left`
 							: currentLicense}
 					</div>

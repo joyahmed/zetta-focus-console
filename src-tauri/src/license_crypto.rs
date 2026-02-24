@@ -386,11 +386,18 @@ impl std::error::Error for LicenseError {}
 pub fn verify_license(key: &str) -> Result<(String, Option<String>), LicenseError> {
     // DIAGNOSTIC: Track license verification
     eprintln!("[DIAGNOSTIC] verify_license() called");
-    eprintln!("[DIAGNOSTIC] Key (first 20 chars): {}...", &key.chars().take(20).collect::<String>());
+    eprintln!(
+        "[DIAGNOSTIC] Key (first 20 chars): {}...",
+        &key.chars().take(20).collect::<String>()
+    );
 
     let parsed = ParsedLicenseKey::parse(key)?;
-    eprintln!("[DIAGNOSTIC] Parsed key: prefix={}, tier={}, has_signature={}",
-        parsed.prefix, parsed.tier, parsed.has_signature());
+    eprintln!(
+        "[DIAGNOSTIC] Parsed key: prefix={}, tier={}, has_signature={}",
+        parsed.prefix,
+        parsed.tier,
+        parsed.has_signature()
+    );
 
     // If the key has signed data, verify it
     if parsed.has_signature() {
@@ -423,7 +430,10 @@ pub fn verify_license(key: &str) -> Result<(String, Option<String>), LicenseErro
     // This allows backward compatibility with simple format keys
     // In production, all keys should be signed
     // DIAGNOSTIC: Warn about unsigned key acceptance
-    eprintln!("[DIAGNOSTIC] WARNING: Accepting UNSIGNED key! Tier={}", parsed.tier);
+    eprintln!(
+        "[DIAGNOSTIC] WARNING: Accepting UNSIGNED key! Tier={}",
+        parsed.tier
+    );
     eprintln!("[DIAGNOSTIC] In production, all keys should be cryptographically signed!");
     Ok((parsed.tier, None))
 }

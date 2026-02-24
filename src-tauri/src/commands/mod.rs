@@ -3,8 +3,6 @@
 mod parser;
 mod profile;
 mod settings;
-mod sound;
-mod stats;
 mod timer;
 
 pub use parser::{format_time, parse_command_with_quotes, parse_duration};
@@ -15,6 +13,7 @@ pub use timer::{
 
 pub use settings::{
     activate_key, activate_strict_mode, can_create_profile, check_strict_mode_failure,
-    clear_debug_license_override, clear_license_storage, deactivate_strict_mode, get_license,
-    get_trial_days_remaining, get_trial_status, is_pro, set_debug_license_override,
+    clear_debug_license_override, clear_license_storage, deactivate_strict_mode,
+    get_debug_license_override, get_license, get_trial_days_remaining, get_trial_status, is_pro,
+    set_debug_license_override,
 };

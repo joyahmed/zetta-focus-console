@@ -2,9 +2,10 @@
 
 use super::parser::{format_time, parse_command_with_quotes, parse_duration};
 use crate::sound::get_sound_data;
+use crate::state::{AppState, AppStateExt, StateEvent};
 use crate::types::{
-    AppState, AppStateExt, CurrentTask, SessionOverride, SessionType, StateEvent, Stats,
-    StrictModeState, TaskCategory, TimerState, TimerStatus,
+    CurrentTask, SessionOverride, SessionType, Stats, StrictModeState, TaskCategory, TimerState,
+    TimerStatus,
 };
 use crate::EngineState;
 use sysinfo::System;
@@ -165,10 +166,10 @@ pub fn process_command(
    Upgrade to Pro to unlock these features."
     };
 
-    match cmd {
+    let result = match cmd {
         "help" => help_command(pro_features),
 
-        "focus" => focus_command(args, app_state, sound_manager),
+        "focus" => focus_command(args, app_state),
 
         "strict" => strict_command(args, app_state, is_pro),
 
@@ -182,17 +183,17 @@ pub fn process_command(
 
         "sessions" => sessions_command(args, app_state),
 
-        "start" => start_command(app_state, sound_manager),
+        "start" => start_command(app_state),
 
-        "stop" => stop_command(app_state, sound_manager),
+        "stop" => stop_command(app_state),
 
         "override" => override_command(args, app_state),
 
         "status" => status_command(app_state),
 
-        "pause" => pause_command(app_state, sound_manager),
+        "pause" => pause_command(app_state),
 
-        "resume" => resume_command(app_state, sound_manager),
+        "resume" => resume_command(app_state),
 
         "profile" => {
             crate::commands::profile::profile_command(args, app_state, sound_manager, is_pro)
@@ -238,7 +239,10 @@ pub fn process_command(
             "Error: Unknown command \"{}\". Type \"help\" for available commands.",
             cmd
         ),
-    }
+    };
+
+    sync_sound_output_with_timer(app_state, sound_manager);
+    result
 }
 
 // ============================================================================
@@ -277,18 +281,17 @@ fn help_command(pro_features: &str) -> String {
     )
 }
 
-fn focus_command(
-    args: &[&str],
-    app_state: &mut AppState,
-    sound_manager: &mut crate::sound::SoundManager,
-) -> String {
+fn focus_command(args: &[&str], app_state: &mut AppState) -> String {
     match args.first() {
         Some(&"start") => {
-            let minutes = args.get(1).and_then(|m| m.parse().ok()).unwrap_or(25);
-            if minutes <= 0 {
+            let minutes = args
+                .get(1)
+                .and_then(|m| m.parse::<f64>().ok())
+                .unwrap_or(25.0);
+            if !minutes.is_finite() || minutes <= 0.0 {
                 return "Error: Invalid duration. Usage: focus start [minutes]".to_string();
             }
-            let total_seconds = minutes * 60;
+            let total_seconds = (minutes * 60.0).round() as u32;
             app_state.timer = TimerState {
                 remaining_seconds: total_seconds,
                 total_seconds,
@@ -297,24 +300,11 @@ fn focus_command(
                 current_session: 1,
                 total_sessions: 4,
             };
-            if !app_state.sound_state.is_muted && !app_state.sound_state.is_playing {
-                let sound_file = &app_state.active_profile.sound_file;
-                let sound_data: &'static [u8] = get_sound_data(sound_file);
-                app_state.sound_state.current_sound = Some(sound_file.clone());
-                app_state.sound_state.is_playing = true;
-                app_state.sound_state.volume = app_state.active_profile.default_volume;
-                let _ = sound_manager.play(sound_data, app_state.sound_state.volume);
-            }
             format!("Starting focus session for {} minutes...", minutes)
         }
         Some(&"stop") => {
             if app_state.timer.status == TimerStatus::Idle {
                 return "Error: No active session to stop.".to_string();
-            }
-            if app_state.sound_state.is_playing {
-                sound_manager.stop();
-                app_state.sound_state.is_playing = false;
-                app_state.sound_state.current_sound = None;
             }
             app_state.timer.status = TimerStatus::Idle;
             app_state.timer.remaining_seconds = app_state.active_profile.focus_duration;
@@ -324,18 +314,12 @@ fn focus_command(
             if app_state.timer.status != TimerStatus::Running {
                 return "Error: No running session to pause.".to_string();
             }
-            if app_state.sound_state.is_playing && !app_state.sound_state.is_muted {
-                sound_manager.pause();
-            }
             app_state.timer.status = TimerStatus::Paused;
             "Focus session paused.".to_string()
         }
         Some(&"resume") => {
             if app_state.timer.status != TimerStatus::Paused {
                 return "Error: No paused session to resume.".to_string();
-            }
-            if app_state.sound_state.is_playing && !app_state.sound_state.is_muted {
-                sound_manager.resume();
             }
             app_state.timer.status = TimerStatus::Running;
             "Focus session resumed.".to_string()
@@ -619,10 +603,7 @@ fn sessions_command(args: &[&str], app_state: &mut AppState) -> String {
     }
 }
 
-fn start_command(
-    app_state: &mut AppState,
-    sound_manager: &mut crate::sound::SoundManager,
-) -> String {
+fn start_command(app_state: &mut AppState) -> String {
     if app_state.timer.status == TimerStatus::Running {
         return "Session already running. Use `stop` before restarting.".to_string();
     }
@@ -653,15 +634,6 @@ fn start_command(
         total_sessions,
     };
 
-    if !app_state.sound_state.is_muted && !app_state.sound_state.is_playing {
-        let sound_file = &app_state.active_profile.sound_file;
-        let sound_data: &'static [u8] = get_sound_data(sound_file);
-        app_state.sound_state.current_sound = Some(sound_file.clone());
-        app_state.sound_state.is_playing = true;
-        app_state.sound_state.volume = app_state.active_profile.default_volume;
-        let _ = sound_manager.play(sound_data, app_state.sound_state.volume);
-    }
-
     let override_info = if let Some(ref override_state) = app_state.session_override {
         if override_state.is_active() {
             let mut info = vec![];
@@ -685,10 +657,7 @@ fn start_command(
     format!("Starting session...{}", override_info)
 }
 
-fn stop_command(
-    app_state: &mut AppState,
-    sound_manager: &mut crate::sound::SoundManager,
-) -> String {
+fn stop_command(app_state: &mut AppState) -> String {
     if app_state.timer.status == TimerStatus::Idle {
         return "Error: No active session to stop.".to_string();
     }
@@ -699,11 +668,6 @@ fn stop_command(
             .to_string();
     }
 
-    if app_state.sound_state.is_playing {
-        sound_manager.stop();
-        app_state.sound_state.is_playing = false;
-        app_state.sound_state.current_sound = None;
-    }
     app_state.timer.status = TimerStatus::Idle;
     app_state.timer.remaining_seconds = app_state.active_profile.focus_duration;
 
@@ -797,10 +761,7 @@ fn status_command(app_state: &mut AppState) -> String {
     info.join("\n")
 }
 
-fn pause_command(
-    app_state: &mut AppState,
-    sound_manager: &mut crate::sound::SoundManager,
-) -> String {
+fn pause_command(app_state: &mut AppState) -> String {
     if app_state.timer.status != TimerStatus::Running {
         return "Error: No running session to pause.".to_string();
     }
@@ -810,22 +771,13 @@ fn pause_command(
             .to_string();
     }
 
-    if app_state.sound_state.is_playing && !app_state.sound_state.is_muted {
-        sound_manager.pause();
-    }
     app_state.timer.status = TimerStatus::Paused;
     "Session paused.".to_string()
 }
 
-fn resume_command(
-    app_state: &mut AppState,
-    sound_manager: &mut crate::sound::SoundManager,
-) -> String {
+fn resume_command(app_state: &mut AppState) -> String {
     if app_state.timer.status != TimerStatus::Paused {
         return "Error: No paused session to resume.".to_string();
-    }
-    if app_state.sound_state.is_playing && !app_state.sound_state.is_muted {
-        sound_manager.resume();
     }
     app_state.timer.status = TimerStatus::Running;
     "Session resumed.".to_string()
@@ -959,13 +911,12 @@ fn reset_command(
     };
     app_state.dev_mode = false;
     app_state.ambience_enabled = true;
+    app_state.sound_state.play_ambient_sound = false;
     app_state.sound_state.volume = 50;
     app_state.sound_state.is_muted = false;
-    if app_state.sound_state.is_playing {
-        let _ = sound_manager.stop();
-        app_state.sound_state.is_playing = false;
-        app_state.sound_state.current_sound = None;
-    }
+    let _ = sound_manager.stop();
+    app_state.sound_state.is_playing = false;
+    app_state.sound_state.current_sound = None;
     if let Some(default_profile) = app_state.profiles.iter().find(|p| p.id == "winter-deep") {
         app_state.active_profile = default_profile.clone();
     }
@@ -1153,22 +1104,21 @@ fn sound_command(
         Some(&"play") => {
             let sound_file = &app_state.active_profile.sound_file;
             app_state.sound_state.current_sound = Some(sound_file.clone());
-            app_state.sound_state.is_playing = true;
+            app_state.sound_state.play_ambient_sound = true;
             app_state.sound_state.volume = app_state.active_profile.default_volume;
-
-            let sound_data: &[u8] = get_sound_data(sound_file);
-
-            match sound_manager.play(sound_data, app_state.sound_state.volume) {
-                Ok(_) => format!("Playing ambient sound: {}", sound_file),
-                Err(e) => {
-                    app_state.sound_state.is_playing = false;
-                    format!("Warning: Sound system unavailable: {}. Add sound files to src-tauri/sounds/", e)
-                }
+            if app_state.timer.status == TimerStatus::Running && !app_state.sound_state.is_muted {
+                format!("Ambient sound enabled: {}", sound_file)
+            } else if app_state.sound_state.is_muted {
+                "Ambient sound enabled but muted. Unmute while timer runs to hear it.".to_string()
+            } else {
+                "Ambient sound enabled. It will play while the timer is running.".to_string()
             }
         }
         Some(&"stop") => {
             sound_manager.stop();
+            app_state.sound_state.play_ambient_sound = false;
             app_state.sound_state.is_playing = false;
+            app_state.sound_state.current_sound = None;
             "Ambient sound stopped.".to_string()
         }
         Some(&"volume") => {
@@ -1193,7 +1143,8 @@ fn sound_command(
                             sound_manager.set_volume(vol);
                             return format!("Volume set to {}%", vol);
                         } else {
-                            return "Error: Invalid volume value. Use 0-100, or 'up'/'down'".to_string();
+                            return "Error: Invalid volume value. Use 0-100, or 'up'/'down'"
+                                .to_string();
                         }
                     }
                 }
@@ -1203,24 +1154,77 @@ fn sound_command(
         Some(&"mute") => {
             app_state.sound_state.is_muted = !app_state.sound_state.is_muted;
             if app_state.sound_state.is_muted {
-                sound_manager.pause();
                 "Sound muted.".to_string()
             } else {
-                sound_manager.resume();
                 "Sound unmuted.".to_string()
             }
         }
-        _ => format!(
-            "Sound Status: {} | Volume: {}% | Muted: {}",
-            if app_state.sound_state.is_playing {
-                "Playing"
+        _ => {
+            let status = if app_state.sound_state.play_ambient_sound {
+                if app_state.timer.status == TimerStatus::Running && !app_state.sound_state.is_muted
+                {
+                    if sound_manager.is_playing() {
+                        "Playing"
+                    } else {
+                        "Enabled (starting)"
+                    }
+                } else if app_state.sound_state.is_muted {
+                    "Enabled (muted)"
+                } else {
+                    "Enabled (waiting for timer)"
+                }
             } else {
                 "Stopped"
-            },
-            app_state.sound_state.volume,
-            app_state.sound_state.is_muted
-        ),
+            };
+
+            format!(
+                "Sound Status: {} | Enabled: {} | Volume: {}% | Muted: {}",
+                status,
+                app_state.sound_state.play_ambient_sound,
+                app_state.sound_state.volume,
+                app_state.sound_state.is_muted
+            )
+        }
     }
+}
+
+fn sync_sound_output_with_timer(
+    app_state: &mut AppState,
+    sound_manager: &mut crate::sound::SoundManager,
+) {
+    let should_output = app_state.timer.status == TimerStatus::Running
+        && app_state.sound_state.play_ambient_sound
+        && !app_state.sound_state.is_muted;
+
+    if should_output {
+        if !sound_manager.is_playing() {
+            sound_manager.resume();
+        }
+
+        if !sound_manager.is_playing() {
+            let sound_file = app_state
+                .sound_state
+                .current_sound
+                .clone()
+                .unwrap_or_else(|| app_state.active_profile.sound_file.clone());
+            app_state.sound_state.current_sound = Some(sound_file.clone());
+            let sound_data: &[u8] = get_sound_data(&sound_file);
+            let _ = sound_manager.play(sound_data, app_state.sound_state.volume);
+        }
+
+        app_state.sound_state.is_playing = sound_manager.is_playing();
+        return;
+    }
+
+    if app_state.sound_state.play_ambient_sound {
+        if sound_manager.is_playing() {
+            sound_manager.pause();
+        }
+    } else {
+        sound_manager.stop();
+    }
+
+    app_state.sound_state.is_playing = false;
 }
 
 // ============================================================================
@@ -1230,6 +1234,7 @@ fn sound_command(
 #[tauri::command]
 pub fn tick_timer(state: State<EngineState>, app_handle: AppHandle) -> Result<(), String> {
     let mut app_state = state.app_state.lock().map_err(|e| e.to_string())?;
+    let mut sound_manager = state.sound_manager.lock().map_err(|e| e.to_string())?;
 
     if app_state.timer.status == TimerStatus::Running && app_state.timer.remaining_seconds > 0 {
         app_state.timer.remaining_seconds -= 1;
@@ -1268,6 +1273,8 @@ pub fn tick_timer(state: State<EngineState>, app_handle: AppHandle) -> Result<()
 
             app_state.session_override = None;
         }
+
+        sync_sound_output_with_timer(&mut app_state, &mut sound_manager);
 
         let _ = app_handle.emit(
             "state-updated",

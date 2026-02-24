@@ -24,16 +24,39 @@ const DevLicensePopover = ({
 	const buttonRef = useRef<HTMLButtonElement>(null);
 
 	const handleOverrideChange = async (value: string) => {
-		setCurrentOverride(value);
 		try {
 			await invoke('set_debug_license_override', {
 				overrideMode: value
 			});
+			const fresh = await invoke<string>(
+				'get_debug_license_override'
+			);
+			setCurrentOverride(fresh);
 			onLicenseChange?.();
 		} catch (error) {
 			console.error('Failed to set license override:', error);
 		}
 	};
+
+	useEffect(() => {
+		if (!isOpen) return;
+
+		const fetchCurrentOverride = async () => {
+			try {
+				const value = await invoke<string>(
+					'get_debug_license_override'
+				);
+				setCurrentOverride(value);
+			} catch (error) {
+				console.error(
+					'Failed to fetch current license override:',
+					error
+				);
+			}
+		};
+
+		fetchCurrentOverride();
+	}, [isOpen]);
 
 	useEffect(() => {
 		if (!isOpen) return;

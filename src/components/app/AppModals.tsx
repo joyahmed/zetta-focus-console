@@ -32,6 +32,7 @@ const AppModals = ({
 	refreshLicenseState,
 	setProfileError,
 	licenseState,
+	trialDaysRemaining,
 	voiceEnabled,
 	onVoiceToggle
 }: AppModelsProps) => {
@@ -64,7 +65,7 @@ const AppModals = ({
 				onVolumeChange={handleVolumeChange}
 				isMuted={appState.sound_state.is_muted}
 				onMuteToggle={handleMuteToggle}
-				isPlaying={appState.sound_state.is_playing}
+				playAmbientSound={appState.sound_state.play_ambient_sound}
 				onSoundPlay={handleSoundPlay}
 				onSoundStop={handleSoundStop}
 				backgroundType={appState.active_profile.background_type}
@@ -72,6 +73,8 @@ const AppModals = ({
 				onResetSettings={handleResetSettings}
 				theme={appState.theme}
 				onThemeChange={handleThemeChange}
+				licenseState={licenseState}
+				trialDaysRemaining={trialDaysRemaining}
 				onLicenseChange={refreshLicenseState}
 				strictModeActive={appState.strict_mode.is_active}
 				onStrictModeToggle={() => {

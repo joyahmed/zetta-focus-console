@@ -6,20 +6,29 @@ function NumberInput({
 	onChange,
 	min,
 	max,
-	label
+	label,
+	step = 1,
+	precision = 0
 }: {
 	value: number;
 	onChange: (value: number) => void;
 	min: number;
 	max: number;
 	label: string;
+	step?: number;
+	precision?: number;
 }) {
+	const clampValue = (nextValue: number) => {
+		const clamped = Math.min(max, Math.max(min, nextValue));
+		return Number(clamped.toFixed(precision));
+	};
+
 	const handleDecrement = () => {
-		if (value > min) onChange(value - 1);
+		if (value > min) onChange(clampValue(value - step));
 	};
 
 	const handleIncrement = () => {
-		if (value < max) onChange(value + 1);
+		if (value < max) onChange(clampValue(value + step));
 	};
 
 	const handleManualChange = (
@@ -31,8 +40,7 @@ function NumberInput({
 		const parsed = Number(raw);
 		if (Number.isNaN(parsed)) return;
 
-		const clamped = Math.min(max, Math.max(min, Math.round(parsed)));
-		onChange(clamped);
+		onChange(clampValue(parsed));
 	};
 
 	return (
@@ -64,7 +72,7 @@ function NumberInput({
 					type='number'
 					min={min}
 					max={max}
-					step={1}
+					step={step}
 					value={value}
 					onChange={handleManualChange}
 					className='profile-modal-white flex-1 h-8 bg-zetta-bg border-t border-b border-zetta-border text-sm text-zetta-text font-mono font-medium text-center focus:outline-none focus:border-zetta-neon focus:ring-1 focus:ring-zetta-neon/30'
@@ -111,13 +119,16 @@ export default function ProfileModal({
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
+	const secondsToMinutes = (seconds: number) =>
+		Number((seconds / 60).toFixed(2));
+
 	// Populate form when editing
 	useEffect(() => {
 		if (mode === 'edit' && profile) {
 			setName(profile.name);
-			setFocusMin(profile.focus_duration / 60);
-			setShortBreakMin(profile.short_break_duration / 60);
-			setLongBreakMin(profile.long_break_duration / 60);
+			setFocusMin(secondsToMinutes(profile.focus_duration));
+			setShortBreakMin(secondsToMinutes(profile.short_break_duration));
+			setLongBreakMin(secondsToMinutes(profile.long_break_duration));
 			setSessionsPerCycle(profile.sessions_per_cycle || 4);
 			setSeason(profile.season);
 			setIntensity(profile.motion_intensity);
@@ -295,22 +306,28 @@ export default function ProfileModal({
 								label='Focus'
 								value={focusMin}
 								onChange={setFocusMin}
-								min={1}
+								min={0.5}
 								max={180}
+								step={0.5}
+								precision={2}
 							/>
 							<NumberInput
 								label='Short'
 								value={shortBreakMin}
 								onChange={setShortBreakMin}
-								min={1}
+								min={0.5}
 								max={60}
+								step={0.5}
+								precision={2}
 							/>
 							<NumberInput
 								label='Long'
 								value={longBreakMin}
 								onChange={setLongBreakMin}
-								min={1}
+								min={0.5}
 								max={60}
+								step={0.5}
+								precision={2}
 							/>
 							<NumberInput
 								label='Sessions'
@@ -318,6 +335,8 @@ export default function ProfileModal({
 								onChange={setSessionsPerCycle}
 								min={1}
 								max={20}
+								step={1}
+								precision={0}
 							/>
 						</div>
 					</div>

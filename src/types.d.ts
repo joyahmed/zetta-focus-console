@@ -37,6 +37,7 @@ interface AppModelsProps {
 	handleThemeChange: (theme: string) => Promise<void>;
 	helpOpen: boolean;
 	licenseState: { license_type: string } | null;
+	trialDaysRemaining?: number | null;
 
 	profileModalOpen: boolean;
 	setProfileModalOpen: (value: SetStateAction<boolean>) => void;
@@ -106,6 +107,7 @@ interface AppStats {
 
 interface SoundState {
 	current_sound: string | null;
+	play_ambient_sound: boolean;
 	volume: number;
 	is_playing: boolean;
 	is_muted: boolean;
@@ -288,7 +290,7 @@ interface SettingsPanelProps {
 	onVolumeChange: (volume: number) => void;
 	isMuted: boolean;
 	onMuteToggle: () => void;
-	isPlaying: boolean;
+	playAmbientSound: boolean;
 	onSoundPlay: () => void;
 	onSoundStop: () => void;
 	backgroundType: 'gradient' | 'particles' | 'custom';
@@ -296,6 +298,8 @@ interface SettingsPanelProps {
 	onResetSettings: () => void;
 	theme: string;
 	onThemeChange: (theme: string) => void;
+	licenseState?: { license_type: string } | null;
+	trialDaysRemaining?: number | null;
 	onLicenseChange?: () => void;
 	strictModeActive?: boolean;
 	onStrictModeToggle?: () => void;
