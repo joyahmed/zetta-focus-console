@@ -129,7 +129,7 @@ const LicenseSection = ({
 			>
 				{/* Current License Status */}
 				<div
-					className='p-3 rounded-lg border glass-panel bg-black/5 backdrop-blur-xl'
+					className='p-3 rounded-lg border glass-panel  backdrop-blur-xl'
 					style={{
 						borderColor: 'var(--border-color)'
 					}}
@@ -158,7 +158,7 @@ const LicenseSection = ({
 							value={licenseKey}
 							onChange={e => setLicenseKey(e.target.value)}
 							placeholder='ZFC-PRO-XXXX-XXXX or ZFC-FOUNDER-XXXX-XXXX'
-							className='flex-1 min-w-0 p-2 rounded-lg border text-sm glass-panel bg-black/5 backdrop-blur-xl '
+							className='flex-1 min-w-0 p-2 rounded-lg border text-sm glass-panel  backdrop-blur-xl '
 							style={{
 								borderColor: 'var(--border-color)',
 								color: 'var(--text-primary)'
