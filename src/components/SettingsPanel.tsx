@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react';
 import { useSettingPanel } from '../hooks/use-setting-panel';
-
 const SettingsHeader = lazy(
 	() => import('./settings-panel/SettingsHeader')
 );
