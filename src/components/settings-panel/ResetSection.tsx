@@ -1,4 +1,4 @@
-import { RefreshIcon } from "../timer-panel/icons";
+import { RefreshIcon } from '../timer-panel/icons';
 
 interface ResetSectionProps {
 	onResetSettings: () => void;
@@ -21,16 +21,20 @@ const ResetSection = ({ onResetSettings }: ResetSectionProps) => (
 			}}
 		>
 			<div>
-				<div className='text-sm group-hover:text-red-400'
-					style={{ color: 'var(--text-primary)' }}>
+				<div
+					className='text-sm group-hover:text-red-400'
+					style={{ color: 'var(--text-primary)' }}
+				>
 					Reset Settings
 				</div>
-				<div className='text-xs mt-0.5'
-					style={{ color: 'var(--text-muted)' }}>
+				<div
+					className='text-xs mt-0.5'
+					style={{ color: 'var(--text-muted)' }}
+				>
 					Restore default configuration
 				</div>
 			</div>
-			<RefreshIcon className="w-5 h-5 text-[var(--text-muted)] group-hover:text-red-400 transition-colors" />
+			<RefreshIcon className='w-5 h-5 text-[var(--text-muted)] group-hover:text-red-400 transition-colors' />
 		</button>
 	</section>
 );

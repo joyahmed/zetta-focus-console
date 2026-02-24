@@ -81,11 +81,13 @@ const StartupSection = ({ isLight }: StartupSectionProps) => {
 				Startup
 			</h3>
 
-			<div className='space-y-3 p-2 rounded-lg'
+			<div
+				className='space-y-3 p-2 rounded-lg'
 				style={{
 					backgroundColor: 'var(--bg-primary)',
 					borderColor: 'var(--border-color)'
-				}}>
+				}}
+			>
 				{/* Start with Windows */}
 				<div
 					className='flex items-center justify-between p-3 rounded-lg border glass-panel bg-black/5 backdrop-blur-xl'

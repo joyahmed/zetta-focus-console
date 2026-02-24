@@ -70,7 +70,7 @@ export default function TerminalModal({
 							<span
 								className={`px-1.5 py-0.5 rounded ${isLight ? 'bg-gray-200 text-gray-700' : 'bg-zetta-bg text-gray-500'}`}
 							>
-								ESC
+								Ctrl+T
 							</span>{' '}
 							to close
 						</span>

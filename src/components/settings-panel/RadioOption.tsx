@@ -14,7 +14,6 @@ const RadioOption = ({
 	onChange,
 	label,
 	className = ''
-
 }: RadioOptionProps) => (
 	<label
 		className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${checked ? 'border-blue-500' : ''} ${className}
@@ -31,7 +30,10 @@ const RadioOption = ({
 			onChange={onChange}
 			className='accent-blue-500'
 		/>
-		<span className='text-sm' style={{ color: 'var(--text-primary)' }}>
+		<span
+			className='text-sm'
+			style={{ color: 'var(--text-primary)' }}
+		>
 			{label}
 		</span>
 	</label>
