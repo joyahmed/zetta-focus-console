@@ -67,18 +67,25 @@ const SoundSection = ({
 	onSoundStop,
 	isLight
 }: SoundSectionProps) => (
-	<section>
+	<section >
 		<h3
 			className='text-sm font-medium uppercase tracking-wider mb-3'
-			style={{ color: 'var(--text-secondary)' }}
+			style={{
+				color: 'var(--text-secondary)'
+
+			}}
 		>
 			Sound
 		</h3>
-		<div className='space-y-3'>
-			<div
-				className='p-3 rounded-lg border'
-				style={{
+		<div className='space-y-3 p-2 rounded-lg'
+			style={{
 					backgroundColor: 'var(--bg-primary)',
+					borderColor: 'var(--border-color)'
+				}}
+			>
+			<div
+				className='p-3 rounded-lg border glass-panel bg-black/5 backdrop-blur-xl'
+				style={{
 					borderColor: 'var(--border-color)'
 				}}
 			>
@@ -102,9 +109,8 @@ const SoundSection = ({
 			</div>
 
 			<div
-				className='flex items-center justify-between p-3 rounded-lg border'
+				className='flex items-center justify-between p-3 rounded-lg border glass-panel glass-panel bg-black/5 backdrop-blur-xl'
 				style={{
-					backgroundColor: 'var(--bg-primary)',
 					borderColor: 'var(--border-color)'
 				}}
 			>
@@ -127,13 +133,12 @@ const SoundSection = ({
 
 			<button
 				onClick={isPlaying ? onSoundStop : onSoundPlay}
-				className={`w-full p-3 rounded-lg border transition-colors ${
+				className={`w-full p-3 rounded-lg border transition-colors glass-panel bg-black/5 backdrop-blur-xl ${
 					isPlaying
 						? 'bg-red-500/10 border-red-500/30 text-red-400'
 						: 'border-opacity-50'
 				}`}
 				style={{
-					backgroundColor: isPlaying ? undefined : 'var(--bg-primary)',
 					borderColor: isPlaying ? undefined : 'var(--border-color)',
 					color: isPlaying ? undefined : 'var(--text-primary)'
 				}}
