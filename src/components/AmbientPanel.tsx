@@ -20,11 +20,12 @@ const AmbientPanel = ({
 	motionIntensity,
 	backgroundType,
 	glowColor,
-	isRunning,
+	timer,
 	isEnabled,
 	theme = 'dark'
 }: AmbientPanelProps) => {
 	const isLight = theme === 'light';
+	const isRunning = timer.status === 'running';
 
 	const { isPaused, speedMultiplier, snowParticles, leaves, springParticles } =
 		useAmbientPanel({
@@ -50,7 +51,7 @@ const AmbientPanel = ({
 		};
 
 		if (backgroundType === 'gradient') {
-			return <GradientBackground {...{ glowColor, isLight }} />;
+			return <GradientBackground {...{ glowColor, isLight, timer }} />;
 		}
 
 		switch (season) {

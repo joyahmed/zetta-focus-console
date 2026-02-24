@@ -156,7 +156,7 @@ interface AmbientPanelProps {
 	motionIntensity: 'low' | 'medium' | 'high';
 	backgroundType: 'gradient' | 'particles' | 'custom';
 	glowColor: string;
-	isRunning: boolean;
+	timer: TimerState;
 	isEnabled: boolean;
 	theme?: string;
 }
