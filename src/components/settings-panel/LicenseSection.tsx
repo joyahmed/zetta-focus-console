@@ -191,7 +191,7 @@ const LicenseSection = ({
 							onClick={() =>
 								setShowPaymentOptions(!showPaymentOptions)
 							}
-							className='w-full py-2 px-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg text-sm font-medium transition-all'
+							className='w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-all'
 						>
 							{showPaymentOptions
 								? 'Hide Upgrade Options'
@@ -267,7 +267,7 @@ const LicenseSection = ({
 												style={{ color: 'var(--text-primary)' }}
 											>
 												<span>Founder</span>
-												<span className='text-xs px-1 py-0.5 bg-purple-600 rounded'>
+												<span className='text-xs px-1 py-0.5 bg-purple-500/80  rounded'>
 													Limited
 												</span>
 											</div>

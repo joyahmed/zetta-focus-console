@@ -112,8 +112,8 @@ const SoundSection = ({
 					className='w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-blue-500'
 					style={{
 						background: `linear-gradient(to right,
-      var(--accent-neon-secondary) 0%,
-      var(--accent-neon-secondary) ${soundVolume}%,
+     #3B82F6 0%,
+      #3B82F6 ${soundVolume}%,
       ${isLight ? '#d1d5db' : '#374151'} ${soundVolume}%,
       ${isLight ? '#d1d5db' : '#374151'} 100%)`
 					}}
@@ -157,7 +157,9 @@ const SoundSection = ({
 						: 'border-opacity-50'
 				}`}
 				style={{
-					borderColor: playAmbientSound ? undefined : 'var(--border-color)',
+					borderColor: playAmbientSound
+						? undefined
+						: 'var(--border-color)',
 					color: playAmbientSound ? undefined : 'var(--text-primary)'
 				}}
 			>

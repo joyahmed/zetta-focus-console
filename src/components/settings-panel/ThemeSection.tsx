@@ -7,8 +7,8 @@ interface ThemeSectionProps {
 }
 
 const styles = {
-	light: { background: '#d1d5db', color: '#111827' },
-	dark: { background: '#172033', color: '#ffffff' }
+	light: { background: '#FFFFFFB3', color: '#111827' },
+	dark: { background: '#050510', color: '#ffffff' }
 };
 
 const options = [
@@ -40,7 +40,7 @@ const ThemeSection = ({
 					: 'light'
 				: (value as 'light' | 'dark')
 		];
-
+	const isDark = theme === 'dark' || (theme === 'system' && sysDark);
 	return (
 		<section>
 			<h3
@@ -49,10 +49,7 @@ const ThemeSection = ({
 			>
 				Theme
 			</h3>
-			<div
-				className='flex gap-2 p-2 rounded-xl'
-				style={{ background: 'var(--bg-primary)' }}
-			>
+			<div className='flex gap-2 p-2 rounded-xl'>
 				{options.map(({ value, Icon }) => (
 					<button
 						key={value}
@@ -62,7 +59,15 @@ const ThemeSection = ({
 							theme === value
 								? {
 										...getStyle(value),
-										color: '#0284c7'
+										color: '#0284c7',
+										boxShadow: isDark
+											? `
+		0 1px 0 rgba(255,255,255,0.06),
+		0 6px 14px rgba(0,0,0,0.85),
+		0 2px 6px rgba(0,0,0,0.6),
+		inset 0 0 0 1px rgba(255,255,255,0.02)
+	  `
+											: '0 1px 0 rgba(255,255,255,0.8), 0 4px 8px rgba(0,0,0,0.22), 0 2px 3px rgba(0,0,0,0.14)'
 									}
 								: {
 										background: 'transparent',
