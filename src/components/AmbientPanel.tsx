@@ -5,7 +5,7 @@ import { AMBIENT_ANIMATIONS } from './ambient-panel';
 import AmbientHeader from './ambient-panel/AmbientHeader';
 import SeasonIndicator from './ambient-panel/SeasonIndicator';
 import LightModePlaceholder from './ambient-panel/LightModePlaceholder';
-import GradientBackground from './ambient-panel/GradientBackground';
+import AuroraBackground from './ambient-panel/AuroraBackground';
 import WinterScene from './ambient-panel/WinterScene';
 import SummerScene from './ambient-panel/SummerScene';
 import SpringScene from './ambient-panel/SpringScene';
@@ -45,7 +45,14 @@ const AmbientPanel = ({
 		return () => observer.disconnect();
 	}, []);
 
-	const { isPaused, speedMultiplier, snowParticles, leaves, springParticles } =
+	const {
+		isPaused,
+		speedMultiplier,
+		snowParticles,
+		leaves,
+		springParticles,
+		embers
+	} =
 		useAmbientPanel({
 			season,
 			motionIntensity,
@@ -56,66 +63,35 @@ const AmbientPanel = ({
 		return null;
 	}
 
+	/**
+	 * One effect, not two.
+	 *
+	 * Every season used to render the background wash *and* its particles
+	 * stacked on top of each other, so whichever was quieter just muddied the
+	 * other — and because both were laid out in normal flow rather than as
+	 * overlays, the particle layer was pushed a full panel-height below the
+	 * visible area and never appeared at all. The mode picks one.
+	 */
 	const renderSeasonContent = () => {
 		if (isLight) {
 			return <LightModePlaceholder />;
 		}
 
-		const sceneProps = {
-			glowColor,
-			isPaused,
-			isLight,
-			speedMultiplier
-		};
-
 		if (backgroundType === 'gradient') {
-			return <GradientBackground {...{ glowColor, isLight, timer }} />;
+			return <AuroraBackground {...{ glowColor, isLight, timer }} />;
 		}
+
+		const sceneProps = { glowColor, isPaused, isLight, speedMultiplier };
 
 		switch (season) {
 			case 'winter':
-				return (
-					<>
-						<GradientBackground {...{ glowColor, isLight, timer }} />
-						<WinterScene
-							{...{
-								...sceneProps,
-								snowParticles
-							}}
-						/>
-					</>
-				);
+				return <WinterScene {...{ ...sceneProps, snowParticles }} />;
 			case 'summer':
-				return (
-					<>
-						<GradientBackground {...{ glowColor, isLight, timer }} />
-						<SummerScene {...{ glowColor, isLight }} />
-					</>
-				);
+				return <SummerScene {...{ ...sceneProps, embers }} />;
 			case 'spring':
-				return (
-					<>
-						<GradientBackground {...{ glowColor, isLight, timer }} />
-						<SpringScene
-							{...{
-								...sceneProps,
-								springParticles
-							}}
-						/>
-					</>
-				);
+				return <SpringScene {...{ ...sceneProps, springParticles }} />;
 			case 'autumn':
-				return (
-					<>
-						<GradientBackground {...{ glowColor, isLight, timer }} />
-						<AutumnScene
-							{...{
-								...sceneProps,
-								leaves
-							}}
-						/>
-					</>
-				);
+				return <AutumnScene {...{ ...sceneProps, leaves }} />;
 		}
 	};
 

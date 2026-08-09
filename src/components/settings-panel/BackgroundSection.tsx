@@ -1,43 +1,41 @@
 import RadioOption from './RadioOption';
+import SectionHeader from './SectionHeader';
 
+/** The two ambience modes. The stored value stays `gradient` — it is a Rust
+    enum the preferences file has been written with — but what it draws is the
+    aurora, so that is what it is called here. */
+const BACKGROUND_MODES: BackgroundMode[] = [
+	{ value: 'gradient', label: 'Aurora' },
+	{ value: 'particles', label: 'Seasonal Particles' }
+];
 
 const BackgroundSection = ({
 	backgroundType,
 	onBackgroundTypeChange
 }: BackgroundSectionProps) => (
 	<section>
-		<h3
-			className='text-sm font-medium uppercase tracking-wider mb-3'
-			style={{ color: 'var(--text-secondary)' }}
-		>
-			Background Mode
-		</h3>
-		<div className='space-y-2 p-2 rounded-lg'
-		style={{
-					backgroundColor: 'var(--bg-primary)',
-					borderColor: 'var(--border-color)'
-			}}>
+		<SectionHeader title='Background Mode' />
 
-			<RadioOption
-				{...{
-					name: 'bg',
-					value: 'gradient',
-					checked: backgroundType === 'gradient',
-					onChange: () => onBackgroundTypeChange('gradient'),
-					label: 'Gradient Theme',
-					className:' glass-panel  backdrop-blur-xl'
-				}}
-			/>
-			<RadioOption
-				{...{
-					name: 'bg',
-					value: 'particles',
-					checked: backgroundType === 'particles',
-					onChange: () => onBackgroundTypeChange('particles'),
-					label: 'Subtle Particles',
-					className:' glass-panel backdrop-blur-xl'
-				}}
-			/>
+		<div
+			className='space-y-2 p-2 rounded-lg'
+			style={{
+				backgroundColor: 'var(--bg-primary)',
+				borderColor: 'var(--border-color)'
+			}}
+		>
+			{BACKGROUND_MODES.map(mode => (
+				<RadioOption
+					key={mode.value}
+					{...{
+						name: 'bg',
+						value: mode.value,
+						checked: backgroundType === mode.value,
+						onChange: () => onBackgroundTypeChange(mode.value),
+						label: mode.label,
+						className: ' glass-panel backdrop-blur-xl'
+					}}
+				/>
+			))}
 		</div>
 	</section>
 );

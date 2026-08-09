@@ -6,7 +6,7 @@ const Snowflake = ({
 	speedMultiplier
 }: SnowflakeProps) => (
 	<div
-		className={`absolute rounded-full ${isPaused ? 'animation-paused' : ''}`}
+		className='absolute rounded-full'
 		style={{
 			left: `${particle.x}%`,
 			width: particle.size,
@@ -21,9 +21,11 @@ const Snowflake = ({
 			// difference between the scene costing nothing and costing the
 			// whole frame budget.
 			willChange: isPaused ? 'auto' : 'transform, opacity',
-			animation: isPaused
-				? 'none'
-				: `snowfall ${particle.duration * speedMultiplier}s linear ${particle.delay}s infinite`
+			// Frozen in place rather than reset: `animation: none` sent every
+			// particle back to its start line, so a paused scene was a row of
+			// dots along the top edge instead of a snapshot of snowfall.
+			animation: `snowfall ${particle.duration * speedMultiplier}s linear ${particle.delay}s infinite`,
+			animationPlayState: isPaused ? 'paused' : 'running'
 		}}
 	/>
 );

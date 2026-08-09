@@ -271,8 +271,27 @@ interface Particle {
 }
 
 interface Leaf extends Particle {
+	/** Degrees of extra turn on top of one full rotation during the fall. */
 	rotation: number;
-	rotationDuration: number;
+}
+
+/** A spark. `drift` is how far sideways it wanders on the way up. */
+interface Ember extends Particle {
+	drift: number;
+}
+
+/** One band of the aurora. */
+interface AuroraRibbon {
+	key: string;
+	top: string;
+	height: string;
+	/** Degrees, so the bands separate instead of reading as one smear. */
+	hueShift: number;
+	blur: number;
+	opacity: number;
+	sweep: string;
+	/** Multiplier on the base durations — higher is slower. */
+	speed: number;
 }
 
 /** Every scene animates against the same four knobs. */
@@ -295,24 +314,35 @@ interface AutumnSceneProps extends SceneProps {
 	leaves: Leaf[];
 }
 
-interface SummerSceneProps {
-	glowColor: string;
-	isLight: boolean;
+interface SummerSceneProps extends SceneProps {
+	embers: Ember[];
 }
 
 interface SnowflakeProps extends SceneProps {
 	particle: Particle;
 }
 
-interface SpringParticleProps extends SceneProps {
+interface PetalProps extends SceneProps {
 	particle: Particle;
+}
+
+interface EmberProps extends SceneProps {
+	particle: Ember;
+}
+
+interface LightningFlashProps {
+	glowColor: string;
+	isPaused: boolean;
+	/** Seconds for one strike-strike-wait cycle. */
+	period: number;
+	delay: number;
 }
 
 interface FallingLeafProps extends SceneProps {
 	leaf: Leaf;
 }
 
-interface GradientBackgroundProps {
+interface AuroraBackgroundProps {
 	glowColor: string;
 	isLight: boolean;
 	timer: TimerState;
@@ -581,6 +611,11 @@ interface AmbientSectionProps {
 	ambienceEnabled: boolean;
 	onAmbienceToggle: () => void;
 	isLight: boolean;
+}
+
+interface BackgroundMode {
+	value: 'gradient' | 'particles';
+	label: string;
 }
 
 interface BackgroundSectionProps {

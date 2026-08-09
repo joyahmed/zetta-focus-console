@@ -1,6 +1,6 @@
 const LightModePlaceholder = () => (
 	<div
-		className='relative w-full h-full flex items-center justify-center'
+		className='absolute inset-0 flex items-center justify-center'
 		style={{
 			background:
 				'linear-gradient(135deg, #f3e7e9 0%, #e3eeff 50%, #f5f7fa 100%)'
