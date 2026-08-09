@@ -149,9 +149,6 @@ interface AppModalsProps {
 	handleAmbienceToggle: () => Promise<void>;
 	handleSoundPlay: () => Promise<void>;
 	handleSoundStop: () => Promise<void>;
-	handleBackgroundTypeChange: (
-		type: 'gradient' | 'particles'
-	) => Promise<void>;
 	handleResetSettings: () => Promise<void>;
 	helpOpen: boolean;
 
@@ -254,7 +251,6 @@ interface ShortcutGroup {
 interface AmbientPanelProps {
 	season: 'spring' | 'summer' | 'autumn' | 'winter';
 	motionIntensity: 'low' | 'medium' | 'high';
-	backgroundType: 'gradient' | 'particles' | 'custom';
 	glowColor: string;
 	timer: TimerState;
 	isEnabled: boolean;
@@ -278,20 +274,6 @@ interface Leaf extends Particle {
 /** A spark. `drift` is how far sideways it wanders on the way up. */
 interface Ember extends Particle {
 	drift: number;
-}
-
-/** One band of the aurora. */
-interface AuroraRibbon {
-	key: string;
-	top: string;
-	height: string;
-	/** Degrees, so the bands separate instead of reading as one smear. */
-	hueShift: number;
-	blur: number;
-	opacity: number;
-	sweep: string;
-	/** Multiplier on the base durations — higher is slower. */
-	speed: number;
 }
 
 /** Every scene animates against the same four knobs. */
@@ -342,16 +324,9 @@ interface FallingLeafProps extends SceneProps {
 	leaf: Leaf;
 }
 
-interface AuroraBackgroundProps {
-	glowColor: string;
-	isLight: boolean;
-	timer: TimerState;
-}
-
 interface SeasonIndicatorProps {
 	season: AmbientPanelProps['season'];
 	motionIntensity: AmbientPanelProps['motionIntensity'];
-	backgroundType: AmbientPanelProps['backgroundType'];
 	isLight: boolean;
 }
 
@@ -577,8 +552,6 @@ interface SettingsPanelProps {
 	playAmbientSound: boolean;
 	onSoundPlay: () => void;
 	onSoundStop: () => void;
-	backgroundType: 'gradient' | 'particles' | 'custom';
-	onBackgroundTypeChange: (type: 'gradient' | 'particles') => void;
 	onResetSettings: () => void;
 	theme: string;
 	strictModeActive?: boolean;
@@ -598,29 +571,10 @@ interface ToggleProps {
 	isLight: boolean;
 }
 
-interface RadioOptionProps {
-	name: string;
-	value: string;
-	checked: boolean;
-	onChange: () => void;
-	label: string;
-	className?: string;
-}
-
 interface AmbientSectionProps {
 	ambienceEnabled: boolean;
 	onAmbienceToggle: () => void;
 	isLight: boolean;
-}
-
-interface BackgroundMode {
-	value: 'gradient' | 'particles';
-	label: string;
-}
-
-interface BackgroundSectionProps {
-	backgroundType: 'gradient' | 'particles' | 'custom';
-	onBackgroundTypeChange: (type: 'gradient' | 'particles') => void;
 }
 
 interface DevModeSectionProps {

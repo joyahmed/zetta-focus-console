@@ -1,7 +1,6 @@
 export { default as AmbientHeader } from './AmbientHeader';
 export { default as SeasonIndicator } from './SeasonIndicator';
 export { default as LightModePlaceholder } from './LightModePlaceholder';
-export { default as AuroraBackground } from './AuroraBackground';
 export { default as Ember } from './Ember';
 export { default as LightningFlash } from './LightningFlash';
 export { default as Petal } from './Petal';

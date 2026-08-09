@@ -40,32 +40,6 @@ export const AMBIENT_ANIMATIONS = `
 		}
 	}
 
-	/* Aurora. Each ribbon is a wide, soft band that sweeps and stretches;
-	   only transforms and opacity animate, so the blur is rasterised once and
-	   the whole scene stays on the compositor. */
-	@keyframes auroraSweepA {
-		0%   { transform: translate3d(-14%, 6%, 0) rotate(-7deg) scaleY(1); }
-		50%  { transform: translate3d(6%, -4%, 0) rotate(-2deg) scaleY(1.3); }
-		100% { transform: translate3d(-2%, 8%, 0) rotate(-10deg) scaleY(0.85); }
-	}
-
-	@keyframes auroraSweepB {
-		0%   { transform: translate3d(8%, -3%, 0) rotate(5deg) scaleY(0.9); }
-		50%  { transform: translate3d(-10%, 5%, 0) rotate(1deg) scaleY(1.25); }
-		100% { transform: translate3d(4%, -6%, 0) rotate(7deg) scaleY(1.05); }
-	}
-
-	@keyframes auroraSweepC {
-		0%   { transform: translate3d(-6%, 10%, 0) rotate(3deg) scaleY(1.1); }
-		50%  { transform: translate3d(10%, 2%, 0) rotate(-4deg) scaleY(0.8); }
-		100% { transform: translate3d(-12%, 7%, 0) rotate(2deg) scaleY(1.2); }
-	}
-
-	@keyframes auroraBreathe {
-		0%, 100% { opacity: var(--ribbon-opacity, 0.5); }
-		50%      { opacity: calc(var(--ribbon-opacity, 0.5) * 1.5); }
-	}
-
 	/* Embers rise, wander, and burn out before the top. */
 	@keyframes emberRise {
 		0% {

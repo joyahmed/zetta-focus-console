@@ -50,7 +50,6 @@ const AppPanels = ({
 	const ambientProps: AmbientPanelProps = {
 		season: profile.season,
 		motionIntensity: profile.motion_intensity,
-		backgroundType: profile.background_type,
 		glowColor: profile.glow_color,
 		timer: appState.timer,
 		isEnabled: appState.ambience_enabled,

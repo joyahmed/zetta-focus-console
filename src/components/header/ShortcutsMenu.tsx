@@ -29,7 +29,7 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
 			{ key: 'Ctrl+D', description: 'Toggle light and dark theme' },
 			{
 				key: 'Ctrl+B',
-				description: 'Toggle background particles',
+				description: 'Show or hide the ambience',
 				global: true
 			}
 		]

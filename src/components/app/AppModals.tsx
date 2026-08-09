@@ -20,7 +20,6 @@ const AppModals = ({
 	handleMuteToggle,
 	handleSoundPlay,
 	handleSoundStop,
-	handleBackgroundTypeChange,
 	handleResetSettings,
 	helpOpen,
 	profileModalOpen,
@@ -62,8 +61,6 @@ const AppModals = ({
 				playAmbientSound={appState.sound_state.play_ambient_sound}
 				onSoundPlay={handleSoundPlay}
 				onSoundStop={handleSoundStop}
-				backgroundType={appState.active_profile.background_type}
-				onBackgroundTypeChange={handleBackgroundTypeChange}
 				onResetSettings={handleResetSettings}
 				theme={appState.theme}
 				strictModeActive={appState.strict_mode.is_active}

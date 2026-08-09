@@ -1,7 +1,6 @@
 import Drawer from './Drawer';
 import AmbientSection from './settings-panel/AmbientSection';
 import SoundSection from './settings-panel/SoundSection';
-import BackgroundSection from './settings-panel/BackgroundSection';
 import DevModeSection from './settings-panel/DevModeSection';
 import StrictModeSection from './settings-panel/StrictModeSection';
 import ResetSection from './settings-panel/ResetSection';
@@ -23,8 +22,6 @@ const SettingsPanel = ({
 	playAmbientSound,
 	onSoundPlay,
 	onSoundStop,
-	backgroundType,
-	onBackgroundTypeChange,
 	onResetSettings,
 	theme,
 	strictModeActive,
@@ -62,9 +59,6 @@ const SettingsPanel = ({
 					}}
 				/>
 
-				<BackgroundSection
-					{...{ backgroundType, onBackgroundTypeChange }}
-				/>
 
 				<DevModeSection {...{ devMode, onDevModeToggle, isLight }} />
 

@@ -188,15 +188,6 @@ const ProfilePanel = ({
 						</div>
 					</div>
 
-					<div>
-						<DetailRow
-							{...{
-								label: 'Background',
-								value: profile.background_type,
-								capitalize: true
-							}}
-						/>
-					</div>
 
 					<div className='pt-2 border-t border-zetta-border'>
 						<div className='grid grid-cols-4 gap-1 md:gap-2 text-xs'>

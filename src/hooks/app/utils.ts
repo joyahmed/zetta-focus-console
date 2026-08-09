@@ -96,19 +96,6 @@ export const appUtils = ({
 		}
 	}, []);
 
-	const handleBackgroundTypeChange = useCallback(
-		async (type: 'gradient' | 'particles') => {
-			try {
-				await invoke('execute_command', {
-					command: `background ${type}`
-				});
-			} catch (error) {
-				console.error(error);
-			}
-		},
-		[]
-	);
-
 	const handleResetSettings = useCallback(async () => {
 		try {
 			await invoke('execute_command', { command: 'reset' });
@@ -179,7 +166,6 @@ export const appUtils = ({
 		handleMuteToggle,
 		handleSoundPlay,
 		handleSoundStop,
-		handleBackgroundTypeChange,
 		handleResetSettings,
 		handleThemeChange,
 		handleCreateProfile,

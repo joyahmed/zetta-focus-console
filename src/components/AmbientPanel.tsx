@@ -5,7 +5,6 @@ import { AMBIENT_ANIMATIONS } from './ambient-panel';
 import AmbientHeader from './ambient-panel/AmbientHeader';
 import SeasonIndicator from './ambient-panel/SeasonIndicator';
 import LightModePlaceholder from './ambient-panel/LightModePlaceholder';
-import AuroraBackground from './ambient-panel/AuroraBackground';
 import WinterScene from './ambient-panel/WinterScene';
 import SummerScene from './ambient-panel/SummerScene';
 import SpringScene from './ambient-panel/SpringScene';
@@ -14,7 +13,6 @@ import AutumnScene from './ambient-panel/AutumnScene';
 const AmbientPanel = ({
 	season,
 	motionIntensity,
-	backgroundType,
 	glowColor,
 	timer,
 	isEnabled,
@@ -64,21 +62,20 @@ const AmbientPanel = ({
 	}
 
 	/**
-	 * One effect, not two.
+	 * Particles, and nothing behind them.
 	 *
-	 * Every season used to render the background wash *and* its particles
-	 * stacked on top of each other, so whichever was quieter just muddied the
-	 * other — and because both were laid out in normal flow rather than as
-	 * overlays, the particle layer was pushed a full panel-height below the
-	 * visible area and never appeared at all. The mode picks one.
+	 * There used to be a second mode — a full-panel wash, latterly an aurora —
+	 * rendered either instead of or stacked underneath the particles. It is
+	 * gone. A wide, soft, animated backdrop is the most expensive thing a
+	 * compositor can be asked for: blurs and blend modes each force the element
+	 * onto its own layer with its own texture, and a blend mode makes the
+	 * compositor keep a copy of everything behind it as well. Particles are a
+	 * handful of tiny layers by comparison, and they were always the part worth
+	 * looking at.
 	 */
 	const renderSeasonContent = () => {
 		if (isLight) {
 			return <LightModePlaceholder />;
-		}
-
-		if (backgroundType === 'gradient') {
-			return <AuroraBackground {...{ glowColor, isLight, timer }} />;
 		}
 
 		const sceneProps = { glowColor, isPaused, isLight, speedMultiplier };
@@ -114,7 +111,6 @@ const AmbientPanel = ({
 						{...{
 							season,
 							motionIntensity,
-							backgroundType,
 							isLight
 						}}
 					/>

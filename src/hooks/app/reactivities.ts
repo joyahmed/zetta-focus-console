@@ -84,12 +84,12 @@ export const appReactivities = ({
 					});
 					break;
 				case 'toggle_particles':
+					// There is only one ambience mode now, so this turns the
+					// scene on and off rather than swapping between two.
 					await invoke('execute_command', {
-						command:
-							currentState?.active_profile?.background_type ===
-							'particles'
-								? 'background gradient'
-								: 'background particles'
+						command: currentState?.ambience_enabled
+							? 'ambience off'
+							: 'ambience on'
 					});
 					break;
 			}
@@ -334,13 +334,10 @@ export const appReactivities = ({
 			) {
 				e.preventDefault();
 				e.stopPropagation();
-				const currentBackground =
-					appStateRef.current?.active_profile?.background_type;
 				await invoke('execute_command', {
-					command:
-						currentBackground === 'particles'
-							? 'background gradient'
-							: 'background particles'
+					command: appStateRef.current?.ambience_enabled
+						? 'ambience off'
+						: 'ambience on'
 				});
 			}
 		};

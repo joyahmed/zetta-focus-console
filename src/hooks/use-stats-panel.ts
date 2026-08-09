@@ -64,7 +64,7 @@ export const useStatsPanel = (appState: AppState): DiagnosticField[] => {
 		},
 		{
 			label: 'AMBIENCE',
-			value: `${ambience ? 'ON' : 'OFF'} · ${profile.background_type.toUpperCase()}`
+			value: `${ambience ? 'ON' : 'OFF'} · ${profile.season.toUpperCase()}`
 		},
 		{ label: 'SOUND', value: soundValue() },
 		{ label: 'VOICE', value: voice ? 'ON' : 'OFF' },
