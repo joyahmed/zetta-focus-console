@@ -10,7 +10,6 @@ import SeasonScene from './ambient-panel/SeasonScene';
 const AmbientPanel = ({
 	season,
 	motionIntensity,
-	glowColor,
 	timer,
 	isEnabled,
 	theme = 'dark'
@@ -67,14 +66,7 @@ const AmbientPanel = ({
 			<LightModePlaceholder />
 		) : (
 			<SeasonScene
-				{...{
-					season,
-					particles,
-					glowColor,
-					isPaused,
-					isLight,
-					speedMultiplier
-				}}
+				{...{ season, particles, isPaused, isLight, speedMultiplier }}
 			/>
 		);
 

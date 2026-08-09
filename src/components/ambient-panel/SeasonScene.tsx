@@ -1,5 +1,4 @@
 import { getSeasonEmoji } from '../../utils/profile';
-import LightningFlash from './LightningFlash';
 import SeasonParticle from './SeasonParticle';
 
 /** Summer's icon rises off the heat; everything else falls. */
@@ -12,11 +11,16 @@ const RISING_SEASONS: Profile['season'][] = ['summer'];
  * particle components — snowflake, petal, leaf and ember — which between them
  * differed in a shape, a direction and a set of durations. All four are the
  * same idea, so they are one component and a table.
+ *
+ * Summer briefly had sheet lightning behind its particles. It went the same way
+ * as the aurora and for the same reason: a full-panel gradient that flashed
+ * every thirteen seconds is a full-panel gradient, whatever it is called, and
+ * on a dark panel it read as the wash that had just been taken out. Particles
+ * are the ambience — that is the whole rule.
  */
 const SeasonScene = ({
 	season,
 	particles,
-	glowColor,
 	isPaused,
 	isLight,
 	speedMultiplier
@@ -26,19 +30,6 @@ const SeasonScene = ({
 
 	return (
 		<div className='absolute inset-0 overflow-hidden'>
-			{/* Summer keeps its weather. Lightning is not a particle — it is the
-			    sky behind them — so it stays its own thing. */}
-			{season === 'summer' && (
-				<LightningFlash
-					{...{
-						glowColor,
-						isPaused,
-						period: 19 * speedMultiplier,
-						delay: 4
-					}}
-				/>
-			)}
-
 			{particles.map(particle => (
 				<SeasonParticle
 					key={particle.id}

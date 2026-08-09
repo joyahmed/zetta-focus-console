@@ -39,14 +39,4 @@ export const AMBIENT_ANIMATIONS = `
 		}
 	}
 
-	/* Two strikes close together, then a long wait — the pattern is in the
-	   timing function, not in JavaScript. */
-	@keyframes lightningFlash {
-		0%, 100%      { opacity: 0; }
-		1.2%          { opacity: 0.85; }
-		2.4%          { opacity: 0.05; }
-		3.2%          { opacity: 0.6; }
-		5%            { opacity: 0; }
-	}
-
 `;

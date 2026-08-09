@@ -251,7 +251,6 @@ interface ShortcutGroup {
 interface AmbientPanelProps {
 	season: 'spring' | 'summer' | 'autumn' | 'winter';
 	motionIntensity: 'low' | 'medium' | 'high';
-	glowColor: string;
 	timer: TimerState;
 	isEnabled: boolean;
 	theme?: string;
@@ -287,7 +286,7 @@ interface SceneProps {
 	speedMultiplier: number;
 }
 
-interface SeasonSceneProps extends SceneProps {
+interface SeasonSceneProps extends Omit<SceneProps, 'glowColor'> {
 	season: Profile['season'];
 	particles: AmbientParticle[];
 }
@@ -298,14 +297,6 @@ interface SeasonParticleProps extends Omit<SceneProps, 'glowColor'> {
 	particle: AmbientParticle;
 	/** Summer's heat rises; everything else falls. */
 	rises: boolean;
-}
-
-interface LightningFlashProps {
-	glowColor: string;
-	isPaused: boolean;
-	/** Seconds for one strike-strike-wait cycle. */
-	period: number;
-	delay: number;
 }
 
 interface SeasonIndicatorProps {
