@@ -1191,9 +1191,8 @@ pub fn tick_timer(state: State<EngineState>, app_handle: AppHandle) -> Result<()
 
         if app_state.timer.remaining_seconds == 0 {
             app_state.timer.status = TimerStatus::Completed;
-            app_state.stats.sessions_today += 1;
-            app_state.stats.total_focus_minutes += app_state.timer.total_seconds / 60;
-            app_state.stats.last_session_duration = app_state.timer.total_seconds / 60;
+            let completed_seconds = app_state.timer.total_seconds;
+            app_state.record_completed_session(completed_seconds);
 
             let strict_mode_was_active = app_state.strict_mode.is_active;
             let strict_mode_completed_successfully = if strict_mode_was_active {

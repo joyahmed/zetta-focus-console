@@ -51,13 +51,7 @@ const AppPanels = ({
 
 				{/* Bottom Left: Stats */}
 				<div className='min-h-0'>
-					<StatsPanel
-						stats={appState.stats}
-						devMode={appState.dev_mode}
-						timerStatus={appState.timer.status}
-						activeProfileName={appState.active_profile.name}
-						appStartTime={appState.app_start_time}
-					/>
+					<StatsPanel appState={appState} />
 				</div>
 
 				{/* Bottom Right: Ambience */}

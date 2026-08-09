@@ -16,13 +16,82 @@ const formatUptime = (startedAtUnixSeconds?: number): string => {
 	return `${seconds}s`;
 };
 
-export default function StatsPanel({
-	stats,
-	devMode,
-	timerStatus,
-	activeProfileName,
-	appStartTime
-}: StatsPanelProps) {
+const SESSION_LABELS: Record<string, string> = {
+	focus: 'FOCUS',
+	short_break: 'SHORT BREAK',
+	long_break: 'LONG BREAK'
+};
+
+const clock = (totalSeconds: number): string => {
+	const minutes = Math.floor(Math.max(0, totalSeconds) / 60);
+	const seconds = Math.max(0, totalSeconds) % 60;
+	return `${minutes}:${String(seconds).padStart(2, '0')}`;
+};
+
+export default function StatsPanel({ appState }: StatsPanelProps) {
+	const {
+		timer,
+		active_profile: profile,
+		stats,
+		dev_mode: devMode,
+		sound_state: sound,
+		session_override: override,
+		strict_mode: strict,
+		current_task: task,
+		ambience_enabled: ambience,
+		voice_enabled: voice,
+		app_start_time: appStartTime
+	} = appState;
+
+	const fields: {
+		label: string;
+		value: string;
+		accent?: 'good' | 'warn';
+	}[] = [
+		{ label: 'TIMER STATUS', value: (timer.status || 'idle').toUpperCase() },
+		{
+			label: 'SESSION',
+			value: `${SESSION_LABELS[timer.session_type] ?? timer.session_type} ${timer.current_session}/${timer.total_sessions}`
+		},
+		{ label: 'REMAINING', value: clock(timer.remaining_seconds) },
+		{ label: 'ACTIVE PROFILE', value: profile.name },
+		{
+			label: 'OVERRIDE',
+			value: override ? 'SET' : 'NONE',
+			accent: override ? 'warn' : undefined
+		},
+		{
+			label: 'STRICT MODE',
+			value: strict.is_active ? 'ENGAGED' : 'OFF',
+			accent: strict.is_active ? 'warn' : undefined
+		},
+		{
+			label: 'TASK',
+			value: task.title.trim() ? `${task.title} (${task.category})` : 'NONE'
+		},
+		{
+			label: 'AMBIENCE',
+			value: `${ambience ? 'ON' : 'OFF'} · ${profile.background_type.toUpperCase()}`
+		},
+		{
+			label: 'SOUND',
+			value: sound.is_muted
+				? 'MUTED'
+				: sound.is_playing
+					? `${(sound.current_sound ?? '').replace(/\.[^.]+$/, '') || 'ON'} ${sound.volume}%`
+					: 'STOPPED'
+		},
+		{
+			label: 'VOICE',
+			value: voice ? 'ON' : 'OFF'
+		},
+		{
+			label: 'DEV MODE',
+			value: devMode ? 'ACTIVE' : 'STANDBY',
+			accent: devMode ? 'good' : undefined
+		},
+		{ label: 'UPTIME', value: formatUptime(appStartTime) }
+	];
 
 	return (
 		<div className='panel h-full flex flex-col gap-3 md:gap-4 p-3 md:p-4 overflow-hidden'>
@@ -168,53 +237,42 @@ export default function StatsPanel({
 					</div>
 				</div>
 
-				{/* Engine diagnostics. Grows into whatever the cards leave
-				    behind rather than letting the panel end in a void. */}
-				<div className='p-2.5 md:p-3 rounded-xl border border-yellow-500/20 bg-yellow-500/5 w-full flex-1 flex flex-col'>
-					<div className='flex items-center gap-2 mb-2'>
+				{/* Engine diagnostics.
+				    This used to show four fields and then stretch to fill the
+				    panel, which reads worse than a short box — a large empty
+				    container with a border around nothing. The engine knows a
+				    good deal more than four things about itself, and a panel
+				    called diagnostics should say so. */}
+				<div className='p-2.5 md:p-3 rounded-xl border border-zetta-border bg-zetta-bg/50 w-full flex-1 flex flex-col min-h-0'>
+					<div className='flex items-center gap-2 mb-2 shrink-0'>
 						<div
-							className={`w-1.5 h-1.5 rounded-full ${devMode ? 'bg-yellow-500 animate-pulse' : 'bg-zetta-text-muted'}`}
+							className={`w-1.5 h-1.5 rounded-full ${devMode ? 'bg-zetta-neon animate-pulse' : 'bg-zetta-text-muted'}`}
 						/>
-						<span className='text-[10px] uppercase tracking-wider font-bold text-yellow-500'>
+						<span className='text-[10px] uppercase tracking-wider font-semibold text-zetta-text-muted'>
 							Engine Diagnostics
 						</span>
 					</div>
-					<div className='grid grid-cols-2 gap-2 md:gap-4 text-[10px]'>
-						<div className='flex flex-col gap-0.5'>
-							<span className='text-zetta-text-muted font-medium'>
-								TIMER STATUS
-							</span>
-							<span className='font-mono font-medium text-zetta-text bg-zetta-bg px-2 py-1 rounded border border-zetta-border truncate'>
-								{timerStatus || 'IDLE'}
-							</span>
-						</div>
-						<div className='flex flex-col gap-0.5'>
-							<span className='text-zetta-text-muted font-medium'>
-								ACTIVE PROFILE
-							</span>
-							<span className='font-medium text-zetta-text truncate'>
-								{activeProfileName || '-'}
-							</span>
-						</div>
-						<div className='flex flex-col gap-0.5'>
-							<span className='text-zetta-text-muted font-medium'>
-								DEV MODE
-							</span>
-							<span
-								className={`font-mono font-medium px-2 py-1 rounded border ${devMode ? 'bg-green-500/10 text-green-500 border-green-500/30' : 'bg-zetta-bg text-zetta-text-muted border-zetta-border'}`}
-							>
-								{devMode ? 'ACTIVE' : 'STANDBY'}
-							</span>
-						</div>
-						<div className='flex flex-col gap-0.5'>
-							<span className='text-zetta-text-muted font-medium'>
-								UPTIME
-							</span>
-							<span className='font-mono font-medium text-zetta-text bg-zetta-bg px-2 py-1 rounded border border-zetta-border truncate'>
-								{formatUptime(appStartTime)}
-							</span>
-						</div>
-					</div>
+
+					<dl className='grid grid-cols-2 gap-x-3 gap-y-2 text-[10px] content-start flex-1 overflow-y-auto custom-scrollbar'>
+						{fields.map(field => (
+							<div key={field.label} className='flex flex-col gap-0.5 min-w-0'>
+								<dt className='text-zetta-text-muted font-medium'>
+									{field.label}
+								</dt>
+								<dd
+									className={`font-mono font-medium px-2 py-1 rounded border truncate ${
+										field.accent === 'good'
+											? 'bg-green-500/10 text-green-500 border-green-500/30'
+											: field.accent === 'warn'
+												? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
+												: 'bg-zetta-bg text-zetta-text border-zetta-border'
+									}`}
+								>
+									{field.value}
+								</dd>
+							</div>
+						))}
+					</dl>
 				</div>
 
 			</div>

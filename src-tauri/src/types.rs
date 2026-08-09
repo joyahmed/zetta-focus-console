@@ -91,7 +91,7 @@ pub struct Profile {
 // STATS TYPES
 // ============================================================================
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Stats {
     pub sessions_today: u32,
     pub total_focus_minutes: u32,

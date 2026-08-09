@@ -19,6 +19,16 @@ pub struct Preferences {
     pub voice_enabled: bool,
     pub custom_profiles: Vec<Profile>,
     pub start_minimized: bool,
+    /// Statistics survive restarts. They used to live only in memory, seeded
+    /// with invented values, so every launch reported the same fictional four
+    /// sessions, hundred minutes and seven-day streak — on a machine that had
+    /// never run a session.
+    #[serde(default)]
+    pub stats: Stats,
+    /// Local date of the last completed session, as YYYY-MM-DD. The streak and
+    /// the daily count are both derived by comparing this against today.
+    #[serde(default)]
+    pub last_session_date: String,
 }
 
 impl Default for Preferences {
@@ -34,6 +44,8 @@ impl Default for Preferences {
             voice_enabled: false,
             custom_profiles: vec![],
             start_minimized: false,
+            stats: Stats::default(),
+            last_session_date: String::new(),
         }
     }
 }
@@ -53,6 +65,9 @@ pub struct AppState {
     pub current_task: CurrentTask,
     pub voice_enabled: bool,
     pub app_start_time: i64,
+    /// Local date of the last completed session, YYYY-MM-DD. Empty until one
+    /// finishes. Drives both the streak and the daily reset.
+    pub last_session_date: String,
 }
 
 impl Default for AppState {
@@ -139,12 +154,7 @@ impl AppState {
             },
             active_profile: default_profile,
             profiles,
-            stats: Stats {
-                sessions_today: 4,
-                total_focus_minutes: 100,
-                current_streak: 7,
-                last_session_duration: 25,
-            },
+            stats: Stats::default(),
             dev_mode: false,
             sound_state: SoundState::new(),
             session_override: None,
@@ -153,6 +163,7 @@ impl AppState {
             strict_mode: StrictModeState::default(),
             current_task: CurrentTask::default(),
             voice_enabled: false,
+            last_session_date: String::new(),
             app_start_time: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()
@@ -161,10 +172,62 @@ impl AppState {
     }
 }
 
+/// Today's date as YYYY-MM-DD in local time.
+///
+/// Derived from the system clock by hand rather than pulling in a date crate:
+/// the only thing needed is whether two completions fall on the same day or on
+/// consecutive ones, and a civil-date conversion is a dozen lines.
+fn local_date_today() -> String {
+    let secs = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0);
+
+    civil_date(secs / 86_400)
+}
+
+/// Days since the Unix epoch -> "YYYY-MM-DD". Howard Hinnant's civil_from_days.
+fn civil_date(days: i64) -> String {
+    let z = days + 719_468;
+    let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
+    let doe = (z - era * 146_097) as i64;
+    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
+    let y = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = if m <= 2 { y + 1 } else { y };
+
+    format!("{:04}-{:02}-{:02}", y, m, d)
+}
+
+/// Days between two YYYY-MM-DD strings, or None if either fails to parse.
+fn days_between(earlier: &str, later: &str) -> Option<i64> {
+    Some(days_from_civil(earlier)? - days_from_civil(later)?)
+}
+
+fn days_from_civil(date: &str) -> Option<i64> {
+    let mut parts = date.split('-');
+    let y: i64 = parts.next()?.parse().ok()?;
+    let m: i64 = parts.next()?.parse().ok()?;
+    let d: i64 = parts.next()?.parse().ok()?;
+
+    let y = if m <= 2 { y - 1 } else { y };
+    let era = if y >= 0 { y } else { y - 399 } / 400;
+    let yoe = y - era * 400;
+    let mp = if m > 2 { m - 3 } else { m + 9 };
+    let doy = (153 * mp + 2) / 5 + d - 1;
+    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+
+    Some(era * 146_097 + doe - 719_468)
+}
+
 /// Extension trait for AppState to add preference loading/saving.
 pub trait AppStateExt {
     fn load_preferences(&mut self);
     fn save_preferences(&self) -> Result<(), String>;
+    fn record_completed_session(&mut self, total_seconds: u32);
 }
 
 impl AppStateExt for AppState {
@@ -179,6 +242,20 @@ impl AppStateExt for AppState {
         self.sound_state.is_muted = prefs.is_muted;
         self.theme = prefs.theme;
         self.voice_enabled = prefs.voice_enabled;
+
+        // Sessions today are only "today" if the saved date is today. Coming
+        // back after a break should show a clean count, not the last day used.
+        self.stats = prefs.stats;
+        self.last_session_date = prefs.last_session_date.clone();
+        let today = local_date_today();
+        if prefs.last_session_date != today {
+            self.stats.sessions_today = 0;
+        }
+        // A streak is only alive if the last session was today or yesterday.
+        match days_between(&today, &prefs.last_session_date) {
+            Some(gap) if gap <= 1 => {}
+            _ => self.stats.current_streak = 0,
+        }
 
         for profile in prefs.custom_profiles {
             if !self.profiles.iter().any(|p| p.id == profile.id) {
@@ -222,8 +299,36 @@ impl AppStateExt for AppState {
             voice_enabled: self.voice_enabled,
             custom_profiles,
             start_minimized: false,
+            stats: self.stats.clone(),
+            last_session_date: self.last_session_date.clone(),
         };
         save_preferences(&prefs)
+    }
+
+    /// Fold a finished session into the statistics and persist them.
+    ///
+    /// The streak advances once per day: a second session on the same day adds
+    /// to the counts but not to the streak, a session the day after continues
+    /// it, and a longer gap starts over at one.
+    fn record_completed_session(&mut self, total_seconds: u32) {
+        let today = local_date_today();
+        let minutes = total_seconds / 60;
+
+        if self.last_session_date != today {
+            self.stats.sessions_today = 0;
+
+            self.stats.current_streak = match days_between(&today, &self.last_session_date) {
+                Some(1) => self.stats.current_streak + 1,
+                _ => 1,
+            };
+        }
+
+        self.stats.sessions_today += 1;
+        self.stats.total_focus_minutes += minutes;
+        self.stats.last_session_duration = minutes;
+        self.last_session_date = today;
+
+        let _ = self.save_preferences();
     }
 }
 

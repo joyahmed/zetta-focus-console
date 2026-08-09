@@ -126,6 +126,7 @@ interface AppState {
 	current_task: CurrentTask;
 	voice_enabled: boolean;
 	app_start_time: number;
+	last_session_date: string;
 }
 
 interface StateEvent {
@@ -282,11 +283,9 @@ interface Stats {
 }
 
 interface StatsPanelProps {
-	stats: Stats;
-	devMode?: boolean;
-	timerStatus?: string;
-	activeProfileName?: string;
-	appStartTime?: number;
+	/** The whole engine state — this panel is a state inspector, and threading
+	    a dozen individual props through for it was noise. */
+	appState: AppState;
 }
 
 /**Terminal Modal  */
