@@ -147,9 +147,14 @@ export default function TimerPanel({
 			{/* Quick durations.
 			    Until now the only way to run anything other than the profile's
 			    25 minutes was `timer 5m` in the terminal, or building a whole
-			    custom profile for it. A five-minute session is not a profile. */}
-			{onQuickStart && timer.status === 'idle' && (
-				<div className='relative z-10 mt-4 flex items-center gap-2'>
+			    custom profile for it. A five-minute session is not a profile.
+
+			    The row keeps its height whether or not it has anything in it.
+			    It only appears while idle, and if it collapsed on start the
+			    ring would resize under the cursor every time you pressed play. */}
+			<div className='relative z-10 flex items-center justify-center gap-2 h-12 shrink-0'>
+				{onQuickStart && timer.status === 'idle' && (
+					<>
 					<span className='text-[10px] uppercase tracking-wider text-zetta-text-muted mr-0.5'>
 						Quick
 					</span>
@@ -172,8 +177,9 @@ export default function TimerPanel({
 							{minutes}m
 						</button>
 					))}
-				</div>
-			)}
+					</>
+				)}
+			</div>
 		</div>
 	);
 }

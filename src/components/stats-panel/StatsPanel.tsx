@@ -253,14 +253,14 @@ export default function StatsPanel({ appState }: StatsPanelProps) {
 						</span>
 					</div>
 
-					<dl className='grid grid-cols-2 lg:grid-cols-3 gap-x-3 gap-y-2 text-[10px] content-start flex-1 min-h-0 overflow-y-auto custom-scrollbar'>
+					<dl className='grid grid-cols-2 lg:grid-cols-3 auto-rows-fr gap-x-3 gap-y-2 text-[10px] flex-1 min-h-0 overflow-y-auto custom-scrollbar'>
 						{fields.map(field => (
-							<div key={field.label} className='flex flex-col gap-0.5 min-w-0'>
+							<div key={field.label} className='flex flex-col gap-1 min-w-0 min-h-0'>
 								<dt className='text-zetta-text-muted font-medium'>
 									{field.label}
 								</dt>
 								<dd
-									className={`font-mono font-medium px-2 py-1 rounded border truncate ${
+									className={`font-mono font-medium px-2 rounded border truncate flex items-center flex-1 min-h-[1.75rem] ${
 										field.accent === 'good'
 											? 'bg-green-500/10 text-green-500 border-green-500/30'
 											: field.accent === 'warn'

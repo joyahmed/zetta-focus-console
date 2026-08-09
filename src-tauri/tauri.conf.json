@@ -14,12 +14,12 @@
 		"windows": [
 			{
 				"title": "Zetta Focus Console",
-				"width": 1400,
-				"height": 1000,
-				"minWidth": 1400,
-				"minHeight": 1000,
+				"width": 1500,
+				"height": 1100,
+				"minWidth": 1200,
+				"minHeight": 800,
 				"maxWidth": 1600,
-				"maxHeight": 1200,
+				"maxHeight": 1100,
 				"center": true,
 				"resizable": true,
 				"maximizable": false,

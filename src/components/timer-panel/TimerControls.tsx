@@ -64,7 +64,7 @@ function TimerControls({
 	// When strict mode is blocking, show only the stop button as disabled
 	// and show a tooltip explaining why
 	return (
-		<div className='flex items-center gap-6 z-10'>
+		<div className='flex items-center justify-center gap-6 h-20 shrink-0 z-10'>
 			{status === 'idle' && (
 				<ControlButton
 					{...{
