@@ -70,6 +70,15 @@ export default function TimerPanel({
 				/>
 			</Suspense>
 
+			{/* Session type, above the circle rather than inside it. In normal
+			    flow with a height of its own, so the ring sizes around it
+			    instead of into it. */}
+			<div className='flex items-center justify-center h-5 shrink-0'>
+				<span className='text-[10px] font-bold uppercase tracking-[0.2em] text-zetta-text-muted whitespace-nowrap'>
+					{timer.session_type.replace('_', ' ')}
+				</span>
+			</div>
+
 			{/* The ring takes whatever height is left after the fixed rows, and
 			    derives its width from that. Sizing it by width instead meant a
 			    short, wide panel asked for a circle taller than the space it had
@@ -90,18 +99,11 @@ export default function TimerPanel({
 						/>
 					</Suspense>
 
-					{/* Four rows inside the circle: what kind of session, the clock,
-				    where you are in the cycle, and any override. Laid out as a
-				    stack rather than positioned at percentages, so nothing has
-				    to be nudged when a row appears or disappears. The override
-				    row keeps its height either way. */}
+					{/* Inside the circle: the clock, position in the cycle, and any
+				    override. Stacked rather than positioned at percentages, so
+				    nothing needs nudging when a row appears or disappears — the
+				    override row keeps its height either way. */}
 					<div className='absolute inset-0 z-10 flex flex-col items-center justify-center px-[12%]'>
-						<div className='flex items-center h-5 mb-2'>
-							<span className='text-[10px] font-bold uppercase tracking-[0.2em] text-zetta-text-muted whitespace-nowrap'>
-								{timer.session_type.replace('_', ' ')}
-							</span>
-						</div>
-
 						<Suspense fallback={null}>
 							<TimerDisplay
 								{...{
@@ -171,9 +173,9 @@ export default function TimerPanel({
 			    It only appears while idle, and if it collapsed on start the
 			    ring would resize under the cursor every time you pressed play. */}
 
-			<div className='relative z-10 flex items-center justify-center gap-2 h-12 shrink-0'>
+			<div className='relative z-10 flex items-center justify-center gap-2 h-[4.5rem] shrink-0'>
 				{onQuickStart && timer.status === 'idle' && (
-					<div className='flex flex-col gap-2 mt-5'>
+					<div className='flex flex-col gap-2'>
 						<div className='flex gap-2'>
 							{QUICK_DURATIONS.map(minutes => (
 								<button
