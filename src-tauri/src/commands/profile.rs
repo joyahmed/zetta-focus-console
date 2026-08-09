@@ -1,0 +1,428 @@
+//! Profile module - Profile-related commands
+
+use crate::sound::{get_sound_data, SoundManager};
+use crate::types::{AppState, BackgroundType, MotionIntensity, Profile, Season, TimerStatus};
+
+fn parse_minutes_to_seconds(raw: &str, min: f64, max: f64, label: &str) -> Result<u32, String> {
+    let minutes = raw
+        .parse::<f64>()
+        .map_err(|_| format!("Error: {} must be {}-{} minutes.", label, min, max))?;
+
+    if !minutes.is_finite() || minutes < min || minutes > max {
+        return Err(format!("Error: {} must be {}-{} minutes.", label, min, max));
+    }
+
+    Ok((minutes * 60.0).round() as u32)
+}
+
+fn normalize_sound_file(raw: &str) -> String {
+    let trimmed = raw.trim();
+    // `.mp3` is still accepted so that profiles saved before the switch to
+    // Vorbis keep resolving instead of silently falling back to fireplace.
+    if let Some(stem) = trimmed.strip_suffix(".mp3") {
+        format!("{}.ogg", stem)
+    } else if trimmed.ends_with(".ogg") {
+        trimmed.to_string()
+    } else {
+        format!("{}.ogg", trimmed)
+    }
+}
+
+pub fn profile_command(
+    args: &[&str],
+    app_state: &mut AppState,
+    sound_manager: &mut SoundManager,
+) -> String {
+    match args.first() {
+        Some(&"list") => list_profiles(app_state),
+        Some(&"create") => create_profile(args, app_state, sound_manager),
+        Some(&"delete") => delete_profile(args, app_state),
+        Some(&"edit") => edit_profile(args, app_state, sound_manager),
+        Some(&"duplicate") => duplicate_profile(args, app_state),
+        Some(&"switch") => switch_profile(args, app_state, sound_manager),
+        None => format!(
+            "Current profile: {}\nUse \"profile list\" to see all profiles.",
+            app_state.active_profile.id
+        ),
+        Some(profile_id) => switch_profile_internal(profile_id, app_state, sound_manager),
+    }
+}
+
+fn list_profiles(app_state: &AppState) -> String {
+    let profiles_list: Vec<String> = app_state
+        .profiles
+        .iter()
+        .map(|p| {
+            let preset_tag = if p.is_preset {
+                " [preset]"
+            } else {
+                " [custom]"
+            };
+            format!("  {} - {}{}", p.id, p.name, preset_tag)
+        })
+        .collect();
+    format!("Available profiles:\n{}", profiles_list.join("\n"))
+}
+
+fn create_profile(
+    args: &[&str],
+    app_state: &mut AppState,
+    sound_manager: &mut SoundManager,
+) -> String {
+    if args.len() < 9 {
+        return "Usage: profile create <name> <focus_min> <short_break_min> <long_break_min> <sessions> <season> <intensity> <sound>\nExample: profile create \"My Profile\" 25 5 15 4 winter low fireplace".to_string();
+    }
+
+    let name = args[1].to_string();
+
+    if app_state
+        .profiles
+        .iter()
+        .any(|p| p.name.to_lowercase() == name.to_lowercase())
+    {
+        return format!("Error: A profile with name '{}' already exists.", name);
+    }
+
+    let base_id: String = name
+        .to_lowercase()
+        .chars()
+        .map(|c| {
+            if c.is_alphanumeric() {
+                c
+            } else if c == ' ' {
+                '-'
+            } else {
+                '-'
+            }
+        })
+        .collect();
+
+    let mut clean_id = String::new();
+    let mut prev_hyphen = false;
+    for c in base_id.chars() {
+        if c == '-' {
+            if !prev_hyphen {
+                clean_id.push(c);
+            }
+            prev_hyphen = true;
+        } else {
+            clean_id.push(c);
+            prev_hyphen = false;
+        }
+    }
+    let clean_id = clean_id.trim_matches('-').to_string();
+
+    let mut new_id = clean_id.clone();
+    let mut suffix = 1;
+    while app_state.profiles.iter().any(|p| p.id == new_id) {
+        new_id = format!("{}-{}", clean_id, suffix);
+        suffix += 1;
+    }
+
+    let focus_min: u32 = match parse_minutes_to_seconds(args[2], 0.5, 180.0, "Focus duration") {
+        Ok(v) => v,
+        Err(e) => return e,
+    };
+    let short_break_min: u32 = match parse_minutes_to_seconds(args[3], 0.5, 60.0, "Short break") {
+        Ok(v) => v,
+        Err(e) => return e,
+    };
+    let long_break_min: u32 = match parse_minutes_to_seconds(args[4], 0.5, 60.0, "Long break") {
+        Ok(v) => v,
+        Err(e) => return e,
+    };
+    let sessions_per_cycle: u32 = match args[5].parse::<u32>() {
+        Ok(v) if v >= 1 && v <= 20 => v,
+        _ => return "Error: Sessions per cycle must be 1-20.".to_string(),
+    };
+
+    let season = match args[6] {
+        "spring" => Season::Spring,
+        "summer" => Season::Summer,
+        "autumn" => Season::Autumn,
+        "winter" => Season::Winter,
+        _ => return "Error: Season must be spring, summer, autumn, or winter.".to_string(),
+    };
+
+    let intensity = match args[7] {
+        "low" => MotionIntensity::Low,
+        "medium" => MotionIntensity::Medium,
+        "high" => MotionIntensity::High,
+        _ => return "Error: Intensity must be low, medium, or high.".to_string(),
+    };
+
+    let sound_file = normalize_sound_file(args[8]);
+
+    let glow_color = match season {
+        Season::Spring => "#34d399".to_string(),
+        Season::Summer => "#fbbf24".to_string(),
+        Season::Autumn => "#f97316".to_string(),
+        Season::Winter => "#60a5fa".to_string(),
+    };
+
+    let new_profile = Profile {
+        id: new_id.clone(),
+        name: name.clone(),
+        season,
+        motion_intensity: intensity,
+        background_type: BackgroundType::Gradient,
+        focus_duration: focus_min,
+        short_break_duration: short_break_min,
+        long_break_duration: long_break_min,
+        sessions_per_cycle,
+        glow_color,
+        sound_file,
+        default_volume: 50,
+        is_preset: false,
+    };
+
+    app_state.profiles.push(new_profile.clone());
+    app_state.active_profile = new_profile;
+    app_state.session_override = None;
+    if app_state.sound_state.play_ambient_sound {
+        app_state.sound_state.current_sound = Some(app_state.active_profile.sound_file.clone());
+        if app_state.timer.status == TimerStatus::Running && !app_state.sound_state.is_muted {
+            let sound_data = get_sound_data(&app_state.active_profile.sound_file);
+            let _ = sound_manager.play(sound_data, app_state.sound_state.volume);
+        }
+    }
+
+    // Refresh timer for the next run when not actively in a session.
+    if app_state.timer.status != TimerStatus::Running {
+        app_state.timer.status = TimerStatus::Idle;
+        app_state.timer.remaining_seconds = focus_min;
+        app_state.timer.total_seconds = focus_min;
+        app_state.timer.session_type = crate::types::SessionType::Focus;
+        app_state.timer.current_session = 1;
+        app_state.timer.total_sessions = sessions_per_cycle;
+    }
+
+    format!(
+        "Created custom profile '{}' with ID: {} and switched to it.",
+        name, new_id
+    )
+}
+
+fn delete_profile(args: &[&str], app_state: &mut AppState) -> String {
+    if args.len() < 2 {
+        return "Usage: profile delete <id>".to_string();
+    }
+    let profile_id = args[1];
+
+    if let Some(profile) = app_state.profiles.iter().find(|p| p.id == profile_id) {
+        if profile.is_preset {
+            return "Error: Cannot delete preset profiles. Only custom profiles can be deleted."
+                .to_string();
+        }
+
+        if app_state.active_profile.id == profile_id {
+            return "Error: Cannot delete the active profile. Switch to another profile first."
+                .to_string();
+        }
+
+        app_state.profiles.retain(|p| p.id != profile_id);
+        format!("Deleted profile: {}", profile_id)
+    } else {
+        format!("Error: Profile '{}' not found.", profile_id)
+    }
+}
+
+fn edit_profile(
+    args: &[&str],
+    app_state: &mut AppState,
+    sound_manager: &mut SoundManager,
+) -> String {
+    if args.len() < 10 {
+        return "Usage: profile edit <id> <name> <focus_min> <short_break_min> <long_break_min> <sessions> <season> <intensity> <sound>".to_string();
+    }
+    let profile_id = args[1];
+
+    if !app_state.can_edit_profile(profile_id) {
+        return "Error: Preset profiles cannot be edited. Duplicate it first.".to_string();
+    }
+    let new_name = args[2].to_string();
+
+    let profile_ref = app_state.profiles.iter().find(|p| p.id == profile_id);
+    if profile_ref.is_none() {
+        return format!("Error: Profile '{}' not found.", profile_id);
+    }
+    if profile_ref.unwrap().is_preset {
+        return "Error: Cannot edit preset profiles. Only custom profiles can be edited."
+            .to_string();
+    }
+
+    if app_state
+        .profiles
+        .iter()
+        .any(|p| p.id != profile_id && p.name.to_lowercase() == new_name.to_lowercase())
+    {
+        return format!("Error: A profile with name '{}' already exists.", new_name);
+    }
+
+    let focus_min: u32 = match parse_minutes_to_seconds(args[3], 0.5, 180.0, "Focus duration") {
+        Ok(v) => v,
+        Err(e) => return e,
+    };
+    let short_break_min: u32 = match parse_minutes_to_seconds(args[4], 0.5, 60.0, "Short break") {
+        Ok(v) => v,
+        Err(e) => return e,
+    };
+    let long_break_min: u32 = match parse_minutes_to_seconds(args[5], 0.5, 60.0, "Long break") {
+        Ok(v) => v,
+        Err(e) => return e,
+    };
+    let sessions_per_cycle: u32 = match args[6].parse::<u32>() {
+        Ok(v) if v >= 1 && v <= 20 => v,
+        _ => return "Error: Sessions per cycle must be 1-20.".to_string(),
+    };
+
+    let season = match args[7].to_lowercase().as_str() {
+        "spring" => Season::Spring,
+        "summer" => Season::Summer,
+        "autumn" => Season::Autumn,
+        "winter" => Season::Winter,
+        _ => return "Error: Season must be spring, summer, autumn, or winter.".to_string(),
+    };
+
+    let intensity = match args[8].to_lowercase().as_str() {
+        "low" => MotionIntensity::Low,
+        "medium" => MotionIntensity::Medium,
+        "high" => MotionIntensity::High,
+        _ => return "Error: Intensity must be low, medium, or high.".to_string(),
+    };
+
+    let sound_file = normalize_sound_file(args[9]);
+
+    let glow_color = match season {
+        Season::Spring => "#34d399".to_string(),
+        Season::Summer => "#fbbf24".to_string(),
+        Season::Autumn => "#f97316".to_string(),
+        Season::Winter => "#60a5fa".to_string(),
+    };
+
+    if let Some(profile) = app_state.profiles.iter_mut().find(|p| p.id == profile_id) {
+        profile.name = new_name.clone();
+        profile.season = season.clone();
+        profile.motion_intensity = intensity.clone();
+        profile.focus_duration = focus_min;
+        profile.short_break_duration = short_break_min;
+        profile.long_break_duration = long_break_min;
+        profile.sessions_per_cycle = sessions_per_cycle;
+        profile.glow_color = glow_color.clone();
+        profile.sound_file = sound_file.clone();
+
+        // If editing the active profile, update active_profile immediately
+        if app_state.active_profile.id == profile_id {
+            app_state.active_profile.name = new_name.clone();
+            app_state.active_profile.season = season;
+            app_state.active_profile.motion_intensity = intensity;
+            app_state.active_profile.focus_duration = focus_min;
+            app_state.active_profile.short_break_duration = short_break_min;
+            app_state.active_profile.long_break_duration = long_break_min;
+            app_state.active_profile.sessions_per_cycle = sessions_per_cycle;
+            app_state.active_profile.glow_color = glow_color;
+            app_state.active_profile.sound_file = sound_file;
+            app_state.session_override = None;
+            if app_state.sound_state.play_ambient_sound {
+                app_state.sound_state.current_sound =
+                    Some(app_state.active_profile.sound_file.clone());
+                if app_state.timer.status == TimerStatus::Running && !app_state.sound_state.is_muted
+                {
+                    let sound_data = get_sound_data(&app_state.active_profile.sound_file);
+                    let _ = sound_manager.play(sound_data, app_state.sound_state.volume);
+                    app_state.sound_state.is_playing = true;
+                }
+            }
+
+            // Update timer for the next run when not actively in a session.
+            if app_state.timer.status != TimerStatus::Running {
+                app_state.timer.status = TimerStatus::Idle;
+                app_state.timer.remaining_seconds = focus_min;
+                app_state.timer.total_seconds = focus_min;
+                app_state.timer.session_type = crate::types::SessionType::Focus;
+                app_state.timer.current_session = 1;
+                app_state.timer.total_sessions = sessions_per_cycle;
+            }
+        }
+
+        format!("Updated profile: {}", new_name)
+    } else {
+        format!("Error: Profile '{}' not found.", profile_id)
+    }
+}
+
+fn duplicate_profile(args: &[&str], app_state: &mut AppState) -> String {
+    if args.len() < 3 {
+        return "Usage: profile duplicate <source_id> <new_id>".to_string();
+    }
+    let source_id = args[1];
+    let new_id = args[2].to_string();
+
+    if app_state.profiles.iter().any(|p| p.id == new_id) {
+        return format!("Error: Profile with id '{}' already exists.", new_id);
+    }
+
+    if let Some(source) = app_state.profiles.iter().find(|p| p.id == source_id) {
+        let mut new_profile = source.clone();
+        new_profile.id = new_id.clone();
+        new_profile.name = format!("{} (Copy)", source.name);
+        new_profile.is_preset = false;
+
+        app_state.profiles.push(new_profile);
+        format!("Duplicated profile '{}' to '{}'", source_id, new_id)
+    } else {
+        format!("Error: Source profile '{}' not found.", source_id)
+    }
+}
+
+fn switch_profile(
+    args: &[&str],
+    app_state: &mut AppState,
+    sound_manager: &mut SoundManager,
+) -> String {
+    if args.len() < 2 {
+        return "Usage: profile switch <id>".to_string();
+    }
+    switch_profile_internal(args[1], app_state, sound_manager)
+}
+
+fn switch_profile_internal(
+    profile_id: &str,
+    app_state: &mut AppState,
+    sound_manager: &mut SoundManager,
+) -> String {
+    if let Some(profile) = app_state
+        .profiles
+        .iter()
+        .find(|p| p.id.as_str() == profile_id)
+    {
+        app_state.active_profile = profile.clone();
+        app_state.session_override = None;
+        if app_state.sound_state.play_ambient_sound {
+            app_state.sound_state.current_sound = Some(profile.sound_file.clone());
+        }
+        if app_state.timer.status != TimerStatus::Running {
+            app_state.timer.status = TimerStatus::Idle;
+            app_state.timer.remaining_seconds = profile.focus_duration;
+            app_state.timer.total_seconds = profile.focus_duration;
+            app_state.timer.session_type = crate::types::SessionType::Focus;
+            app_state.timer.current_session = 1;
+            app_state.timer.total_sessions = profile.sessions_per_cycle;
+        }
+        // Keep output in sync with ambient preference when switching profile mid-session.
+        if app_state.sound_state.play_ambient_sound
+            && !app_state.sound_state.is_muted
+            && app_state.timer.status == TimerStatus::Running
+        {
+            let sound_data: &[u8] = get_sound_data(&profile.sound_file);
+            app_state.sound_state.volume = profile.default_volume;
+            let _ = sound_manager.play(sound_data, app_state.sound_state.volume);
+        }
+        format!("Switched to profile: {}", profile.name)
+    } else {
+        format!(
+            "Error: Profile \"{}\" not found. Use \"profile list\" to see available profiles.",
+            profile_id
+        )
+    }
+}

@@ -1,0 +1,53 @@
+[package]
+name = "zetta-focus-console"
+version = "1.0.0"
+description = "A structured focus timer with a terminal, seasonal ambience and strict sessions."
+authors = ["Joy Ahmed"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "zetta_focus_console_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[profile.release]
+# Across crate boundaries, so the decoder and timer calls inline. Slower to
+# build; a release is cut rarely, so the build time is worth the binary.
+lto = true
+codegen-units = 1
+# Debug symbols are of no use in a binary nobody can attach to, and they are the
+# largest single thing in it.
+strip = true
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "image-png"] }
+tauri-plugin-opener = "2"
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-autostart = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# Default features also build the disk, network, component and user collectors.
+# Only CPU, memory and one process are ever read, so the rest is dead weight.
+sysinfo = { version = "0.32", default-features = false, features = ["system"] }
+rodio = "0.19"
+dirs = "5"
+ed25519-dalek = { version = "2", features = ["rand_core"] }
+rand = "0.8"
+base64 = "0.22"
+sha2 = "0.10"
+aes-gcm = "0.10"
+hex = "0.4"
+hmac = "0.12"
+dotenv = "0.15"
+
+[features]
+default = []
+signing = []
+
