@@ -127,7 +127,7 @@ export default function StatsPanel({ appState }: StatsPanelProps) {
 				{/* Main Grid - Responsive */}
 				<div className='flex flex-wrap gap-2 w-full shrink-0'>
 					{/* Sessions Card */}
-					<div className='flex-1 basis-28 min-w-0 p-2 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
+					<div className='flex-1 basis-28 min-w-0 p-3 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
 						<div className='absolute right-1.5 top-1.5 opacity-15 group-hover:opacity-25 transition-opacity'>
 							<svg
 								xmlns='http://www.w3.org/2000/svg'
@@ -146,7 +146,7 @@ export default function StatsPanel({ appState }: StatsPanelProps) {
 						<div className='text-xs text-zetta-text-muted mb-1 font-medium tracking-wide'>
 							TODAY
 						</div>
-						<div className='text-xl  font-bold text-zetta-text tracking-tight flex items-baseline gap-1.5'>
+						<div className='text-2xl font-bold text-zetta-text tracking-tight flex items-baseline gap-1.5'>
 							{stats.sessions_today}
 							<span className='text-xs font-normal text-zetta-text-muted'>
 								sess
@@ -155,7 +155,7 @@ export default function StatsPanel({ appState }: StatsPanelProps) {
 					</div>
 
 					{/* Focus Time Card */}
-					<div className='flex-1 basis-28 min-w-0 p-2 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
+					<div className='flex-1 basis-28 min-w-0 p-3 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
 						<div className='absolute right-1.5 top-1.5 opacity-15 group-hover:opacity-25 transition-opacity'>
 							<svg
 								xmlns='http://www.w3.org/2000/svg'
@@ -173,7 +173,7 @@ export default function StatsPanel({ appState }: StatsPanelProps) {
 						<div className='text-xs text-zetta-text-muted mb-1 font-medium tracking-wide'>
 							FOCUS TIME
 						</div>
-						<div className='text-xl  font-bold text-zetta-text tracking-tight flex items-baseline gap-1.5'>
+						<div className='text-2xl font-bold text-zetta-text tracking-tight flex items-baseline gap-1.5'>
 							{stats.total_focus_minutes}
 							<span className='text-xs font-normal text-zetta-text-muted'>
 								min
@@ -182,7 +182,7 @@ export default function StatsPanel({ appState }: StatsPanelProps) {
 					</div>
 
 					{/* Streak Card */}
-					<div className='flex-1 basis-28 min-w-0 p-2 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
+					<div className='flex-1 basis-28 min-w-0 p-3 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
 						<div className='absolute right-1.5 top-1.5 opacity-15 group-hover:opacity-25 transition-opacity'>
 							<svg
 								xmlns='http://www.w3.org/2000/svg'
@@ -201,7 +201,7 @@ export default function StatsPanel({ appState }: StatsPanelProps) {
 						<div className='text-xs text-zetta-text-muted mb-1 font-medium tracking-wide'>
 							STREAK
 						</div>
-						<div className='text-xl  font-bold text-zetta-text tracking-tight flex items-baseline gap-1.5'>
+						<div className='text-2xl font-bold text-zetta-text tracking-tight flex items-baseline gap-1.5'>
 							{stats.current_streak}
 							<span className='text-xs font-normal text-zetta-text-muted'>
 								days
@@ -210,7 +210,7 @@ export default function StatsPanel({ appState }: StatsPanelProps) {
 					</div>
 
 					{/* Last Session Card */}
-					<div className='flex-1 basis-28 min-w-0 p-2 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
+					<div className='flex-1 basis-28 min-w-0 p-3 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
 						<div className='absolute right-1.5 top-1.5 opacity-15 group-hover:opacity-25 transition-opacity'>
 							<svg
 								xmlns='http://www.w3.org/2000/svg'
@@ -228,7 +228,7 @@ export default function StatsPanel({ appState }: StatsPanelProps) {
 						<div className='text-xs text-zetta-text-muted mb-1 font-medium tracking-wide'>
 							LAST
 						</div>
-						<div className='text-xl font-bold text-zetta-text tracking-tight flex items-baseline gap-1.5'>
+						<div className='text-2xl font-bold text-zetta-text tracking-tight flex items-baseline gap-1.5'>
 							{stats.last_session_duration}
 							<span className='text-xs font-normal text-zetta-text-muted'>
 								min
@@ -253,19 +253,29 @@ export default function StatsPanel({ appState }: StatsPanelProps) {
 						</span>
 					</div>
 
-					<dl className='grid grid-cols-2 lg:grid-cols-3 auto-rows-fr gap-x-3 gap-y-2 text-[10px] flex-1 min-h-0 overflow-y-auto custom-scrollbar'>
+					{/* Rows, not boxes.
+					    Each value used to sit in a filled, bordered rectangle
+					    stretched to fill the row — twelve heavy blocks with faint
+					    labels, which read as a different application bolted into
+					    the panel. The value carries the weight now and the label
+					    is the quiet part, separated by a hairline rather than
+					    enclosed. */}
+					<dl className='grid grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-2.5 content-start flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1'>
 						{fields.map(field => (
-							<div key={field.label} className='flex flex-col gap-1 min-w-0 min-h-0'>
-								<dt className='text-zetta-text-muted font-medium'>
+							<div
+								key={field.label}
+								className='flex flex-col gap-0.5 min-w-0 pb-1.5 border-b border-zetta-border/50'
+							>
+								<dt className='text-[9px] uppercase tracking-wider text-zetta-text-muted'>
 									{field.label}
 								</dt>
 								<dd
-									className={`font-mono font-medium px-2 rounded border truncate flex items-center flex-1 min-h-[1.75rem] ${
+									className={`font-mono text-[11px] truncate ${
 										field.accent === 'good'
-											? 'bg-green-500/10 text-green-500 border-green-500/30'
+											? 'text-green-400'
 											: field.accent === 'warn'
-												? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
-												: 'bg-zetta-bg text-zetta-text border-zetta-border'
+												? 'text-amber-400'
+												: 'text-zetta-text'
 									}`}
 								>
 									{field.value}

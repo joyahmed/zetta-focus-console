@@ -75,16 +75,16 @@ export default function TimerPanel({
 			    short, wide panel asked for a circle taller than the space it had
 			    — `overflow-hidden` then cut the top off, taking the session
 			    label with it. Height is the scarce axis here, so height decides. */}
-			<div className='flex-1 min-h-0 w-full flex items-center justify-center my-2'>
+			<div className='shrink-0 w-full flex items-center justify-center my-2'>
 				{/* Label and circle are one group with a tight gap, so the label
 				    stays attached to the ring instead of drifting toward the top
 				    of the panel as the available height changes. */}
-				<div className='h-full min-h-0 flex flex-col items-center justify-center gap-1.5'>
+				<div className='flex flex-col items-center gap-1.5'>
 					<span className='text-[10px] font-bold uppercase tracking-[0.2em] text-zetta-text-muted whitespace-nowrap shrink-0'>
 						{timer.session_type.replace('_', ' ')}
 					</span>
 
-					<div className='relative flex-1 min-h-0 max-h-64 aspect-square flex items-center justify-center'>
+					<div className='relative h-[clamp(9rem,26dvh,16rem)] aspect-square shrink-0 flex items-center justify-center'>
 					<Suspense fallback={null}>
 						<TimerRing
 							{...{
