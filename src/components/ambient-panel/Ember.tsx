@@ -20,10 +20,11 @@ const Ember = ({
 				height: particle.size,
 				background: `radial-gradient(circle at 50% 40%, #fff6e0 0%, ${glowColor} 55%, ${glowColor}00 100%)`,
 				boxShadow: `0 0 10px ${glowColor}, 0 0 20px ${glowColor}80`,
-				opacity: isLight ? 0.55 : particle.opacity,
+				'--particle-opacity': isLight ? 0.55 : particle.opacity,
 				'--ember-drift': `${particle.drift}px`,
 				willChange: isPaused ? 'auto' : 'transform, opacity',
 				animation: `emberRise ${particle.duration * speedMultiplier}s ease-out ${particle.delay}s infinite`,
+				animationFillMode: 'backwards',
 				animationPlayState: isPaused ? 'paused' : 'running'
 			} as React.CSSProperties
 		}

@@ -7,7 +7,8 @@ const Snowflake = ({
 }: SnowflakeProps) => (
 	<div
 		className='absolute rounded-full'
-		style={{
+		style={
+			{
 			left: `${particle.x}%`,
 			width: particle.size,
 			height: particle.size,
@@ -15,7 +16,7 @@ const Snowflake = ({
 				radial-gradient(circle at 30% 30%, #ffffff 0%, #ffffffcc 40%, #ffffff66 70%, transparent 100%)
 			`,
 			boxShadow: `0 0 6px ${glowColor}`,
-			opacity: isLight ? 0.7 : particle.opacity,
+			'--particle-opacity': isLight ? 0.7 : particle.opacity,
 			// Promote to its own compositor layer. Without this the browser is
 			// free to repaint the glow on every frame, which at 4K is the
 			// difference between the scene costing nothing and costing the
@@ -25,8 +26,10 @@ const Snowflake = ({
 			// particle back to its start line, so a paused scene was a row of
 			// dots along the top edge instead of a snapshot of snowfall.
 			animation: `snowfall ${particle.duration * speedMultiplier}s linear ${particle.delay}s infinite`,
+			animationFillMode: 'backwards',
 			animationPlayState: isPaused ? 'paused' : 'running'
-		}}
+			} as React.CSSProperties
+		}
 	/>
 );
 

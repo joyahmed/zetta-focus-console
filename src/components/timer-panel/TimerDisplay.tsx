@@ -44,7 +44,11 @@ const TimerDisplay = ({
 				onKeyDown={handleKeyDown}
 				onBlur={commit}
 				aria-label='Session duration'
-				className={`${TYPE_STYLES} z-10 w-[4.5em] bg-transparent text-center outline-none border-b-2 border-dashed`}
+				// Full width of the padded area inside the ring, not a width in
+				// `em`. At 4.5em against a 60px clock the field — and the dashed
+				// rule under it — came out wider than the circle and crossed it
+				// on both sides.
+				className={`${TYPE_STYLES} z-10 w-full min-w-0 bg-transparent text-center outline-none border-b-2 border-dashed`}
 				style={{
 					color: 'var(--text-primary)',
 					borderColor: `${glowColor}80`

@@ -5,10 +5,10 @@ export const AMBIENT_ANIMATIONS = `
 			opacity: 0;
 		}
 		10% {
-			opacity: 1;
+			opacity: var(--particle-opacity, 1);
 		}
 		90% {
-			opacity: 1;
+			opacity: var(--particle-opacity, 1);
 		}
 		100% {
 			transform: translate3d(20px, var(--fall-distance, 220px), 0);
@@ -29,11 +29,11 @@ export const AMBIENT_ANIMATIONS = `
 			transform: translate3d(0, -12px, 0) rotate(0deg);
 			opacity: 0;
 		}
-		10% { opacity: 1; }
+		10% { opacity: var(--particle-opacity, 1); }
 		50% {
 			transform: translate3d(38px, calc(var(--fall-distance, 220px) * 0.5), 0) rotate(var(--leaf-spin-half, 240deg));
 		}
-		90% { opacity: 0.9; }
+		90% { opacity: var(--particle-opacity, 1); }
 		100% {
 			transform: translate3d(-26px, var(--fall-distance, 220px), 0) rotate(var(--leaf-spin, 480deg));
 			opacity: 0;
@@ -46,8 +46,8 @@ export const AMBIENT_ANIMATIONS = `
 			transform: translate3d(0, 0, 0) scale(0.6);
 			opacity: 0;
 		}
-		12% { opacity: 1; }
-		70% { opacity: 0.8; }
+		12% { opacity: var(--particle-opacity, 1); }
+		70% { opacity: calc(var(--particle-opacity, 1) * 0.8); }
 		100% {
 			transform: translate3d(var(--ember-drift, 24px), calc(var(--fall-distance, 220px) * -1), 0) scale(0.2);
 			opacity: 0;
@@ -69,11 +69,11 @@ export const AMBIENT_ANIMATIONS = `
 			transform: translate3d(0, -12px, 0) rotate(0deg);
 			opacity: 0;
 		}
-		10% { opacity: 1; }
+		10% { opacity: var(--particle-opacity, 1); }
 		50% {
 			transform: translate3d(28px, calc(var(--fall-distance, 220px) * 0.5), 0) rotate(180deg);
 		}
-		90% { opacity: 0.9; }
+		90% { opacity: var(--particle-opacity, 1); }
 		100% {
 			transform: translate3d(-16px, var(--fall-distance, 220px), 0) rotate(400deg);
 			opacity: 0;

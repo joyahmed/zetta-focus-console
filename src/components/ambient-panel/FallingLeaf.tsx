@@ -25,13 +25,14 @@ const FallingLeaf = ({
 					top: 0,
 					fontSize: leaf.size,
 					lineHeight: 1,
-					opacity: isLight ? 1 : leaf.opacity,
+					'--particle-opacity': isLight ? 1 : leaf.opacity,
 					color: glowColor,
-					filter: `drop-shadow(0 0 6px ${glowColor}66)`,
+					textShadow: `0 0 6px ${glowColor}66`,
 					'--leaf-spin': `${spin}deg`,
 					'--leaf-spin-half': `${Math.round(spin / 2)}deg`,
 					willChange: isPaused ? 'auto' : 'transform, opacity',
 					animation: `leafFall ${leaf.duration * speedMultiplier}s ease-in-out ${leaf.delay}s infinite`,
+					animationFillMode: 'backwards',
 					animationPlayState: isPaused ? 'paused' : 'running'
 				} as React.CSSProperties
 			}
