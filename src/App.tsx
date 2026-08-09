@@ -118,7 +118,6 @@ const App = () => {
 							handleSoundStop,
 							handleBackgroundTypeChange,
 							handleResetSettings,
-							handleThemeChange,
 							helpOpen,
 							profileModalOpen,
 							setProfileModalOpen,

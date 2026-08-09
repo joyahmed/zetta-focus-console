@@ -9,9 +9,6 @@ const SoundSection = lazy(
 const BackgroundSection = lazy(
 	() => import('./settings-panel/BackgroundSection')
 );
-const ThemeSection = lazy(
-	() => import('./settings-panel/ThemeSection')
-);
 const DevModeSection = lazy(
 	() => import('./settings-panel/DevModeSection')
 );
@@ -49,7 +46,6 @@ const SettingsPanel = ({
 	onBackgroundTypeChange,
 	onResetSettings,
 	theme,
-	onThemeChange,
 	strictModeActive,
 	onStrictModeToggle,
 	voiceEnabled,
@@ -100,15 +96,6 @@ const SettingsPanel = ({
 							{...{
 								backgroundType,
 								onBackgroundTypeChange
-							}}
-						/>
-					</Suspense>
-
-					<Suspense fallback={null}>
-						<ThemeSection
-							{...{
-								theme,
-								onThemeChange
 							}}
 						/>
 					</Suspense>

@@ -31,6 +31,10 @@ const AppPanels = ({
 						onPause={() => processCommand('focus pause')}
 						onResume={() => processCommand('focus resume')}
 						onStop={() => processCommand('stop')}
+						onQuickStart={async minutes => {
+							await processCommand(`timer ${minutes}m`);
+							await processCommand('start');
+						}}
 						theme={appState.theme}
 					/>
 				</div>

@@ -23,7 +23,6 @@ const AppModals = ({
 	handleSoundStop,
 	handleBackgroundTypeChange,
 	handleResetSettings,
-	handleThemeChange,
 	helpOpen,
 	profileModalOpen,
 	setProfileModalOpen,
@@ -68,7 +67,6 @@ const AppModals = ({
 				onBackgroundTypeChange={handleBackgroundTypeChange}
 				onResetSettings={handleResetSettings}
 				theme={appState.theme}
-				onThemeChange={handleThemeChange}
 				strictModeActive={appState.strict_mode.is_active}
 				onStrictModeToggle={() => {
 					const cmd = appState.strict_mode.is_active

@@ -30,7 +30,6 @@ interface AppModelsProps {
 		type: 'gradient' | 'particles'
 	) => Promise<void>;
 	handleResetSettings: () => Promise<void>;
-	handleThemeChange: (theme: string) => Promise<void>;
 	helpOpen: boolean;
 
 	profileModalOpen: boolean;
@@ -259,7 +258,6 @@ interface SettingsPanelProps {
 	onBackgroundTypeChange: (type: 'gradient' | 'particles') => void;
 	onResetSettings: () => void;
 	theme: string;
-	onThemeChange: (theme: string) => void;
 	strictModeActive?: boolean;
 	onStrictModeToggle?: () => void;
 	voiceEnabled?: boolean;
@@ -334,5 +332,7 @@ interface TimerPanelProps {
 	onPause: () => void;
 	onResume: () => void;
 	onStop: () => void;
+	/** Set a duration override and start, in one press. */
+	onQuickStart?: (minutes: number) => void;
 	theme?: string;
 }

@@ -99,9 +99,9 @@ export default function StatsPanel({ appState }: StatsPanelProps) {
 			    more room than its content needs. Rather than leaving a void
 			    underneath, the sections space out and the meters sit against
 			    the bottom edge. */}
-			<div className='flex flex-col w-full h-full overflow-y-auto custom-scrollbar gap-y-4'>
+			<div className='flex flex-col w-full h-full min-h-0 gap-y-3'>
 				{/* Header Section */}
-				<div className='flex items-center justify-between  w-full'>
+				<div className='flex items-center justify-between w-full shrink-0'>
 					<div className='flex items-center gap-2'>
 						<div className='p-1.5 rounded-lg bg-zetta-bg border border-zetta-border'>
 							<svg
@@ -125,13 +125,13 @@ export default function StatsPanel({ appState }: StatsPanelProps) {
 				</div>
 
 				{/* Main Grid - Responsive */}
-				<div className='grid grid-cols-2 xl:grid-cols-4 gap-2 md:gap-3 w-full'>
+				<div className='grid grid-cols-4 gap-2 w-full shrink-0'>
 					{/* Sessions Card */}
-					<div className='p-2.5 md:p-3 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
-						<div className='absolute right-2 top-2 opacity-20 group-hover:opacity-30 transition-opacity'>
+					<div className='p-2 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
+						<div className='absolute right-1.5 top-1.5 opacity-15 group-hover:opacity-25 transition-opacity'>
 							<svg
 								xmlns='http://www.w3.org/2000/svg'
-								className='h-8 w-8 text-blue-400'
+								className='h-5 w-5 text-blue-400'
 								viewBox='0 0 24 24'
 								fill='none'
 								stroke='currentColor'
@@ -155,11 +155,11 @@ export default function StatsPanel({ appState }: StatsPanelProps) {
 					</div>
 
 					{/* Focus Time Card */}
-					<div className='p-2.5 md:p-3 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden min-h-0'>
-						<div className='absolute right-2 top-2 opacity-20 group-hover:opacity-30 transition-opacity'>
+					<div className='p-2 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
+						<div className='absolute right-1.5 top-1.5 opacity-15 group-hover:opacity-25 transition-opacity'>
 							<svg
 								xmlns='http://www.w3.org/2000/svg'
-								className='h-8 w-8 text-purple-400'
+								className='h-5 w-5 text-purple-400'
 								viewBox='0 0 24 24'
 								fill='none'
 								stroke='currentColor'
@@ -182,11 +182,11 @@ export default function StatsPanel({ appState }: StatsPanelProps) {
 					</div>
 
 					{/* Streak Card */}
-					<div className='p-2.5 md:p-3 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
-						<div className='absolute right-2 top-2 opacity-20 group-hover:opacity-30 transition-opacity'>
+					<div className='p-2 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
+						<div className='absolute right-1.5 top-1.5 opacity-15 group-hover:opacity-25 transition-opacity'>
 							<svg
 								xmlns='http://www.w3.org/2000/svg'
-								className='h-8 w-8 text-orange-400'
+								className='h-5 w-5 text-orange-400'
 								viewBox='0 0 24 24'
 								fill='none'
 								stroke='currentColor'
@@ -210,11 +210,11 @@ export default function StatsPanel({ appState }: StatsPanelProps) {
 					</div>
 
 					{/* Last Session Card */}
-					<div className='p-2.5 md:p-3 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
-						<div className='absolute right-2 top-2 opacity-20 group-hover:opacity-30 transition-opacity'>
+					<div className='p-2 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
+						<div className='absolute right-1.5 top-1.5 opacity-15 group-hover:opacity-25 transition-opacity'>
 							<svg
 								xmlns='http://www.w3.org/2000/svg'
-								className='h-8 w-8 text-emerald-400'
+								className='h-5 w-5 text-emerald-400'
 								viewBox='0 0 24 24'
 								fill='none'
 								stroke='currentColor'

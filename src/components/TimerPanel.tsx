@@ -14,6 +14,10 @@ const TimerControls = lazy(
 
 const RADIUS = 90;
 
+/** Minutes offered as one-click sessions. Short first — the whole point is
+    the runs the profile durations do not cover. */
+const QUICK_DURATIONS = [5, 15, 25, 50];
+
 // Red color for Strict Mode
 const STRICT_MODE_COLOR = '#ef4444';
 
@@ -27,6 +31,7 @@ export default function TimerPanel({
 	onPause,
 	onResume,
 	onStop,
+	onQuickStart,
 	theme: _theme = 'dark'
 }: TimerPanelProps) {
 	const { hasOverride, circumference, strokeDashoffset, formatTime } =
@@ -138,6 +143,28 @@ export default function TimerPanel({
 					}}
 				/>
 			</Suspense>
+
+			{/* Quick durations.
+			    Until now the only way to run anything other than the profile's
+			    25 minutes was `timer 5m` in the terminal, or building a whole
+			    custom profile for it. A five-minute session is not a profile. */}
+			{onQuickStart && timer.status === 'idle' && (
+				<div className='mt-4 flex items-center gap-1.5'>
+					<span className='text-[10px] uppercase tracking-wider text-zetta-text-muted mr-1'>
+						Quick
+					</span>
+					{QUICK_DURATIONS.map(minutes => (
+						<button
+							key={minutes}
+							onClick={() => onQuickStart(minutes)}
+							title={`Start a ${minutes} minute session`}
+							className='px-2.5 py-1 text-xs font-mono rounded-lg border border-zetta-border bg-zetta-bg/60 text-zetta-text-secondary hover:text-zetta-text hover:border-zetta-neon/50 hover:bg-zetta-bg transition-colors'
+						>
+							{minutes}m
+						</button>
+					))}
+				</div>
+			)}
 		</div>
 	);
 }

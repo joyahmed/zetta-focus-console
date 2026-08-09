@@ -235,10 +235,21 @@ body::before {
 	color: #ffffff;
 }
 
-/* Focus Ring */
-:focus-visible {
-	outline: 2px solid var(--accent-neon);
-	outline-offset: 2px;
+/*
+ * Focus Ring
+ *
+ * Inside @layer base on purpose. Unlayered rules beat every layered one
+ * regardless of specificity, so as a bare selector this overrode Tailwind's
+ * `outline-none` everywhere it was used — the terminal prompt, which is already
+ * an obvious input, drew a 2px accent ring around itself the moment it took
+ * focus. In a layer it still gives everything a visible focus ring by default,
+ * and a component that says `outline-none` is now allowed to mean it.
+ */
+@layer base {
+	:focus-visible {
+		outline: 2px solid var(--accent-neon);
+		outline-offset: 2px;
+	}
 }
 
 /* Hide native number input spinners (use custom +/- controls instead) */
