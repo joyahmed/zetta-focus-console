@@ -118,12 +118,18 @@ const TimerRing = ({
 
 			    `transition-all` meant the stroke colour and the drop-shadow
 			    animated over a full second alongside it, so starting or stopping
-			    washed the whole ring through a slow colour change. And because
-			    the offset jumps the length of the circle when a session begins
-			    or is reset, the transition swept the arc all the way round —
-			    twice, once for each change. While idle there is nothing to
-			    animate, so it snaps. */}
+			    washed the whole ring through a slow colour change.
+
+			    The `key` is what actually stops the sweep. The offset jumps the
+			    length of the circle when a session starts or resets, and simply
+			    switching the class to `transition-none` on that render does not
+			    help: React commits the new class and the new offset together, so
+			    the browser still interpolates the jump using whichever transition
+			    is in effect afterwards. Remounting on the running/idle boundary
+			    gives it an element with no previous value, which cannot animate —
+			    so start and stop snap, and only the per-second tick glides. */}
 			<Circle
+				key={isRunning ? 'running' : 'idle'}
 				{...{
 					radius,
 					stroke: progressStroke,

@@ -170,10 +170,11 @@ export default function TimerPanel({
 			    The row keeps its height whether or not it has anything in it.
 			    It only appears while idle, and if it collapsed on start the
 			    ring would resize under the cursor every time you pressed play. */}
-			<div className='flex flex-col -mb-2'>
-				<div className='relative z-10 flex items-center justify-center gap-2 h-12 shrink-0'>
-					{onQuickStart && timer.status === 'idle' && (
-						<>
+
+			<div className='relative z-10 flex items-center justify-center gap-2 h-12 shrink-0'>
+				{onQuickStart && timer.status === 'idle' && (
+					<div className='flex flex-col gap-2 mt-5'>
+						<div className='flex gap-2'>
 							{QUICK_DURATIONS.map(minutes => (
 								<button
 									key={minutes}
@@ -183,24 +184,24 @@ export default function TimerPanel({
 										['--chip-glow' as string]: effectiveGlowColor
 									}}
 									className='px-3 py-1.5 text-xs font-mono rounded-lg border transition-all duration-200
-									border-[color-mix(in_srgb,var(--chip-glow)_35%,transparent)]
-									bg-[color-mix(in_srgb,var(--chip-glow)_10%,transparent)]
-									text-zetta-text
-									shadow-[0_0_10px_-2px_color-mix(in_srgb,var(--chip-glow)_45%,transparent)]
-									hover:bg-[color-mix(in_srgb,var(--chip-glow)_22%,transparent)]
-									hover:border-[color-mix(in_srgb,var(--chip-glow)_70%,transparent)]
-									hover:shadow-[0_0_16px_-1px_color-mix(in_srgb,var(--chip-glow)_65%,transparent)]
-									active:scale-95'
+										border-[color-mix(in_srgb,var(--chip-glow)_35%,transparent)]
+										bg-[color-mix(in_srgb,var(--chip-glow)_10%,transparent)]
+										text-zetta-text
+										shadow-[0_0_10px_-2px_color-mix(in_srgb,var(--chip-glow)_45%,transparent)]
+										hover:bg-[color-mix(in_srgb,var(--chip-glow)_22%,transparent)]
+										hover:border-[color-mix(in_srgb,var(--chip-glow)_70%,transparent)]
+										hover:shadow-[0_0_16px_-1px_color-mix(in_srgb,var(--chip-glow)_65%,transparent)]
+										active:scale-95'
 								>
 									{minutes}m
 								</button>
 							))}
-						</>
-					)}
-				</div>
-				<span className='text-[10px] uppercase tracking-wider text-zetta-text-muted mr-0.5 text-center font-bold'>
-					Quick
-				</span>
+						</div>
+						<span className='text-[10px] uppercase tracking-wider text-zetta-text-muted mr-0.5 text-center font-bold'>
+							Quick
+						</span>
+					</div>
+				)}
 			</div>
 		</div>
 	);

@@ -211,19 +211,13 @@ export const appReactivities = ({
 			window.removeEventListener('keydown', handleGlobalKeyDown);
 	}, []);
 
-	// Timer tick and system stats intervals - stable, only cleared on unmount
+	// The engine tick. Created once and cleared on unmount.
 	useEffect(() => {
 		const timerInterval = setInterval(() => {
 			invoke('tick_timer').catch(console.error);
 		}, 1000);
 
-		const systemInterval = setInterval(() => {
-		}, 5000);
-
-		return () => {
-			clearInterval(timerInterval);
-			clearInterval(systemInterval);
-		};
+		return () => clearInterval(timerInterval);
 	}, []);
 
 	// Use ref to access appState in keyboard handler
