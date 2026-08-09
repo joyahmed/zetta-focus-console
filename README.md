@@ -210,6 +210,22 @@ Some notes on choices that are not obvious:
 
 ---
 
+## History
+
+This repository begins at a single commit, which is deliberate and worth
+explaining rather than leaving as a puzzle.
+
+The app was built through the first half of 2026 as a private project, over
+about eighty commits. That history was squashed when the repository was opened
+up, for two reasons. It carried 42 MB of the original uncompressed audio in its
+objects — every clone would have paid for that forever, to fetch files the app
+no longer uses. And it carried a large set of planning documents describing a
+version of this product that no longer exists, which would have been actively
+misleading to read.
+
+Nothing about the code is withheld. What is in this repository is the whole
+application, and [CHANGELOG.md](CHANGELOG.md) tracks it from here.
+
 ## What is next
 
 See [ROADMAP.md](ROADMAP.md) — what is coming, and an explicit list of what is
