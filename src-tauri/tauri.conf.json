@@ -22,7 +22,7 @@
 				"maxHeight": 1100,
 				"center": true,
 				"resizable": true,
-				"maximizable": false,
+				"maximizable": true,
 				"decorations": true,
 				"visible": true
 
