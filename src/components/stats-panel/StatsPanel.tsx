@@ -127,7 +127,7 @@ const StatsPanel = ({ appState }: StatsPanelProps) => {
 										field.accent === 'good'
 											? 'text-zetta-success'
 											: field.accent === 'warn'
-												? 'text-amber-400'
+												? 'text-zetta-warning'
 												: 'text-zetta-text'
 									}`}
 								>

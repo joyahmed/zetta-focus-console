@@ -106,7 +106,7 @@ const TimerPanel = ({
 
 					<div className='flex items-center h-6 shrink-0'>
 						{hasOverride && (
-							<span className='px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-500 bg-amber-500/10 rounded-full border border-amber-500/20 whitespace-nowrap'>
+							<span className='px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-zetta-warning bg-amber-500/10 rounded-full border border-amber-500/20 whitespace-nowrap'>
 								Override
 							</span>
 						)}

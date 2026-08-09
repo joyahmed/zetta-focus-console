@@ -16,7 +16,12 @@ import {
     with a gradient that rises on hover — differing in colour, icon, label and
     handler. Everything that differs is here; the button itself is written once
     below. Tailwind's class names are spelled out in full because the JIT scan
-    cannot see a colour assembled at runtime. */
+    cannot see a colour assembled at runtime.
+
+    The frames and washes are tints, which work at any lightness, but the label
+    is text and has to be read: `text-amber-400` is a colour for the void and
+    came out at about 1.9:1 on a white card. The two label colours are tokens
+    that go four steps darker in the light theme. */
 const PROFILE_ACTIONS: ProfileAction[] = [
 	{
 		key: 'create',
@@ -24,7 +29,7 @@ const PROFILE_ACTIONS: ProfileAction[] = [
 		Icon: PlusIcon,
 		frame: 'border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 hover:border-blue-500/50',
 		wash: 'from-blue-500/10',
-		text: 'text-blue-400 group-hover:text-blue-300'
+		text: 'text-zetta-info'
 	},
 	{
 		key: 'edit',
@@ -32,7 +37,7 @@ const PROFILE_ACTIONS: ProfileAction[] = [
 		Icon: PencilIcon,
 		frame: 'border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 hover:border-amber-500/50',
 		wash: 'from-amber-500/10',
-		text: 'text-amber-400 group-hover:text-amber-300'
+		text: 'text-zetta-warning'
 	},
 	{
 		key: 'duplicate',
@@ -40,7 +45,7 @@ const PROFILE_ACTIONS: ProfileAction[] = [
 		Icon: CopyIcon,
 		frame: 'border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 hover:border-amber-500/50',
 		wash: 'from-amber-500/10',
-		text: 'text-amber-400 group-hover:text-amber-300'
+		text: 'text-zetta-warning'
 	}
 ];
 
@@ -127,8 +132,8 @@ const ProfilePanel = ({
 						<span
 							className={`inline-flex items-center justify-center h-5 px-2 text-[10px] font-medium rounded ${
 								profile.is_preset
-									? 'bg-blue-500/10 border border-blue-500/20 text-blue-500'
-									: 'bg-green-500/10 border border-green-500/20 text-green-500'
+									? 'bg-blue-500/10 border border-blue-500/20 text-zetta-info'
+									: 'bg-green-500/10 border border-green-500/20 text-zetta-success'
 							}`}
 						>
 							{profile.is_preset ? 'PRESET' : 'CUSTOM'}

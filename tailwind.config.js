@@ -37,6 +37,8 @@ export default {
 				// at low alpha — these are the readable foreground per theme.
 				'zetta-success': 'rgb(var(--color-success-rgb) / <alpha-value>)',
 				'zetta-danger': 'rgb(var(--color-danger-rgb) / <alpha-value>)',
+				'zetta-info': 'rgb(var(--color-info-rgb) / <alpha-value>)',
+				'zetta-warning': 'rgb(var(--color-warning-rgb) / <alpha-value>)',
 			},
 			fontFamily: {
 				// Both families are bundled, so the fallbacks only matter if a

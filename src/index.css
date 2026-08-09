@@ -137,8 +137,12 @@
 	   way round. */
 	--color-success-rgb: 74 222 128;
 	--color-danger-rgb: 248 113 113;
+	--color-info-rgb: 96 165 250;
+	--color-warning-rgb: 251 191 36;
 	--color-success: rgb(var(--color-success-rgb));
 	--color-danger: rgb(var(--color-danger-rgb));
+	--color-info: rgb(var(--color-info-rgb));
+	--color-warning: rgb(var(--color-warning-rgb));
 
 	/* Text.
 	   `--text-muted` carries labels, hints and keycaps, not decoration, so it
@@ -214,8 +218,13 @@
 	   turns the app behind it grey and dirty. */
 	--scrim: rgba(15, 23, 42, 0.32);
 
+	/* Four steps darker than the dark theme's. A 400 is a colour meant to glow
+	   on the void: amber-400 on a white card is about 1.9:1, which is a label
+	   you cannot read on a button you are meant to press. These clear 4.5:1. */
 	--color-success-rgb: 22 163 74;
 	--color-danger-rgb: 220 38 38;
+	--color-info-rgb: 37 99 235;
+	--color-warning-rgb: 180 83 9;
 
 	/* Command Bar */
 	--bg-command: rgba(0, 0, 0, 0.04);
