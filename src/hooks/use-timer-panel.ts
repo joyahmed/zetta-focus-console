@@ -29,11 +29,27 @@ export const useTimerPanel = ({
 	glowColor,
 	strictMode
 }: UseTimerPanelProps) => {
+	/**
+	 * Clamped, because the arc has nowhere sensible to go outside 0-100.
+	 *
+	 * The engine used to reset `remaining_seconds` on stop without resetting
+	 * `total_seconds`, so a stopped 5-minute quick session reported 1500
+	 * remaining out of 300 — minus four hundred percent — and the ring swept
+	 * to five times its own circumference. That is fixed in stop_command, but
+	 * a ratio of two independently-set fields should not be able to put the
+	 * arc off the circle no matter what arrives.
+	 */
 	const progress =
 		timer.total_seconds > 0
-			? ((timer.total_seconds - timer.remaining_seconds) /
-					timer.total_seconds) *
-				100
+			? Math.min(
+					100,
+					Math.max(
+						0,
+						((timer.total_seconds - timer.remaining_seconds) /
+							timer.total_seconds) *
+							100
+					)
+				)
 			: 0;
 
 	const circumference = 2 * Math.PI * RADIUS;

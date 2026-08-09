@@ -289,8 +289,11 @@ fn focus_command(args: &[&str], app_state: &mut AppState) -> String {
             if app_state.timer.status == TimerStatus::Idle {
                 return "Error: No active session to stop.".to_string();
             }
+            // Both halves, for the same reason as `stop`: a stale
+            // `total_seconds` makes the ring's progress nonsense.
             app_state.timer.status = TimerStatus::Idle;
             app_state.timer.remaining_seconds = app_state.active_profile.focus_duration;
+            app_state.timer.total_seconds = app_state.active_profile.focus_duration;
             "Focus session stopped.".to_string()
         }
         Some(&"pause") => {
@@ -631,8 +634,22 @@ fn stop_command(app_state: &mut AppState) -> String {
             .to_string();
     }
 
+    // Reset to whatever the next run will actually use, and reset both halves
+    // of it. Setting `remaining_seconds` alone left `total_seconds` holding the
+    // duration of the session just stopped, so after a 5-minute quick session
+    // the timer read 1500 remaining out of 300 total — a progress of -400%,
+    // which drove the ring's arc to five times its circumference and animated
+    // it there. It also ignored a preserved override, so the clock claimed the
+    // profile's duration for a session that would start at the override's.
+    let focus_seconds = app_state
+        .session_override
+        .as_ref()
+        .and_then(|o| o.focus_duration)
+        .unwrap_or(app_state.active_profile.focus_duration);
+
     app_state.timer.status = TimerStatus::Idle;
-    app_state.timer.remaining_seconds = app_state.active_profile.focus_duration;
+    app_state.timer.remaining_seconds = focus_seconds;
+    app_state.timer.total_seconds = focus_seconds;
 
     let override_msg = if app_state.session_override.is_some() {
         " Override preserved."
