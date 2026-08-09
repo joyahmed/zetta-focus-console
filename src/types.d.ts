@@ -582,6 +582,20 @@ interface StartupSectionProps {
 	isLight: boolean;
 }
 
+/** A startup preference and the two Tauri commands that read and write it. */
+interface StartupSetting {
+	key: keyof StartupSettingValues;
+	title: string;
+	description: string;
+	getCommand: string;
+	setCommand: string;
+}
+
+interface StartupSettingValues {
+	autostart: boolean;
+	startMinimized: boolean;
+}
+
 interface StrictModeSectionProps {
 	strictModeActive: boolean;
 	onStrictModeToggle: () => void;

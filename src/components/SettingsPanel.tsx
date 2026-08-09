@@ -35,65 +35,53 @@ const SettingsPanel = ({
 	const isLight = theme === 'light';
 
 	return (
-		<Drawer isOpen={isOpen} onClose={onClose} title='Settings'>
-				<div className='p-3 sm:p-4 space-y-4'>
-					<AmbientSection
-							{...{
-								ambienceEnabled,
-								onAmbienceToggle,
-								isLight
-							}}
-						/>
+		<Drawer {...{ isOpen, onClose, title: 'Settings' }}>
+			<div className='p-3 sm:p-4 space-y-4'>
+				<AmbientSection
+					{...{ ambienceEnabled, onAmbienceToggle, isLight }}
+				/>
 
-					<SoundSection
-							{...{
-								soundVolume,
-								onVolumeChange,
-								isMuted,
-								onMuteToggle,
-								playAmbientSound,
-								onSoundPlay,
-								onSoundStop,
-								isLight
-							}}
-						/>
+				<SoundSection
+					{...{
+						soundVolume,
+						onVolumeChange,
+						isMuted,
+						onMuteToggle,
+						playAmbientSound,
+						onSoundPlay,
+						onSoundStop,
+						isLight
+					}}
+				/>
 
-					<VoiceSection
-							{...{
-								voiceEnabled: voiceEnabled || false,
-								onVoiceToggle: onVoiceToggle || (() => {}),
-								isLight
-							}}
-						/>
+				<VoiceSection
+					{...{
+						voiceEnabled: voiceEnabled || false,
+						onVoiceToggle: onVoiceToggle || (() => {}),
+						isLight
+					}}
+				/>
 
-					<BackgroundSection
-							{...{
-								backgroundType,
-								onBackgroundTypeChange
-							}}
-						/>
+				<BackgroundSection
+					{...{ backgroundType, onBackgroundTypeChange }}
+				/>
 
-					<DevModeSection
-							{...{
-								devMode,
-								onDevModeToggle,
-								isLight
-							}}
-						/>
+				<DevModeSection {...{ devMode, onDevModeToggle, isLight }} />
 
-					<StrictModeSection
-							{...{
-								strictModeActive: strictModeActive || false,
-								onStrictModeToggle: onStrictModeToggle || (() => {}),								isLight
-							}}
-						/>
+				<StrictModeSection
+					{...{
+						strictModeActive: strictModeActive || false,
+						onStrictModeToggle: onStrictModeToggle || (() => {}),
+						isLight
+					}}
+				/>
 
-					<ResetSection onResetSettings={onResetSettings} />
+				<ResetSection {...{ onResetSettings }} />
 
-					<StartupSection isLight={isLight} />
+				<StartupSection {...{ isLight }} />
 
-					<SettingsFooter />
-				</div>
+				<SettingsFooter />
+			</div>
 		</Drawer>
 	);
 };

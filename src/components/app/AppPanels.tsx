@@ -10,8 +10,48 @@ const AppPanels = ({
 	openCreateProfile,
 	openEditProfile,
 	profileError,
-	setProfileError,
+	setProfileError
 }: AppPanelProps) => {
+	const { active_profile: profile } = appState;
+
+	const timerProps: TimerPanelProps = {
+		timer: appState.timer,
+		glowColor: profile.glow_color,
+		sessionOverride: appState.session_override,
+		strictMode: appState.strict_mode,
+		currentTask: appState.current_task,
+		onStart: () => processCommand('start'),
+		onPause: () => processCommand('focus pause'),
+		onResume: () => processCommand('focus resume'),
+		onStop: () => processCommand('stop'),
+		onQuickStart: async minutes => {
+			await processCommand(`timer ${minutes}m`);
+			await processCommand('start');
+		},
+		theme: appState.theme
+	};
+
+	const profileProps: ProfilePanelProps = {
+		profile,
+		profiles: appState.profiles,
+		onProfileSwitch: handleProfileSwitch,
+		onCreateProfile: openCreateProfile,
+		onEditProfile: openEditProfile,
+		errorMessage: profileError,
+		onErrorDismiss: () => setProfileError(null),
+		stats: appState.stats
+	};
+
+	const ambientProps: AmbientPanelProps = {
+		season: profile.season,
+		motionIntensity: profile.motion_intensity,
+		backgroundType: profile.background_type,
+		glowColor: profile.glow_color,
+		timer: appState.timer,
+		isEnabled: appState.ambience_enabled,
+		theme: appState.theme
+	};
+
 	return (
 		<main className='flex-1 p-4 overflow-auto'>
 			<div
@@ -20,54 +60,22 @@ const AppPanels = ({
 			>
 				{/* Top Left: Timer */}
 				<div className='min-h-0'>
-					<TimerPanel
-						timer={appState.timer}
-						glowColor={appState.active_profile.glow_color}
-						sessionOverride={appState.session_override}
-						strictMode={appState.strict_mode}
-						currentTask={appState.current_task}
-						onStart={() => processCommand('start')}
-						onPause={() => processCommand('focus pause')}
-						onResume={() => processCommand('focus resume')}
-						onStop={() => processCommand('stop')}
-						onQuickStart={async minutes => {
-							await processCommand(`timer ${minutes}m`);
-							await processCommand('start');
-						}}
-						theme={appState.theme}
-					/>
+					<TimerPanel {...timerProps} />
 				</div>
 
 				{/* Top Right: Profile */}
 				<div className='min-h-0'>
-					<ProfilePanel
-						profile={appState.active_profile}
-						profiles={appState.profiles}
-						onProfileSwitch={handleProfileSwitch}
-						onCreateProfile={openCreateProfile}
-						onEditProfile={openEditProfile}
-						errorMessage={profileError}
-						onErrorDismiss={() => setProfileError(null)}
-						stats={appState.stats}
-					/>
+					<ProfilePanel {...profileProps} />
 				</div>
 
 				{/* Bottom Left: Stats */}
 				<div className='min-h-0'>
-					<StatsPanel appState={appState} />
+					<StatsPanel {...{ appState }} />
 				</div>
 
 				{/* Bottom Right: Ambience */}
 				<div className='min-h-0'>
-					<AmbientPanel
-						season={appState.active_profile.season}
-						motionIntensity={appState.active_profile.motion_intensity}
-						backgroundType={appState.active_profile.background_type}
-						glowColor={appState.active_profile.glow_color}
-						timer={appState.timer}
-						isEnabled={appState.ambience_enabled}
-						theme={appState.theme}
-					/>
+					<AmbientPanel {...ambientProps} />
 				</div>
 			</div>
 		</main>
