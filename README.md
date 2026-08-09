@@ -210,6 +210,11 @@ Some notes on choices that are not obvious:
 
 ---
 
+## What is next
+
+See [ROADMAP.md](ROADMAP.md) — what is coming, and an explicit list of what is
+not, so nobody spends a weekend on a pull request that gets declined.
+
 ## Licence
 
 MIT — see [LICENSE](LICENSE).
