@@ -4,7 +4,10 @@ import {
 	getMotionLabel,
 	getSeasonEmoji
 } from '../utils/profile';
+import { useProfileDelete } from '../hooks/use-profile-delete';
+import ConfirmDialog from './ConfirmDialog';
 import DetailRow from './profile-panel/DetailRow';
+import ProfileChip from './profile-panel/ProfileChip';
 import {
 	CopyIcon,
 	PencilIcon,
@@ -53,6 +56,7 @@ const ProfilePanel = ({
 	profile,
 	profiles,
 	onProfileSwitch,
+	onProfileDelete,
 	onCreateProfile,
 	onEditProfile,
 	onDuplicateProfile,
@@ -62,6 +66,9 @@ const ProfilePanel = ({
 	stats
 }: ProfilePanelProps) => {
 	const otherProfiles = profiles.filter(p => p.id !== profile.id);
+
+	const { pending, requestDelete, cancelDelete, confirmDelete } =
+		useProfileDelete({ onProfileDelete });
 
 	const durations = [
 		{ label: 'Focus', value: formatMinutes(profile.focus_duration) },
@@ -238,14 +245,18 @@ const ProfilePanel = ({
 						</div>
 						<div className='flex flex-wrap gap-1'>
 							{otherProfiles.map(p => (
-								<button
+								<ProfileChip
 									key={p.id}
-									onClick={() => onProfileSwitch(p.id)}
-									className='px-1.5 md:px-2 py-0.5 md:py-1 text-[10px] md:text-xs bg-zetta-bg border border-zetta-border rounded hover:border-blue-500/50 hover:bg-blue-500/10 transition-colors'
-									style={{ color: 'var(--text-secondary)' }}
-								>
-									{p.name}
-								</button>
+									{...{
+										profile: p,
+										onSwitch: () => onProfileSwitch(p.id),
+										// Presets are read-only in the engine,
+										// so they are offered no bin.
+										onDelete: p.is_preset
+											? undefined
+											: () => requestDelete(p)
+									}}
+								/>
 							))}
 						</div>
 					</div>
@@ -314,6 +325,26 @@ const ProfilePanel = ({
 					)}
 				</div>
 			</div>
+
+			<ConfirmDialog
+				{...{
+					isOpen: Boolean(pending),
+					onClose: cancelDelete,
+					onConfirm: confirmDelete,
+					title: 'Delete Profile',
+					message: (
+						<>
+							<span className='text-zetta-text font-medium'>
+								{pending?.name}
+							</span>{' '}
+							will be removed from this machine. Its sessions stay
+							in the statistics; the profile itself cannot be
+							brought back.
+						</>
+					),
+					confirmLabel: 'Delete Profile'
+				}}
+			/>
 		</div>
 	);
 };

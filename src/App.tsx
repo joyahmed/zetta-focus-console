@@ -27,6 +27,7 @@ const App = () => {
 		/** utils */
 		processCommand,
 		handleProfileSwitch,
+		handleProfileDelete,
 		handleDevModeToggle,
 		handleAmbienceToggle,
 		handleVolumeChange,
@@ -72,6 +73,7 @@ const App = () => {
 						appState,
 						processCommand,
 						handleProfileSwitch,
+						handleProfileDelete,
 						openCreateProfile,
 						openEditProfile,
 						openDuplicateProfile,

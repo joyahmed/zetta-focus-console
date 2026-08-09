@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useModalDismiss } from '../hooks/use-modal-dismiss';
 
 /**
@@ -30,7 +31,13 @@ const Modal = ({
 
 	if (!isOpen) return null;
 
-	return (
+	// Into <body>, for the reason the drawer gives at length: `position: fixed`
+	// is only relative to the viewport while no ancestor establishes a
+	// containing block, and `backdrop-filter` does. Every panel carries one, so
+	// a dialog opened from inside a panel — the delete confirmation, say —
+	// would otherwise be centred in that panel and clipped by its
+	// `overflow-hidden`, rather than covering the window.
+	return createPortal(
 		<div className='fixed inset-0 z-50 flex items-center justify-center'>
 			{/* Scrim. Light enough to keep the season visible behind it — the
 			    ambience is the point of the app, and blacking it out to 70%
@@ -69,7 +76,8 @@ const Modal = ({
 
 				{children}
 			</div>
-		</div>
+		</div>,
+		document.body
 	);
 };
 

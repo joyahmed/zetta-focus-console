@@ -36,6 +36,7 @@ export const useApp = () => {
 	const {
 		processCommand,
 		handleProfileSwitch,
+		handleProfileDelete,
 		handleDevModeToggle,
 		handleAmbienceToggle,
 		handleVolumeChange,
@@ -78,6 +79,7 @@ export const useApp = () => {
 		/** utils */
 		processCommand,
 		handleProfileSwitch,
+		handleProfileDelete,
 		handleDevModeToggle,
 		handleAmbienceToggle,
 		handleVolumeChange,

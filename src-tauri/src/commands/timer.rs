@@ -146,6 +146,7 @@ pub fn process_command(
    profile create        - Create custom profile
    profile edit [id]     - Edit custom profile
    profile duplicate     - Duplicate profile
+   profile delete [id]   - Delete a custom profile
    devmode on/off        - Developer diagnostics
    engine state          - Engine state inspection
    engine reset          - Reset engine

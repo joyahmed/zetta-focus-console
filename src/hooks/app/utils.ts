@@ -40,6 +40,27 @@ export const appUtils = ({
 		[]
 	);
 
+	/**
+	 * Delete a custom profile.
+	 *
+	 * The engine refuses two of these outright — a preset, and whichever
+	 * profile is active — and says so in the returned string rather than by
+	 * throwing. Both refusals go to the same error strip the profile form
+	 * uses, because a delete that quietly does nothing is worse than one that
+	 * explains itself.
+	 */
+	const handleProfileDelete = useCallback(
+		async (profileId: string) => {
+			const result = await processCommand(`profile delete ${profileId}`);
+			setProfileError(
+				result.startsWith('Error:')
+					? result.replace('Error: ', '')
+					: null
+			);
+		},
+		[processCommand]
+	);
+
 	const handleDevModeToggle = useCallback(async () => {
 		if (!appState) return;
 		const cmd = appState.dev_mode ? 'devmode off' : 'devmode on';
@@ -160,6 +181,7 @@ export const appUtils = ({
 	return {
 		processCommand,
 		handleProfileSwitch,
+		handleProfileDelete,
 		handleDevModeToggle,
 		handleAmbienceToggle,
 		handleVolumeChange,

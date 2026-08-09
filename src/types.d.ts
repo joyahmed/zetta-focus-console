@@ -125,6 +125,7 @@ interface AppPanelProps {
 	appState: AppState;
 	processCommand: (command: string) => Promise<string>;
 	handleProfileSwitch: (profileId: string) => Promise<void>;
+	handleProfileDelete: (profileId: string) => Promise<void>;
 	openCreateProfile: () => void;
 	openEditProfile: () => void;
 	openDuplicateProfile: () => void;
@@ -183,6 +184,20 @@ interface DrawerProps {
 	onClose: () => void;
 	title: React.ReactNode;
 	children: React.ReactNode;
+}
+
+type ConfirmTone = 'danger' | 'neutral';
+
+interface ConfirmDialogProps {
+	isOpen: boolean;
+	/** Cancel, and the backdrop, and Escape. */
+	onClose: () => void;
+	onConfirm: () => void;
+	title: string;
+	message: React.ReactNode;
+	confirmLabel?: string;
+	cancelLabel?: string;
+	tone?: ConfirmTone;
 }
 
 interface UseSelectProps {
@@ -436,6 +451,9 @@ interface ProfilePanelProps {
 	profile: Profile;
 	profiles: Profile[];
 	onProfileSwitch: (profileId: string) => void;
+	/** Custom profiles only, and never the active one — the engine refuses
+	    both. */
+	onProfileDelete?: (profileId: string) => void | Promise<void>;
 	onCreateProfile?: () => void;
 	onEditProfile?: () => void;
 	onDuplicateProfile?: () => void;
@@ -444,6 +462,17 @@ interface ProfilePanelProps {
 	errorMessage?: string | null;
 	onErrorDismiss?: () => void;
 	stats?: Stats;
+}
+
+interface ProfileChipProps {
+	profile: Profile;
+	onSwitch: () => void;
+	/** Absent for presets, which cannot be deleted. */
+	onDelete?: (() => void) | undefined;
+}
+
+interface UseProfileDeleteProps {
+	onProfileDelete?: ((profileId: string) => void | Promise<void>) | undefined;
 }
 
 interface DetailRowProps {
