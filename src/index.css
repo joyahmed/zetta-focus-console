@@ -138,6 +138,20 @@
 	background-color: #ffffff !important;
 }
 
+/*
+ * The console panel, opaque in light mode.
+ *
+ * It cannot be a `bg-white` passed alongside the shell's `bg-zetta-card`:
+ * both are background-color utilities of equal specificity, so which one wins
+ * is decided by their order in the generated stylesheet, not by the order they
+ * appear in the class attribute — and the custom colour is emitted last. Same
+ * hook as the two dialogs above, for the same reason.
+ */
+[data-theme='light'] .terminal-modal-white {
+	background-color: #ffffff !important;
+	border-color: #d1d5db !important;
+}
+
 * {
 	margin: 0;
 	padding: 0;

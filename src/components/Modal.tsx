@@ -12,6 +12,8 @@ import { useEffect } from 'react';
 
 const SIZES: Record<ModalSize, string> = {
 	sm: 'max-w-md',
+	/** The profile form, whose four-column stepper grid wants the extra 50px. */
+	form: 'max-w-[500px]',
 	md: 'max-w-2xl',
 	lg: 'max-w-5xl'
 };
@@ -22,6 +24,7 @@ const Modal = ({
 	title,
 	size = 'md',
 	fillHeight = false,
+	panelClassName = '',
 	children
 }: ModalProps) => {
 	useEffect(() => {
@@ -51,7 +54,7 @@ const Modal = ({
 			/>
 
 			<div
-				className={`relative bg-zetta-card backdrop-blur-xl border border-zetta-border rounded-lg shadow-2xl w-full ${SIZES[size]} ${fillHeight ? 'h-[80vh]' : 'max-h-[80vh]'} flex flex-col m-4`}
+				className={`relative bg-zetta-card backdrop-blur-xl border border-zetta-border rounded-lg shadow-2xl w-full ${SIZES[size]} ${fillHeight ? 'h-[80vh]' : 'max-h-[80vh]'} flex flex-col m-4 ${panelClassName}`}
 			>
 				{title !== undefined && (
 					<div className='flex items-center justify-between px-5 py-4 border-b border-zetta-border shrink-0'>

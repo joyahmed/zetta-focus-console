@@ -167,15 +167,18 @@ interface AppModalsProps {
    Shells — Modal and Drawer
    ========================================================================== */
 
-type ModalSize = 'sm' | 'md' | 'lg';
+type ModalSize = 'sm' | 'form' | 'md' | 'lg';
 
 interface ModalProps {
 	isOpen: boolean;
 	onClose: () => void;
+	/** Omit to supply the whole header yourself as the first child. */
 	title?: React.ReactNode;
 	size?: ModalSize;
 	/** Fills the available height rather than hugging its content. */
 	fillHeight?: boolean;
+	/** For the one dialog that needs an opaque panel in light mode. */
+	panelClassName?: string;
 	children: React.ReactNode;
 }
 
@@ -686,7 +689,6 @@ interface UseProfileModalProps {
 
 interface UseHelpModalProps {
 	isOpen: boolean;
-	onClose: () => void;
 }
 
 interface UseTerminalModalProps {

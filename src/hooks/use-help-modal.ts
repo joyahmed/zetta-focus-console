@@ -9,7 +9,7 @@ import { commandGroups } from '../configs/modal-config';
  * those, the arrow-key handler and the scroll-into-view all lived in the
  * component; none of it draws anything.
  */
-export const useHelpModal = ({ isOpen, onClose }: UseHelpModalProps) => {
+export const useHelpModal = ({ isOpen }: UseHelpModalProps) => {
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const listRef = useRef<HTMLDivElement>(null);
 
@@ -50,16 +50,13 @@ export const useHelpModal = ({ isOpen, onClose }: UseHelpModalProps) => {
 					e.preventDefault();
 					setSelectedIndex(prev => Math.max(prev - 1, 0));
 					break;
-				case 'Escape':
-					e.preventDefault();
-					onClose();
-					break;
 			}
 		};
 
 		window.addEventListener('keydown', handleKeyDown);
 		return () => window.removeEventListener('keydown', handleKeyDown);
-	}, [isOpen, onClose, commandCount]);
+		// Escape is not handled here — the Modal shell closes on it.
+	}, [isOpen, commandCount]);
 
 	return { selectedIndex, listRef, commandCount, groupOffsets };
 };

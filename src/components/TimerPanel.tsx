@@ -1,8 +1,10 @@
 import { useTimerPanel } from '../hooks/use-timer-panel';
-import TimerBackground from './timer-panel/TimerBackground';
-import TimerRing from './timer-panel/TimerRing';
-import TimerDisplay from './timer-panel/TimerDisplay';
-import TimerControls from './timer-panel/TimerControls';
+import {
+	TimerBackground,
+	TimerControls,
+	TimerDisplay,
+	TimerRing
+} from './timer-panel';
 
 /** Minutes offered as one-click sessions. Short first — the whole point is
     the runs the profile durations do not cover. */
