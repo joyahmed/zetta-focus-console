@@ -641,12 +641,32 @@ fn stop_command(app_state: &mut AppState) -> String {
     // which drove the ring's arc to five times its circumference and animated
     // it there. It also ignored a preserved override, so the clock claimed the
     // profile's duration for a session that would start at the override's.
+    // Stopping a break ends the break, not the cycle.
+    //
+    // Breaks start themselves, so the only way past one is to stop it — and
+    // treating that as abandoning the whole cycle meant the counter went back
+    // to 1/4 every time, which looked as though it never advanced at all. This
+    // is the same move the break would have made on its own, minus the alarm:
+    // that marks a boundary the timer reached, not one you stepped over.
+    if app_state.timer.session_type != SessionType::Focus {
+        let ended_cycle = app_state.timer.session_type == SessionType::LongBreak;
+        let _ = advance_from_finished(app_state);
+
+        return if ended_cycle {
+            "Break ended. Cycle complete.".to_string()
+        } else {
+            format!(
+                "Break ended. Session {}/{} is up next.",
+                app_state.timer.current_session, app_state.timer.total_sessions
+            )
+        };
+    }
+
     let focus_seconds = effective_focus_seconds(&app_state);
 
-    // Stopping abandons the cycle, not just the session, so the counter goes
-    // back to the start rather than resuming halfway through next time.
+    // Stopping a focus run abandons the cycle, not just the session, so the
+    // counter goes back to the start rather than resuming halfway through.
     app_state.timer.status = TimerStatus::Idle;
-    app_state.timer.session_type = SessionType::Focus;
     app_state.timer.current_session = 1;
     app_state.timer.remaining_seconds = focus_seconds;
     app_state.timer.total_seconds = focus_seconds;
@@ -1255,6 +1275,16 @@ const ALARM_CYCLE_END: &str = "cycle";
 /// up anyway. A finished break stops and waits, because coming back to the desk
 /// should be a decision rather than a clock that started without you.
 fn advance_cycle(app_state: &mut AppState, app_handle: &AppHandle) {
+    let alarm = advance_from_finished(app_state);
+    let _ = app_handle.emit("session-alarm", alarm);
+}
+
+/// The state transition itself, returning which alarm belongs to it.
+///
+/// Split from `advance_cycle` because stopping a break has to make the same
+/// move without sounding anything: an alarm marks a boundary the timer reached
+/// on its own, not one you walked over deliberately.
+fn advance_from_finished(app_state: &mut AppState) -> &'static str {
     let finished = app_state.timer.session_type.clone();
     let current = app_state.timer.current_session;
     let total = app_state.timer.total_sessions.max(1);
@@ -1277,7 +1307,7 @@ fn advance_cycle(app_state: &mut AppState, app_handle: &AppHandle) {
                 total_sessions: total,
             };
 
-            let _ = app_handle.emit("session-alarm", ALARM_SESSION_END);
+            ALARM_SESSION_END
         }
         SessionType::ShortBreak => {
             let seconds = effective_focus_seconds(app_state);
@@ -1291,7 +1321,7 @@ fn advance_cycle(app_state: &mut AppState, app_handle: &AppHandle) {
                 total_sessions: total,
             };
 
-            let _ = app_handle.emit("session-alarm", ALARM_BREAK_END);
+            ALARM_BREAK_END
         }
         SessionType::LongBreak => {
             // The long break only follows the last focus run, so reaching the
@@ -1309,7 +1339,7 @@ fn advance_cycle(app_state: &mut AppState, app_handle: &AppHandle) {
                 total_sessions: app_state.active_profile.sessions_per_cycle.max(1),
             };
 
-            let _ = app_handle.emit("session-alarm", ALARM_CYCLE_END);
+            ALARM_CYCLE_END
         }
     }
 }
