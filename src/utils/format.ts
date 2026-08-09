@@ -49,3 +49,38 @@ export const formatUptime = (startedAtUnixSeconds?: number): string => {
  */
 export const stripExtension = (filename: string): string =>
 	filename.replace(/\.[^.]+$/, '');
+
+/**
+ * What someone typed into the clock, as an argument the engine understands.
+ *
+ * The `timer` command takes "25m" or "90s", but nobody editing a clock reading
+ * 25:00 types either of those — they type 25, or 5:30, or occasionally 90s.
+ * All four forms are accepted and normalised to seconds; a bare number is
+ * minutes, because that is what the field is showing.
+ *
+ * Returns null for anything unparseable or out of the engine's 5s–180m range,
+ * which is the signal to leave the timer alone.
+ */
+export const parseDurationInput = (text: string): string | null => {
+	const trimmed = text.trim().toLowerCase();
+	if (!trimmed) return null;
+
+	const clock = trimmed.match(/^(\d{1,3}):([0-5]?\d)$/);
+	const suffixed = trimmed.match(/^(\d+(?:\.\d+)?)\s*(m|min|s|sec)?$/);
+
+	let seconds: number;
+
+	if (clock) {
+		seconds = Number(clock[1]) * 60 + Number(clock[2]);
+	} else if (suffixed) {
+		const value = Number(suffixed[1]);
+		const isSeconds = suffixed[2] === 's' || suffixed[2] === 'sec';
+		seconds = Math.round(isSeconds ? value : value * 60);
+	} else {
+		return null;
+	}
+
+	if (seconds < 5 || seconds > 10800) return null;
+
+	return `${seconds}s`;
+};

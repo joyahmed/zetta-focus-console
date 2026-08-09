@@ -81,10 +81,14 @@
 	--border-color: rgba(255, 255, 255, 0.06);
 	--border-highlight: rgba(255, 255, 255, 0.15);
 
-	/* Text */
+	/* Text.
+	   `--text-muted` carries labels, hints and keycaps, not decoration, so it
+	   has to be readable rather than merely present. At #7e8185 it sat just
+	   under 5:1 against the void and the statistics labels genuinely could not
+	   be read; #9ba1a8 is a little over 7:1. */
 	--text-primary: #f8fafc;
-	--text-secondary: #94a3b8;
-	--text-muted: #7e8185;
+	--text-secondary: #a8b4c4;
+	--text-muted: #9ba1a8;
 
 	/* Accents - Neon */
 	--accent-neon: #8b5cf6;            /* Violet Neon */
@@ -116,7 +120,8 @@
 
 	--text-primary: #0f172a;
 	--text-secondary: #475569;
-	--text-muted: #94a3b8;
+	/* Same reasoning as the dark theme: #94a3b8 on near-white was under 3:1. */
+	--text-muted: #64748b;
 
 	--accent-neon: #6366f1;   /* Indigo */
 	--accent-neon-secondary: #0ea5e9; /* Sky Blue */
@@ -156,6 +161,22 @@
 	margin: 0;
 	padding: 0;
 	box-sizing: border-box;
+}
+
+/*
+ * Number fields carry their own minus and plus buttons, so the browser's
+ * spinner was a second, tinier pair of arrows sitting inside the field between
+ * them — three ways to change one value, two of them 8px tall.
+ */
+input[type='number'] {
+	-moz-appearance: textfield;
+	appearance: textfield;
+}
+
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
 }
 
 html,

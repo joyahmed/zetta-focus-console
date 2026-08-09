@@ -26,6 +26,29 @@ const SOUNDS: SelectOption[] = [
 	{ value: 'rain_window', label: '☔ Rain on Window' }
 ];
 
+/** What each mode calls itself. Three ternaries on `mode` had to agree with
+    each other by hand; adding duplicate would have made it six. */
+const MODE_COPY: Record<ProfileModalMode, ProfileModalCopy> = {
+	create: {
+		title: 'Create Custom Profile',
+		submitLabel: 'Create Profile',
+		submittingLabel: 'Creating...',
+		accent: 'bg-blue-600 hover:bg-blue-500 shadow-blue-500/20'
+	},
+	edit: {
+		title: 'Edit Profile',
+		submitLabel: 'Save Changes',
+		submittingLabel: 'Saving...',
+		accent: 'bg-amber-600 hover:bg-amber-500 shadow-amber-500/20'
+	},
+	duplicate: {
+		title: 'Duplicate Profile',
+		submitLabel: 'Create Copy',
+		submittingLabel: 'Creating...',
+		accent: 'bg-blue-600 hover:bg-blue-500 shadow-blue-500/20'
+	}
+};
+
 const ProfileModal = ({
 	isOpen,
 	onClose,
@@ -48,9 +71,7 @@ const ProfileModal = ({
 		handleSubmit
 	} = useProfileModal({ isOpen, mode, profile, onClose, onSubmit });
 
-	const title = mode === 'create' ? 'Create Custom Profile' : 'Edit Profile';
-	const submitLabel = mode === 'create' ? 'Create Profile' : 'Save Changes';
-	const submittingLabel = mode === 'create' ? 'Creating...' : 'Saving...';
+	const { title, submitLabel, submittingLabel, accent } = MODE_COPY[mode];
 
 	return (
 		<Modal
@@ -137,7 +158,10 @@ const ProfileModal = ({
 					<h3 className='text-xs font-semibold text-zetta-text-muted uppercase tracking-wider mb-2'>
 						Time Intervals
 					</h3>
-					<div className='profile-modal-white grid grid-cols-4 gap-2 bg-zetta-panel rounded-lg p-3 border border-zetta-border'>
+					{/* Two across, not four. In a 500px dialog four steppers left
+					    each field about 35px between its own minus and plus
+					    buttons — too narrow to read "0.5" in, let alone type in. */}
+					<div className='profile-modal-white grid grid-cols-2 gap-3 bg-zetta-panel rounded-lg p-3 border border-zetta-border'>
 						{intervals.map(interval => (
 							<NumberInput key={interval.label} {...interval} />
 						))}
@@ -195,11 +219,7 @@ const ProfileModal = ({
 					<button
 						type='submit'
 						disabled={isSubmitting}
-						className={`px-5 py-2 text-xs font-medium text-white rounded-md shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${
-							mode === 'edit'
-								? 'bg-amber-600 hover:bg-amber-500 shadow-amber-500/20'
-								: 'bg-blue-600 hover:bg-blue-500 shadow-blue-500/20'
-						}`}
+						className={`px-5 py-2 text-xs font-medium text-white rounded-md shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${accent}`}
 					>
 						{isSubmitting ? submittingLabel : submitLabel}
 					</button>

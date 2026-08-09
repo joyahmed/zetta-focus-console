@@ -48,6 +48,7 @@ export const useApp = () => {
 		handleCreateProfile,
 		openCreateProfile,
 		openEditProfile,
+		openDuplicateProfile,
 		handleVoiceToggle
 	} = appUtils({
 		appState,
@@ -90,6 +91,7 @@ export const useApp = () => {
 		handleCreateProfile,
 		openCreateProfile,
 		openEditProfile,
+		openDuplicateProfile,
 		handleVoiceToggle
 	};
 };

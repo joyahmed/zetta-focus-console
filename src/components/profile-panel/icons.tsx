@@ -40,4 +40,11 @@ const PencilIcon = ({ className }: IconProps) => (
 	</StrokeIcon>
 );
 
-export { SlidersIcon, PlusIcon, PencilIcon };
+const CopyIcon = ({ className }: IconProps) => (
+	<StrokeIcon {...{ className }}>
+		<rect x='9' y='9' width='11' height='11' rx='2' />
+		<path d='M5 15H4a1 1 0 01-1-1V4a1 1 0 011-1h10a1 1 0 011 1v1' />
+	</StrokeIcon>
+);
+
+export { SlidersIcon, PlusIcon, PencilIcon, CopyIcon };

@@ -9,6 +9,7 @@ const AppPanels = ({
 	handleProfileSwitch,
 	openCreateProfile,
 	openEditProfile,
+	openDuplicateProfile,
 	profileError,
 	setProfileError
 }: AppPanelProps) => {
@@ -28,6 +29,9 @@ const AppPanels = ({
 			await processCommand(`timer ${minutes}m`);
 			await processCommand('start');
 		},
+		onDurationChange: (duration: string) => {
+			processCommand(`timer ${duration}`);
+		},
 		theme: appState.theme
 	};
 
@@ -37,6 +41,7 @@ const AppPanels = ({
 		onProfileSwitch: handleProfileSwitch,
 		onCreateProfile: openCreateProfile,
 		onEditProfile: openEditProfile,
+		onDuplicateProfile: openDuplicateProfile,
 		errorMessage: profileError,
 		onErrorDismiss: () => setProfileError(null),
 		stats: appState.stats

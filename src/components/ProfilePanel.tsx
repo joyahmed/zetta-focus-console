@@ -5,7 +5,12 @@ import {
 	getSeasonEmoji
 } from '../utils/profile';
 import DetailRow from './profile-panel/DetailRow';
-import { PencilIcon, PlusIcon, SlidersIcon } from './profile-panel/icons';
+import {
+	CopyIcon,
+	PencilIcon,
+	PlusIcon,
+	SlidersIcon
+} from './profile-panel/icons';
 
 /** Create and Edit were the same fourteen lines twice over — a bordered button
     with a gradient that rises on hover — differing in colour, icon, label and
@@ -28,6 +33,14 @@ const PROFILE_ACTIONS: ProfileAction[] = [
 		frame: 'border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 hover:border-amber-500/50',
 		wash: 'from-amber-500/10',
 		text: 'text-amber-400 group-hover:text-amber-300'
+	},
+	{
+		key: 'duplicate',
+		label: 'Duplicate',
+		Icon: CopyIcon,
+		frame: 'border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 hover:border-amber-500/50',
+		wash: 'from-amber-500/10',
+		text: 'text-amber-400 group-hover:text-amber-300'
 	}
 ];
 
@@ -37,6 +50,7 @@ const ProfilePanel = ({
 	onProfileSwitch,
 	onCreateProfile,
 	onEditProfile,
+	onDuplicateProfile,
 	errorMessage,
 	onErrorDismiss,
 	stats
@@ -50,16 +64,18 @@ const ProfilePanel = ({
 		{ label: 'Sessions', value: String(profile.sessions_per_cycle) }
 	];
 
-	/** Only the actions this profile can actually take: a preset cannot be
-	    edited, and either handler may be absent. */
-	const actions = PROFILE_ACTIONS.filter(action =>
-		action.key === 'create'
-			? Boolean(onCreateProfile)
-			: Boolean(onEditProfile) && !profile.is_preset
-	).map(action => ({
-		...action,
-		onClick: action.key === 'create' ? onCreateProfile! : onEditProfile!
-	}));
+	/** Only the actions this profile can actually take. A preset is read-only
+	    in the engine, so it offers Duplicate — the same form, seeded, saving
+	    to a new custom profile — where a custom one offers Edit. */
+	const handlers: Record<ProfileAction['key'], (() => void) | undefined> = {
+		create: onCreateProfile,
+		edit: profile.is_preset ? undefined : onEditProfile,
+		duplicate: profile.is_preset ? onDuplicateProfile : undefined
+	};
+
+	const actions = PROFILE_ACTIONS.filter(
+		action => handlers[action.key]
+	).map(action => ({ ...action, onClick: handlers[action.key]! }));
 
 	return (
 		<div className='panel flex-1 h-full p-3 md:p-4 lg:p-6 overflow-hidden flex flex-col gap-4'>

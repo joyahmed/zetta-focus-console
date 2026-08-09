@@ -90,30 +90,12 @@ const AppModals = ({
 				}}
 				mode={profileModalMode}
 				profile={
-					profileModalMode === 'edit'
-						? {
-								id: appState.active_profile.id,
-								name: appState.active_profile.name,
-								focus_duration:
-									appState.active_profile.focus_duration,
-								short_break_duration:
-									appState.active_profile.short_break_duration,
-								long_break_duration:
-									appState.active_profile.long_break_duration,
-								sessions_per_cycle:
-									appState.active_profile.sessions_per_cycle,
-								season: appState.active_profile.season,
-								motion_intensity:
-									appState.active_profile.motion_intensity,
-								sound_file: appState.active_profile.sound_file,
-								background_type:
-									appState.active_profile.background_type,
-								glow_color: appState.active_profile.glow_color,
-								default_volume:
-									appState.active_profile.default_volume,
-								is_preset: appState.active_profile.is_preset
-							}
-						: undefined
+					// Both edit and duplicate seed from the active profile; only
+					// create starts blank. This used to copy the profile out
+					// field by field into an object identical to its source.
+					profileModalMode === 'create'
+						? undefined
+						: appState.active_profile
 				}
 				onSubmit={handleCreateProfile}
 			/>

@@ -26,7 +26,6 @@ const TerminalModal = ({
 		getLineColor
 	} = useTerminalModal({
 		isOpen,
-		onClose,
 		onCommand,
 		onHelp,
 		sessionSummary,
@@ -69,10 +68,10 @@ const TerminalModal = ({
 				</div>
 				<div className='flex items-center gap-3'>
 					<span
-						className={`text-xs ${isLight ? 'text-gray-600' : 'text-gray-500'}`}
+						className={`text-xs ${isLight ? 'text-gray-600' : 'text-zetta-text-secondary'}`}
 					>
 						<span
-							className={`px-1.5 py-0.5 rounded ${isLight ? 'bg-gray-200 text-gray-700' : 'bg-zetta-bg text-gray-500'}`}
+							className={`px-1.5 py-0.5 rounded border font-mono mr-1 ${isLight ? 'bg-gray-200 border-gray-300 text-gray-800' : 'bg-white/10 border-white/15 text-zetta-text'}`}
 						>
 							Ctrl+T
 						</span>{' '}
@@ -80,7 +79,7 @@ const TerminalModal = ({
 					</span>
 					<button
 						onClick={onClose}
-						className={`p-1 transition-colors ${isLight ? 'text-gray-600 hover:text-gray-900' : 'text-gray-400 hover:text-white'}`}
+						className={`p-1 transition-colors ${isLight ? 'text-gray-600 hover:text-gray-900' : 'text-zetta-text-secondary hover:text-white'}`}
 					>
 						<svg
 							xmlns='http://www.w3.org/2000/svg'
@@ -113,25 +112,24 @@ const TerminalModal = ({
 						{line.content}
 					</div>
 				))}
-				<div className='flex items-center gap-2 h-5'>
-					<span
-						className={
-							isLight
-								? 'text-green-600 font-mono'
-								: 'text-green-400 font-mono'
-						}
-					>
-						$
-					</span>
-					<span
-						className={`font-mono ${isLight ? 'text-gray-900' : 'text-white'}`}
-					>
-						{input}
-					</span>
-					<span
-						className={`w-2 h-4 ${isLight ? 'bg-green-600' : 'bg-green-400'} ${isExecuting ? 'animate-pulse' : ''}`}
-					/>
-				</div>
+				{/* A busy indicator, not a second prompt.
+				    This used to echo `$ {input}` with a caret, so every
+				    keystroke appeared twice: once here under the tips and
+				    again in the real input at the foot of the dialog. The
+				    input is the only place the command is typed now; this row
+				    just shows the engine working. */}
+				{isExecuting && (
+					<div className='flex items-center gap-2 h-5'>
+						<span
+							className={`font-mono ${isLight ? 'text-green-600' : 'text-green-400'}`}
+						>
+							$
+						</span>
+						<span
+							className={`w-2 h-4 animate-pulse ${isLight ? 'bg-green-600' : 'bg-green-400'}`}
+						/>
+					</div>
+				)}
 			</div>
 
 			{/* Input Line - Fixed at bottom */}

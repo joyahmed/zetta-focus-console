@@ -40,8 +40,13 @@ export const useProfileModal = ({
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
-		if (mode === 'edit' && profile) {
-			setName(profile.name);
+		// Duplicate seeds from the profile exactly as edit does; the only
+		// differences are the name it suggests and that it submits without an
+		// id, so the engine creates rather than updates.
+		if ((mode === 'edit' || mode === 'duplicate') && profile) {
+			setName(
+				mode === 'duplicate' ? `${profile.name} Copy` : profile.name
+			);
 			setFocusMin(secondsToMinutes(profile.focus_duration));
 			setShortBreakMin(secondsToMinutes(profile.short_break_duration));
 			setLongBreakMin(secondsToMinutes(profile.long_break_duration));
@@ -67,6 +72,7 @@ export const useProfileModal = ({
 	const intervals: NumberInputProps[] = [
 		{
 			label: 'Focus',
+			unit: 'min',
 			value: focusMin,
 			onChange: setFocusMin,
 			min: 0.5,
@@ -76,6 +82,7 @@ export const useProfileModal = ({
 		},
 		{
 			label: 'Short',
+			unit: 'min',
 			value: shortBreakMin,
 			onChange: setShortBreakMin,
 			min: 0.5,
@@ -85,6 +92,7 @@ export const useProfileModal = ({
 		},
 		{
 			label: 'Long',
+			unit: 'min',
 			value: longBreakMin,
 			onChange: setLongBreakMin,
 			min: 0.5,
@@ -115,6 +123,7 @@ export const useProfileModal = ({
 		setIsSubmitting(true);
 		try {
 			const result = await onSubmit({
+				// Duplicate deliberately sends no id, so this saves as a new profile.
 				id: mode === 'edit' ? profile?.id : undefined,
 				name: name.trim(),
 				focus_min: focusMin,

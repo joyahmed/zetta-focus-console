@@ -7,9 +7,8 @@ export const appStates = () => {
 	const [helpOpen, setHelpOpen] = useState(false);
 	const [terminalOpen, setTerminalOpen] = useState(false);
 	const [profileModalOpen, setProfileModalOpen] = useState(false);
-	const [profileModalMode, setProfileModalMode] = useState<
-		'create' | 'edit'
-	>('create');
+	const [profileModalMode, setProfileModalMode] =
+		useState<ProfileModalMode>('create');
 	const [sessionSummary, setSessionSummary] = useState<string | null>(
 		null
 	);

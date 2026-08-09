@@ -21,6 +21,7 @@ const TimerPanel = ({
 	onResume,
 	onStop,
 	onQuickStart,
+	onDurationChange,
 	theme: _theme = 'dark'
 }: TimerPanelProps) => {
 	const {
@@ -80,7 +81,9 @@ const TimerPanel = ({
 								{...{
 									formattedTime,
 									isRunning,
-									glowColor: effectiveGlowColor
+									glowColor: effectiveGlowColor,
+									canEdit: timer.status === 'idle',
+									onDurationChange
 								}}
 							/>
 						</div>

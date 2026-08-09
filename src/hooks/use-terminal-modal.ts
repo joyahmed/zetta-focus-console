@@ -43,7 +43,6 @@ const MAX_HISTORY_SIZE = 100;
 
 export const useTerminalModal = ({
 	isOpen,
-	onClose,
 	onCommand,
 	onHelp: _onHelp,
 	sessionSummary,
@@ -84,7 +83,9 @@ export const useTerminalModal = ({
 			type: 'output',
 			content: 'Type "help" for available commands.'
 		},
-		{ type: 'output', content: 'Press ESC to close terminal.' },
+		// No "press ESC to close" line: the header states how to close it, and
+		// having the banner name one key while the header named another read
+		// as two different ways out rather than one dialog.
 		{
 			type: 'output',
 			content: 'Tip: Use Tab for autocomplete, ↑↓ for history.'
@@ -275,10 +276,10 @@ export const useTerminalModal = ({
 			if (outputRef.current) {
 				outputRef.current.scrollTop += 200;
 			}
-		} else if (e.key === 'Escape') {
-			e.preventDefault();
-			onClose();
 		}
+		// Escape is not handled here — the Modal shell closes on it, as it
+		// does for every other dialog. Handling it in both places meant two
+		// close calls for one keypress.
 	};
 
 	const getLineColor = (type: TerminalLine['type']) => {

@@ -126,17 +126,7 @@ export const appUtils = ({
 	}, []);
 
 	const handleCreateProfile = useCallback(
-		async (profileData: {
-			id?: string;
-			name: string;
-			focus_min: number;
-			short_break_min: number;
-			long_break_min: number;
-			sessions_per_cycle: number;
-			season: string;
-			intensity: string;
-			sound: string;
-		}) => {
+		async (profileData: ProfileFormData) => {
 			let cmd: string;
 			if (profileData.id) {
 				// Edit mode
@@ -152,13 +142,21 @@ export const appUtils = ({
 
 	const openCreateProfile = useCallback(() => {
 		setProfileError(null);
-		setProfileModalMode("create");
+		setProfileModalMode('create');
 		setProfileModalOpen(true);
 	}, []);
 
 	const openEditProfile = useCallback(() => {
 		setProfileError(null);
 		setProfileModalMode('edit');
+		setProfileModalOpen(true);
+	}, []);
+
+	/** Presets are read-only in the engine, so the way to change one is to
+	    copy it into a profile that is not. */
+	const openDuplicateProfile = useCallback(() => {
+		setProfileError(null);
+		setProfileModalMode('duplicate');
 		setProfileModalOpen(true);
 	}, []);
 
@@ -172,8 +170,8 @@ export const appUtils = ({
 		}
 	}, [appState?.voice_enabled]);
 
-  return {
-    processCommand,
+	return {
+		processCommand,
 		handleProfileSwitch,
 		handleDevModeToggle,
 		handleAmbienceToggle,
@@ -187,6 +185,7 @@ export const appUtils = ({
 		handleCreateProfile,
 		openCreateProfile,
 		openEditProfile,
+		openDuplicateProfile,
 		handleVoiceToggle
 	};
 };

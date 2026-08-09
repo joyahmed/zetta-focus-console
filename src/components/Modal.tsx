@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useModalDismiss } from '../hooks/use-modal-dismiss';
 
 /**
  * The single modal shell.
@@ -27,19 +27,7 @@ const Modal = ({
 	panelClassName = '',
 	children
 }: ModalProps) => {
-	useEffect(() => {
-		if (!isOpen) return;
-
-		const onKeyDown = (e: globalThis.KeyboardEvent) => {
-			if (e.key === 'Escape') {
-				e.preventDefault();
-				onClose();
-			}
-		};
-
-		window.addEventListener('keydown', onKeyDown);
-		return () => window.removeEventListener('keydown', onKeyDown);
-	}, [isOpen, onClose]);
+	useModalDismiss({ isOpen, onClose });
 
 	if (!isOpen) return null;
 

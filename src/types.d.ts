@@ -127,6 +127,7 @@ interface AppPanelProps {
 	handleProfileSwitch: (profileId: string) => Promise<void>;
 	openCreateProfile: () => void;
 	openEditProfile: () => void;
+	openDuplicateProfile: () => void;
 	profileError: string | null;
 	setProfileError: (value: React.SetStateAction<string | null>) => void;
 }
@@ -156,7 +157,7 @@ interface AppModalsProps {
 
 	profileModalOpen: boolean;
 	setProfileModalOpen: (value: React.SetStateAction<boolean>) => void;
-	profileModalMode: 'create' | 'edit';
+	profileModalMode: ProfileModalMode;
 	handleCreateProfile: (profileData: ProfileFormData) => Promise<string>;
 	setProfileError: (value: React.SetStateAction<string | null>) => void;
 	voiceEnabled?: boolean;
@@ -342,6 +343,8 @@ interface TimerPanelProps {
 	onStop: () => void;
 	/** Set a duration override and start, in one press. */
 	onQuickStart?: (minutes: number) => void;
+	/** Set the focus duration from the clock itself, idle only. */
+	onDurationChange?: (duration: string) => void;
 	theme?: string;
 }
 
@@ -354,6 +357,10 @@ interface TimerDisplayProps {
 	formattedTime: string;
 	isRunning: boolean;
 	glowColor: string;
+	/** Only while the timer is idle — the engine refuses an override on a
+	    running session. */
+	canEdit?: boolean;
+	onDurationChange?: (duration: string) => void;
 }
 
 interface TimerControlsProps {
@@ -432,6 +439,7 @@ interface ProfilePanelProps {
 	onProfileSwitch: (profileId: string) => void;
 	onCreateProfile?: () => void;
 	onEditProfile?: () => void;
+	onDuplicateProfile?: () => void;
 	errorMessage?: string | null;
 	onErrorDismiss?: () => void;
 	stats?: Stats;
@@ -447,7 +455,7 @@ interface DetailRowProps {
     rather than composed from a colour name, because the JIT scanner only sees
     class names it can read literally in the source. */
 interface ProfileAction {
-	key: 'create' | 'edit';
+	key: 'create' | 'edit' | 'duplicate';
 	label: string;
 	Icon: (props: IconProps) => React.JSX.Element;
 	/** Border and background, including hover. */
@@ -478,7 +486,7 @@ interface ProfileFormData {
 interface ProfileModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	mode: 'create' | 'edit';
+	mode: ProfileModalMode;
 	/** Required for edit mode. */
 	profile?: Profile | undefined;
 	onSubmit: (profileData: ProfileFormData) => Promise<string>;
@@ -497,8 +505,28 @@ interface NumberInputProps {
 	min: number;
 	max: number;
 	label: string;
+	/** Rendered after the label, e.g. "Focus (min)". */
+	unit?: string;
 	step?: number;
 	precision?: number;
+}
+
+/**
+ * Create, edit, or duplicate.
+ *
+ * Duplicate exists because the engine holds presets read-only —
+ * `can_edit_profile` refuses them — so the only way to base a profile on
+ * Winter Deep is to copy it into a custom one. It is the create path with the
+ * fields seeded and no id.
+ */
+type ProfileModalMode = 'create' | 'edit' | 'duplicate';
+
+interface ProfileModalCopy {
+	title: string;
+	submitLabel: string;
+	submittingLabel: string;
+	/** Tailwind classes for the submit button, spelled out for the JIT scan. */
+	accent: string;
 }
 
 /* ==========================================================================
@@ -662,7 +690,7 @@ interface AppReactivitiesProps extends CommonStatesProps {
 interface AppUtilsProps extends CommonStatesProps {
 	setTerminalKey: React.Dispatch<React.SetStateAction<number>>;
 	setProfileError: React.Dispatch<React.SetStateAction<string | null>>;
-	setProfileModalMode: React.Dispatch<React.SetStateAction<'create' | 'edit'>>;
+	setProfileModalMode: React.Dispatch<React.SetStateAction<ProfileModalMode>>;
 	setProfileModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
@@ -681,10 +709,23 @@ interface UseTimerPanelProps {
 
 interface UseProfileModalProps {
 	isOpen: boolean;
-	mode: 'create' | 'edit';
+	mode: ProfileModalMode;
 	profile?: Profile | undefined;
 	onClose: () => void;
 	onSubmit: (profileData: ProfileFormData) => Promise<string>;
+}
+
+interface UseModalDismissProps {
+	isOpen: boolean;
+	onClose: () => void;
+}
+
+interface UseEditableDurationProps {
+	/** What the clock currently reads, used to seed the field. */
+	value: string;
+	canEdit: boolean;
+	/** Receives a duration the engine accepts, e.g. "1500s". */
+	onCommit: (duration: string) => void;
 }
 
 interface UseHelpModalProps {
@@ -693,7 +734,6 @@ interface UseHelpModalProps {
 
 interface UseTerminalModalProps {
 	isOpen: boolean;
-	onClose: () => void;
 	onCommand: (command: string) => Promise<string>;
 	onHelp: () => void;
 	sessionSummary?: string | null;

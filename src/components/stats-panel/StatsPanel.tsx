@@ -72,15 +72,17 @@ const StatsPanel = ({ appState }: StatsPanelProps) => {
 							key={label}
 							className='flex-1 basis-28 min-w-0 p-3 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'
 						>
-							<div className='absolute right-1.5 top-1.5 opacity-15 group-hover:opacity-25 transition-opacity'>
+							{/* The icon was a 15% watermark, which against this
+							    background is not a faint icon so much as no icon. */}
+							<div className='absolute right-1.5 top-1.5 opacity-60 group-hover:opacity-100 transition-opacity'>
 								<Icon className={`h-5 w-5 ${tone}`} />
 							</div>
-							<div className='text-xs text-zetta-text-muted mb-1 font-medium tracking-wide'>
+							<div className='text-xs text-zetta-text-secondary mb-1 font-medium tracking-wide'>
 								{label}
 							</div>
 							<div className='text-2xl font-bold text-zetta-text tracking-tight flex items-baseline gap-1.5'>
 								{read(stats)}
-								<span className='text-xs font-normal text-zetta-text-muted'>
+								<span className='text-xs font-normal text-zetta-text-secondary'>
 									{unit}
 								</span>
 							</div>

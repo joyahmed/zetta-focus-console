@@ -25,6 +25,7 @@ const NumberInput = ({
 	min,
 	max,
 	label,
+	unit,
 	step = 1,
 	precision = 0
 }: NumberInputProps) => {
@@ -53,8 +54,17 @@ const NumberInput = ({
 
 	return (
 		<div className='flex flex-col gap-1.5'>
+			{/* The unit belongs on the label: "Focus 25" reads as ambiguous
+			    where "Focus (min)" does not, and three of these four fields
+			    are minutes while the fourth is a count. */}
 			<label className='text-xs text-zetta-text-secondary font-medium'>
 				{label}
+				{unit && (
+					<span className='text-zetta-text-muted font-normal'>
+						{' '}
+						({unit})
+					</span>
+				)}
 			</label>
 			<div className='flex items-center gap-1'>
 				<button
