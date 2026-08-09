@@ -98,10 +98,7 @@ export default function TimerPanel({
 						/>
 					</Suspense>
 
-					{/* Inside the circle: the clock, position in the cycle, and any
-				    override. Stacked rather than positioned at percentages, so
-				    nothing needs nudging when a row appears or disappears — the
-				    override row keeps its height either way. */}
+					{/* Just the clock inside the circle now. */}
 					<div className='absolute inset-0 z-10 flex flex-col items-center justify-center px-[12%]'>
 						<Suspense fallback={null}>
 							<TimerDisplay
@@ -113,20 +110,25 @@ export default function TimerPanel({
 							/>
 						</Suspense>
 
-						<div className='flex items-center h-5 mt-1'>
-							<span className='text-[10px] font-medium uppercase tracking-wider text-zetta-text-muted/70 whitespace-nowrap'>
-								Session {timer.current_session}/{timer.total_sessions}
-							</span>
-						</div>
-
-						<div className='flex items-center h-6'>
-							{hasOverride && (
-								<span className='px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-500 bg-amber-500/10 rounded-full border border-amber-500/20 whitespace-nowrap'>
-									Override
-								</span>
-							)}
-						</div>
 					</div>
+					</div>
+
+					{/* Cycle position and override, below the circle rather than
+					    crowded inside it. Both rows keep their height whether or
+					    not they have anything to say, so the circle above them
+					    does not move when an override is set or cleared. */}
+					<div className='flex items-center h-5 shrink-0'>
+						<span className='text-[10px] font-medium uppercase tracking-wider text-zetta-text-muted/70 whitespace-nowrap'>
+							Session {timer.current_session}/{timer.total_sessions}
+						</span>
+					</div>
+
+					<div className='flex items-center h-6 shrink-0'>
+						{hasOverride && (
+							<span className='px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-500 bg-amber-500/10 rounded-full border border-amber-500/20 whitespace-nowrap'>
+								Override
+							</span>
+						)}
 					</div>
 				</div>
 
@@ -140,7 +142,7 @@ export default function TimerPanel({
 			    for width, and on a narrow window the two of them together
 			    overflowed and the chips ended up on top of the ring. Absolute,
 			    it cannot affect the circle's size or centring at all. */}
-			<div className='absolute right-4 top-1/2 -translate-y-1/2 z-10 w-14 flex flex-col items-center gap-1.5'>
+			<div className='absolute right-4 top-1/2 -translate-y-1/2 z-10 w-14 flex flex-col items-center gap-2'>
 					{onQuickStart && timer.status === 'idle' && (
 						<>
 							<span className='text-[9px] uppercase tracking-wider text-zetta-text-muted font-bold'>
@@ -170,7 +172,6 @@ export default function TimerPanel({
 						</>
 					)}
 				</div>
-			</div>
 
 			{/* Task display */}
 			{currentTask && currentTask.title && isRunning && (

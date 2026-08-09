@@ -113,23 +113,17 @@ const TimerRing = ({
 				}}
 			/>
 
-			{/* Only the progress is animated, and only while a session is
-			    running.
+			{/* Only `stroke-dashoffset` transitions.
+			    It was `transition-all duration-1000`, which animated the stroke
+			    colour and the drop-shadow over a full second as well — that, not
+			    the arc, was the flash on start. Starting does not move the arc at
+			    all: an idle timer and a fresh session both sit at a full circle.
 
-			    `transition-all` meant the stroke colour and the drop-shadow
-			    animated over a full second alongside it, so starting or stopping
-			    washed the whole ring through a slow colour change.
-
-			    The `key` is what actually stops the sweep. The offset jumps the
-			    length of the circle when a session starts or resets, and simply
-			    switching the class to `transition-none` on that render does not
-			    help: React commits the new class and the new offset together, so
-			    the browser still interpolates the jump using whichever transition
-			    is in effect afterwards. Remounting on the running/idle boundary
-			    gives it an element with no previous value, which cannot animate —
-			    so start and stop snap, and only the per-second tick glides. */}
+			    Stopping does move it, back to full, and that wind-down is worth
+			    seeing — it is the feedback that the session was discarded. Half a
+			    second, eased out, against the linear second-long glide of a tick
+			    so the two read as different things. */}
 			<Circle
-				key={isRunning ? 'running' : 'idle'}
 				{...{
 					radius,
 					stroke: progressStroke,
@@ -138,7 +132,7 @@ const TimerRing = ({
 					strokeDashoffset,
 					className: isRunning
 						? 'transition-[stroke-dashoffset] duration-1000 ease-linear'
-						: 'transition-none',
+						: 'transition-[stroke-dashoffset] duration-500 ease-out',
 					style: progressStyle,
 					gradientId
 				}}
