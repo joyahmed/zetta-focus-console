@@ -16,40 +16,27 @@ pub fn get_preferences_path() -> PathBuf {
     get_app_data_dir().join("preferences.json")
 }
 
-/// Load preferences from disk, with fallback to defaults if corrupted or missing
+/// Load preferences from disk, falling back to defaults if missing or corrupt.
+///
+/// A corrupt file is not an error worth surfacing: the app is perfectly usable
+/// with defaults, and the next save overwrites it. Losing a theme preference is
+/// not worth an error dialog on launch.
 pub fn load_preferences() -> Preferences {
     let path = get_preferences_path();
 
-    // eprintln!("[DEBUG] Loading preferences from: {:?}", path);
-
     if !path.exists() {
-        eprintln!("[DEBUG] Preferences file does not exist, using defaults");
         return Preferences::default();
     }
 
-    match fs::read_to_string(&path) {
-        Ok(content) => {
-            // eprintln!("[DEBUG] Preferences content: {}", content);
-            match serde_json::from_str::<Preferences>(&content) {
-                Ok(prefs) => prefs,
-                Err(e) => {
-                    eprintln!("[DEBUG] Failed to parse preferences: {}", e);
-                    Preferences::default()
-                }
-            }
-        }
-        Err(e) => {
-            eprintln!("[DEBUG] Failed to read preferences file: {}", e);
-            Preferences::default()
-        }
-    }
+    fs::read_to_string(&path)
+        .ok()
+        .and_then(|content| serde_json::from_str::<Preferences>(&content).ok())
+        .unwrap_or_default()
 }
 
 /// Save preferences to disk
 pub fn save_preferences(prefs: &Preferences) -> Result<(), String> {
     let path = get_preferences_path();
-
-    eprintln!("[DEBUG] Saving preferences to: {:?}", path);
 
     // Ensure directory exists
     if let Some(parent) = path.parent() {
@@ -57,9 +44,7 @@ pub fn save_preferences(prefs: &Preferences) -> Result<(), String> {
     }
 
     let content = serde_json::to_string_pretty(prefs).map_err(|e| e.to_string())?;
-    eprintln!("[DEBUG] Preferences content to save: {}", content);
     fs::write(&path, content).map_err(|e| e.to_string())?;
 
     Ok(())
 }
-

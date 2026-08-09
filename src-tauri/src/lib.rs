@@ -27,9 +27,6 @@ fn setup_global_shortcuts(app: &AppHandle) -> Result<(), Box<dyn std::error::Err
     // Global shortcuts
     let toggle_window_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyH);
     let toggle_particles_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyB);
-
-    eprintln!("[DIAGNOSTIC] Registering global shortcuts...");
-
     // Ctrl+H - Hide/Show window
     app.global_shortcut()
         .on_shortcut(toggle_window_shortcut, move |app, _shortcut, event| {
@@ -55,8 +52,6 @@ fn setup_global_shortcuts(app: &AppHandle) -> Result<(), Box<dyn std::error::Err
             }
         },
     )?;
-
-    eprintln!("[DIAGNOSTIC] Global shortcuts registered (Ctrl+H, Ctrl+B)");
     Ok(())
 }
 
@@ -86,30 +81,26 @@ fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         .icon(app.default_window_icon().unwrap().clone())
         .menu(&menu)
         .tooltip("Zetta Focus Console - Idle")
-        .on_menu_event(move |app, event| {
-            eprintln!("[TRAY] Menu item clicked: {:?}", event.id.as_ref());
-            match event.id.as_ref() {
-                "start" => {
-                    let _ = app.emit("tray-action", "start");
-                }
-                "stop" => {
-                    let _ = app.emit("tray-action", "stop");
-                }
-                "pause" => {
-                    let _ = app.emit("tray-action", "pause");
-                }
-                "resume" => {
-                    let _ = app.emit("tray-action", "resume");
-                }
-                "settings" => {
-                    let _ = app.emit("tray-action", "settings");
-                }
-                "quit" => {
-                    eprintln!("[TRAY] Quit requested");
-                    app.exit(0);
-                }
-                _ => {}
+        .on_menu_event(move |app, event| match event.id.as_ref() {
+            "start" => {
+                let _ = app.emit("tray-action", "start");
             }
+            "stop" => {
+                let _ = app.emit("tray-action", "stop");
+            }
+            "pause" => {
+                let _ = app.emit("tray-action", "pause");
+            }
+            "resume" => {
+                let _ = app.emit("tray-action", "resume");
+            }
+            "settings" => {
+                let _ = app.emit("tray-action", "settings");
+            }
+            "quit" => {
+                app.exit(0);
+            }
+            _ => {}
         })
         .on_tray_icon_event(move |tray, event| {
             if let TrayIconEvent::Click {
@@ -126,8 +117,6 @@ fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
             }
         })
         .build(&app_handle)?;
-
-    eprintln!("[DIAGNOSTIC] System tray initialized successfully");
     Ok(())
 }
 
@@ -139,11 +128,6 @@ fn update_tray_state(
     session_type: String,
     strict_mode_active: Option<bool>,
 ) -> Result<(), String> {
-    // eprintln!(
-    //     "[TRAY] Updating tray state - status: {}, session_type: {}, strict_mode: {:?}",
-    //     status, session_type, strict_mode_active
-    // );
-
     let is_strict = strict_mode_active.unwrap_or(false);
 
     let tooltip = match (status.as_str(), session_type.as_str(), is_strict) {
@@ -239,12 +223,9 @@ pub fn run() {
             set_start_minimized,
         ])
         .setup(|app| {
-            eprintln!("[DIAGNOSTIC] Setting up Zetta Focus Console...");
-
             // Check if app should start minimized based on preference
             let prefs = crate::storage::load_preferences();
             if prefs.start_minimized {
-                eprintln!("[DIAGNOSTIC] Starting minimized to tray (preference enabled)");
                 if let Some(window) = app.get_webview_window("main") {
                     let _ = window.hide();
                 }
@@ -265,7 +246,6 @@ pub fn run() {
             if let Some(window) = app.get_webview_window("main") {
                 window.on_window_event(move |event| {
                     if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                        eprintln!("[DIAGNOSTIC] Window close requested - minimizing to tray");
                         api.prevent_close();
                         if let Some(win) = app_handle.get_webview_window("main") {
                             let _ = win.hide();
@@ -273,8 +253,6 @@ pub fn run() {
                     }
                 });
             }
-
-            eprintln!("[DIAGNOSTIC] Setup complete");
             Ok(())
         })
         .run(tauri::generate_context!())

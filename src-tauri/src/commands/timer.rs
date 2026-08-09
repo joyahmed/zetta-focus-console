@@ -180,9 +180,7 @@ pub fn process_command(
 
         "resume" => resume_command(app_state),
 
-        "profile" => {
-            crate::commands::profile::profile_command(args, app_state, sound_manager)
-        }
+        "profile" => crate::commands::profile::profile_command(args, app_state, sound_manager),
 
         "season" => season_command(args, app_state),
 

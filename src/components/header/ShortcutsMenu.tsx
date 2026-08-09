@@ -1,121 +1,112 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
+import Modal from '../Modal';
 import { KeyboardIcon } from './icons';
 
 interface Shortcut {
 	key: string;
-	action: string;
 	description: string;
+	/** Works even when the app is not focused. */
+	global?: boolean;
 }
 
-const shortcuts: Shortcut[] = [
+const SHORTCUT_GROUPS: { title: string; shortcuts: Shortcut[] }[] = [
 	{
-		key: 'Ctrl+S',
-		action: 'Start/Stop',
-		description: 'Start or stop the timer'
+		title: 'Session',
+		shortcuts: [
+			{ key: 'Ctrl+S', description: 'Start or stop the timer' },
+			{ key: 'Ctrl+P', description: 'Pause or resume' }
+		]
 	},
 	{
-		key: 'Ctrl+P',
-		action: 'Pause/Resume',
-		description: 'Pause or resume the timer'
+		title: 'Windows',
+		shortcuts: [
+			{ key: 'Ctrl+T', description: 'Toggle the terminal' },
+			{ key: 'Ctrl+,', description: 'Open settings' },
+			{
+				key: 'Ctrl+H',
+				description: 'Hide or restore the window',
+				global: true
+			}
+		]
 	},
 	{
-		key: 'Ctrl+T',
-		action: 'Terminal',
-		description: 'Toggle terminal'
+		title: 'Appearance',
+		shortcuts: [
+			{ key: 'Ctrl+D', description: 'Toggle light and dark theme' },
+			{
+				key: 'Ctrl+B',
+				description: 'Toggle background particles',
+				global: true
+			}
+		]
 	},
 	{
-		key: 'Ctrl+H',
-		action: 'Hide/Show',
-		description: 'Hide or show window (global)'
-	},
-	{ key: 'Ctrl+,', action: 'Settings', description: 'Open settings' },
-	{
-		key: 'Ctrl+D',
-		action: 'Theme',
-		description: 'Toggle light/dark theme'
-	},
-	{
-		key: 'Ctrl+M',
-		action: 'Mute',
-		description: 'Mute or unmute audio'
-	},
-	{
-		key: 'Ctrl+=',
-		action: 'Volume Up',
-		description: 'Increase volume'
-	},
-	{
-		key: 'Ctrl+-',
-		action: 'Volume Down',
-		description: 'Decrease volume'
-	},
-	{
-		key: 'Ctrl+V',
-		action: 'Voice',
-		description: 'Toggle voice cues'
-	},
-	{
-		key: 'Ctrl+B',
-		action: 'Particles',
-		description: 'Toggle background particles'
+		title: 'Audio',
+		shortcuts: [
+			{ key: 'Ctrl+M', description: 'Mute or unmute' },
+			{ key: 'Ctrl+=', description: 'Volume up' },
+			{ key: 'Ctrl+-', description: 'Volume down' },
+			{ key: 'Ctrl+V', description: 'Toggle voice cues' }
+		]
 	}
 ];
 
 export default function ShortcutsMenu() {
 	const [isOpen, setIsOpen] = useState(false);
-	const menuRef = useRef<HTMLDivElement>(null);
-
-	useEffect(() => {
-		function handleClickOutside(event: MouseEvent) {
-			if (
-				menuRef.current &&
-				!menuRef.current.contains(event.target as Node)
-			) {
-				setIsOpen(false);
-			}
-		}
-
-		document.addEventListener('mousedown', handleClickOutside);
-		return () =>
-			document.removeEventListener('mousedown', handleClickOutside);
-	}, []);
 
 	return (
-		<div className='relative' ref={menuRef}>
+		<>
 			<button
-				onClick={() => setIsOpen(!isOpen)}
+				onClick={() => setIsOpen(true)}
 				className='p-2 rounded-lg transition-all duration-200 hover:bg-white/10 text-zetta-text-secondary hover:text-zetta-text-primary'
 				title='Keyboard Shortcuts'
 			>
 				<KeyboardIcon className='w-5 h-5' />
 			</button>
 
-			{isOpen && (
-				<div className='absolute right-0 top-full mt-2 w-80 z-50'>
-					<div className='glass-panel rounded-xl border border-zetta-border/50 shadow-xl overflow-hidden'>
-						<div className='px-4 py-3 border-b border-zetta-border/50 bg-white/5 dark:bg-black'>
-							<h3 className='text-sm font-semibold text-zetta-text-primary'>
-								Keyboard Shortcuts
-							</h3>
-						</div>
-						<div className='py-2 max-h-80 overflow-y-auto'>
-							{shortcuts.map((shortcut, index) => (
-								<div
-									key={index}
-									className='flex items-center justify-between px-4 py-2 hover:bg-white/5 transition-colors'
-								>
-									<span className='text-xs text-zetta-text-secondary'>
-										{shortcut.description}
-									</span>
-									<kbd className='px-2 py-1 text-xs font-mono bg-zetta-bg-secondary border border-zetta-border rounded text-zetta-accent-primary'>
-										{shortcut.key}
-									</kbd>
+			<Modal
+				isOpen={isOpen}
+				onClose={() => setIsOpen(false)}
+				title='Keyboard Shortcuts'
+			>
+				<div className='px-5 py-4 overflow-y-auto custom-scrollbar'>
+					<div className='grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5'>
+						{SHORTCUT_GROUPS.map(group => (
+							<section key={group.title}>
+								<h3 className='text-xs font-medium text-zetta-text-secondary uppercase tracking-wider mb-2'>
+									{group.title}
+								</h3>
+								<div className='flex flex-col gap-1'>
+									{group.shortcuts.map(shortcut => (
+										<div
+											key={shortcut.key}
+											className='flex items-center justify-between gap-4 px-2 py-1.5 rounded hover:bg-white/5 transition-colors'
+										>
+											<span className='text-sm text-zetta-text'>
+												{shortcut.description}
+												{shortcut.global && (
+													<span className='ml-1.5 text-[10px] uppercase tracking-wide text-zetta-text-muted'>
+														global
+													</span>
+												)}
+											</span>
+											<kbd className='shrink-0 px-2 py-1 text-xs font-mono bg-zetta-bg-secondary border border-zetta-border rounded text-zetta-accent-primary'>
+												{shortcut.key}
+											</kbd>
+										</div>
+									))}
 								</div>
-							))}
-						</div>
+							</section>
+						))}
 					</div>
+
+					<p className='mt-5 pt-4 border-t border-zetta-border text-xs text-zetta-text-muted'>
+						Shortcuts marked <span className='uppercase'>global</span>{' '}
+						work from any application. The rest need this window
+						focused, and are ignored while you are typing in a field.
+					</p>
 				</div>
-			)}
-		</div>
+			</Modal>
+		</>
 	);
 }

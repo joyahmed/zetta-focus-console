@@ -8,7 +8,6 @@ export const appReactivities = ({
 	setAppState,
 	setSessionSummary,
 	setTerminalOpen,
-	settingsOpen,
 	setSettingsOpen
 }: AppReactivitiesProps) => {
 	// Use ref to track current appState for event handlers
@@ -27,7 +26,6 @@ export const appReactivities = ({
 		const terminalOpenFn = setTerminalOpenRef.current;
 		const settingsOpenFn = setSettingsOpenRef.current;
 
-		console.log('[Frontend] handleGlobalAction:', action);
 
 		try {
 			switch (action) {
@@ -136,10 +134,6 @@ export const appReactivities = ({
 		const unlistenGlobalShortcut = listen<string>(
 			'global-shortcut',
 			event => {
-				console.log(
-					'[Frontend] Global shortcut received:',
-					event.payload
-				);
 				handleGlobalAction(event.payload);
 			}
 		);
@@ -148,10 +142,6 @@ export const appReactivities = ({
 		const unlistenTrayAction = listen<string>(
 			'tray-action',
 			event => {
-				console.log(
-					'[Frontend] Tray action received:',
-					event.payload
-				);
 				handleGlobalAction(event.payload);
 			}
 		);
@@ -243,17 +233,8 @@ export const appReactivities = ({
 
 	// In-app keyboard shortcuts (only work when app is in focus)
 	useEffect(() => {
-		console.log('[DEBUG] Keyboard effect running - adding listener');
 
 		const handleKeyDown = async (e: KeyboardEvent) => {
-			console.log(
-				'[DEBUG] Key pressed:',
-				e.key,
-				'ctrl:',
-				e.ctrlKey,
-				'shift:',
-				e.shiftKey
-			);
 
 			// Ignore if user is typing in an input field
 			if (
@@ -271,7 +252,6 @@ export const appReactivities = ({
 			if (ctrl && key === 's') {
 				e.preventDefault();
 				e.stopPropagation();
-				console.log('[SHORTCUT] Ctrl+S: Start/Stop');
 				const status = appStateRef.current?.timer?.status;
 				if (status === 'running') {
 					await invoke('execute_command', { command: 'stop' });
@@ -283,7 +263,6 @@ export const appReactivities = ({
 			else if (ctrl && key === 'p') {
 				e.preventDefault();
 				e.stopPropagation();
-				console.log('[SHORTCUT] Ctrl+P: Pause/Resume');
 				const status = appStateRef.current?.timer?.status;
 				if (status === 'running') {
 					await invoke('execute_command', { command: 'pause' });
@@ -295,19 +274,13 @@ export const appReactivities = ({
 			else if (ctrl && key === 't') {
 				e.preventDefault();
 				e.stopPropagation();
-				console.log('[SHORTCUT] Ctrl+T: Toggle terminal');
 				setTerminalOpen(prev => !prev);
 			}
 			// Ctrl+, - Settings (toggle)
 			else if (ctrl && e.key === ',') {
 				e.preventDefault();
 				e.stopPropagation();
-				console.log(
-					'[SHORTCUT] Ctrl+,: Settings - current:',
-					settingsOpen
-				);
 				setSettingsOpen(prev => {
-					console.log('[SHORTCUT] Toggling settings:', !prev);
 					return !prev;
 				});
 			}
@@ -315,14 +288,12 @@ export const appReactivities = ({
 			else if (ctrl && key === 'd') {
 				e.preventDefault();
 				e.stopPropagation();
-				console.log('[SHORTCUT] Ctrl+D: Toggle theme');
 				await invoke('execute_command', { command: 'theme toggle' });
 			}
 			// Ctrl+M - Mute
 			else if (ctrl && key === 'm') {
 				e.preventDefault();
 				e.stopPropagation();
-				console.log('[SHORTCUT] Ctrl+M: Mute');
 				await invoke('execute_command', { command: 'sound mute' });
 			}
 			// Ctrl+= / Ctrl++ - Volume up
@@ -336,7 +307,6 @@ export const appReactivities = ({
 			) {
 				e.preventDefault();
 				e.stopPropagation();
-				console.log('[SHORTCUT] Ctrl+=/+: Volume up');
 				await invoke('execute_command', {
 					command: 'sound volume up'
 				});
@@ -351,7 +321,6 @@ export const appReactivities = ({
 			) {
 				e.preventDefault();
 				e.stopPropagation();
-				console.log('[SHORTCUT] Ctrl+-: Volume down');
 				await invoke('execute_command', {
 					command: 'sound volume down'
 				});
