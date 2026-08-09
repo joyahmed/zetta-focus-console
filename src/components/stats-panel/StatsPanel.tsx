@@ -5,6 +5,7 @@ import {
 	ClockIcon,
 	FlameIcon
 } from './icons';
+import { useStatsPanel } from '../../hooks/use-stats-panel';
 
 /** The four headline numbers. Written once as data because the card around
     them was previously copied out four times — a hundred lines in which the
@@ -41,99 +42,9 @@ const STAT_CARDS: StatCard[] = [
 	}
 ];
 
-/** Unix seconds -> "2h 14m". The engine records when it started, not how long
-    it has run, so the elapsed time is derived here rather than ticked. */
-const formatUptime = (startedAtUnixSeconds?: number): string => {
-	if (!startedAtUnixSeconds) return '--';
-
-	const seconds = Math.max(
-		0,
-		Math.floor(Date.now() / 1000) - startedAtUnixSeconds
-	);
-	const hours = Math.floor(seconds / 3600);
-	const minutes = Math.floor((seconds % 3600) / 60);
-
-	if (hours > 0) return `${hours}h ${minutes}m`;
-	if (minutes > 0) return `${minutes}m`;
-	return `${seconds}s`;
-};
-
-const SESSION_LABELS: Record<string, string> = {
-	focus: 'FOCUS',
-	short_break: 'SHORT BREAK',
-	long_break: 'LONG BREAK'
-};
-
-const clock = (totalSeconds: number): string => {
-	const minutes = Math.floor(Math.max(0, totalSeconds) / 60);
-	const seconds = Math.max(0, totalSeconds) % 60;
-	return `${minutes}:${String(seconds).padStart(2, '0')}`;
-};
-
 const StatsPanel = ({ appState }: StatsPanelProps) => {
-	const {
-		timer,
-		active_profile: profile,
-		stats,
-		dev_mode: devMode,
-		sound_state: sound,
-		session_override: override,
-		strict_mode: strict,
-		current_task: task,
-		ambience_enabled: ambience,
-		voice_enabled: voice,
-		app_start_time: appStartTime
-	} = appState;
-
-	const fields: {
-		label: string;
-		value: string;
-		accent?: 'good' | 'warn';
-	}[] = [
-		{ label: 'TIMER STATUS', value: (timer.status || 'idle').toUpperCase() },
-		{
-			label: 'SESSION',
-			value: `${SESSION_LABELS[timer.session_type] ?? timer.session_type} ${timer.current_session}/${timer.total_sessions}`
-		},
-		{ label: 'REMAINING', value: clock(timer.remaining_seconds) },
-		{ label: 'ACTIVE PROFILE', value: profile.name },
-		{
-			label: 'OVERRIDE',
-			value: override ? 'SET' : 'NONE',
-			accent: override ? 'warn' : undefined
-		},
-		{
-			label: 'STRICT MODE',
-			value: strict.is_active ? 'ENGAGED' : 'OFF',
-			accent: strict.is_active ? 'warn' : undefined
-		},
-		{
-			label: 'TASK',
-			value: task.title.trim() ? `${task.title} (${task.category})` : 'NONE'
-		},
-		{
-			label: 'AMBIENCE',
-			value: `${ambience ? 'ON' : 'OFF'} · ${profile.background_type.toUpperCase()}`
-		},
-		{
-			label: 'SOUND',
-			value: sound.is_muted
-				? 'MUTED'
-				: sound.is_playing
-					? `${(sound.current_sound ?? '').replace(/\.[^.]+$/, '') || 'ON'} ${sound.volume}%`
-					: 'STOPPED'
-		},
-		{
-			label: 'VOICE',
-			value: voice ? 'ON' : 'OFF'
-		},
-		{
-			label: 'DEV MODE',
-			value: devMode ? 'ACTIVE' : 'STANDBY',
-			accent: devMode ? 'good' : undefined
-		},
-		{ label: 'UPTIME', value: formatUptime(appStartTime) }
-	];
+	const { stats, dev_mode: devMode } = appState;
+	const fields = useStatsPanel(appState);
 
 	return (
 		<div className='panel h-full flex flex-col gap-3 md:gap-4 p-3 md:p-4 overflow-hidden'>

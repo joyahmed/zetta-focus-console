@@ -1,0 +1,51 @@
+/** Seconds -> "12:05". The clock inside the ring. */
+export const formatTime = (seconds: number): string => {
+	const mins = Math.floor(seconds / 60);
+	const secs = seconds % 60;
+	return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+};
+
+/** Seconds -> "12:05", without the leading zero on the minutes. */
+export const formatClock = (totalSeconds: number): string => {
+	const safe = Math.max(0, totalSeconds);
+	const minutes = Math.floor(safe / 60);
+	const seconds = safe % 60;
+	return `${minutes}:${String(seconds).padStart(2, '0')}`;
+};
+
+/** Seconds -> "25m", trimming a trailing ".00" but keeping "0.5m". */
+export const formatMinutes = (seconds: number): string =>
+	`${Number((seconds / 60).toFixed(2))}m`;
+
+export const secondsToMinutes = (seconds: number): number =>
+	Number((seconds / 60).toFixed(2));
+
+/**
+ * Unix seconds -> "2h 14m".
+ *
+ * The engine records when it started, not how long it has run, so the elapsed
+ * time is derived rather than ticked.
+ */
+export const formatUptime = (startedAtUnixSeconds?: number): string => {
+	if (!startedAtUnixSeconds) return '--';
+
+	const seconds = Math.max(
+		0,
+		Math.floor(Date.now() / 1000) - startedAtUnixSeconds
+	);
+	const hours = Math.floor(seconds / 3600);
+	const minutes = Math.floor((seconds % 3600) / 60);
+
+	if (hours > 0) return `${hours}h ${minutes}m`;
+	if (minutes > 0) return `${minutes}m`;
+	return `${seconds}s`;
+};
+
+/**
+ * "fireplace.ogg" -> "fireplace".
+ *
+ * Any extension, not just .ogg: profiles saved before the switch to Vorbis
+ * still name a .mp3 and must still resolve to the same sound.
+ */
+export const stripExtension = (filename: string): string =>
+	filename.replace(/\.[^.]+$/, '');

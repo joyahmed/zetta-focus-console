@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
 import { commandGroups } from '../configs/modal-config';
+import { useHelpModal } from '../hooks/use-help-modal';
 
 /** The little bordered key. Written once for the four places this modal shows
     one — ESC in the header, UP and DOWN in the footer. */
@@ -10,63 +10,10 @@ const KeyCap = ({ children }: { children: React.ReactNode }) => (
 );
 
 const HelpModal = ({ isOpen, onClose }: HelpModalProps) => {
-	const [selectedIndex, setSelectedIndex] = useState(0);
-	const listRef = useRef<HTMLDivElement>(null);
-
-	// Flatten commands for navigation
-	const allCommands = commandGroups.flatMap(group =>
-		group.commands.map(cmd => ({ ...cmd, group: group.title }))
-	);
-
-	useEffect(() => {
-		if (!isOpen) {
-			setSelectedIndex(0);
-		}
-	}, [isOpen]);
-
-	useEffect(() => {
-		if (isOpen && listRef.current) {
-			const selectedElement = listRef.current.querySelector(
-				`[data-index="${selectedIndex}"]`
-			);
-			if (selectedElement) {
-				selectedElement.scrollIntoView({
-					block: 'nearest',
-					behavior: 'smooth'
-				});
-			}
-		}
-	}, [selectedIndex, isOpen]);
-
-	useEffect(() => {
-		if (!isOpen) return;
-
-		const handleKeyDown = (e: globalThis.KeyboardEvent) => {
-			switch (e.key) {
-				case 'ArrowDown':
-					e.preventDefault();
-					setSelectedIndex(prev =>
-						Math.min(prev + 1, allCommands.length - 1)
-					);
-					break;
-				case 'ArrowUp':
-					e.preventDefault();
-					setSelectedIndex(prev => Math.max(prev - 1, 0));
-					break;
-				case 'Escape':
-					e.preventDefault();
-					onClose();
-					break;
-				case 'Enter':
-					e.preventDefault();
-					// Could implement selecting the command
-					break;
-			}
-		};
-
-		window.addEventListener('keydown', handleKeyDown);
-		return () => window.removeEventListener('keydown', handleKeyDown);
-	}, [isOpen, onClose, allCommands.length]);
+	const { selectedIndex, listRef, commandCount, groupOffsets } = useHelpModal({
+		isOpen,
+		onClose
+	});
 
 	if (!isOpen) return null;
 
@@ -98,9 +45,7 @@ const HelpModal = ({ isOpen, onClose }: HelpModalProps) => {
 					className='flex-1 overflow-y-auto p-4 custom-scrollbar'
 				>
 					{commandGroups.map((group, groupIndex) => {
-						const startIndex = commandGroups
-							.slice(0, groupIndex)
-							.reduce((acc, g) => acc + g.commands.length, 0);
+						const startIndex = groupOffsets[groupIndex] ?? 0;
 
 						return (
 							<div key={group.title} className='mb-4 last:mb-0'>
@@ -155,7 +100,7 @@ const HelpModal = ({ isOpen, onClose }: HelpModalProps) => {
 							<span>navigate</span>
 						</span>
 					</div>
-					<span>{allCommands.length} commands</span>
+					<span>{commandCount} commands</span>
 				</div>
 			</div>
 		</div>

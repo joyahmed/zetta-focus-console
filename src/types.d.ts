@@ -658,6 +658,21 @@ interface UseAmbientPanelProps {
 interface UseTimerPanelProps {
 	timer: TimerState;
 	sessionOverride: SessionOverride | null | undefined;
+	glowColor: string;
+	strictMode: StrictModeState | null | undefined;
+}
+
+interface UseProfileModalProps {
+	isOpen: boolean;
+	mode: 'create' | 'edit';
+	profile?: Profile | undefined;
+	onClose: () => void;
+	onSubmit: (profileData: ProfileFormData) => Promise<string>;
+}
+
+interface UseHelpModalProps {
+	isOpen: boolean;
+	onClose: () => void;
 }
 
 interface UseTerminalModalProps {
@@ -670,8 +685,3 @@ interface UseTerminalModalProps {
 	isLight: boolean;
 }
 
-interface UseProfilePanelReturn {
-	getSeasonEmoji: (season: string) => string;
-	getMotionLabel: (intensity: string) => string;
-	getMotionBar: (intensity: string) => number;
-}

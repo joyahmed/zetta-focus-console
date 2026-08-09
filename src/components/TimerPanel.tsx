@@ -4,14 +4,9 @@ import TimerRing from './timer-panel/TimerRing';
 import TimerDisplay from './timer-panel/TimerDisplay';
 import TimerControls from './timer-panel/TimerControls';
 
-const RADIUS = 90;
-
 /** Minutes offered as one-click sessions. Short first — the whole point is
     the runs the profile durations do not cover. */
 const QUICK_DURATIONS = [5, 15, 25, 50];
-
-// Red color for Strict Mode
-const STRICT_MODE_COLOR = '#ef4444';
 
 const TimerPanel = ({
 	timer,
@@ -26,23 +21,16 @@ const TimerPanel = ({
 	onQuickStart,
 	theme: _theme = 'dark'
 }: TimerPanelProps) => {
-	const { hasOverride, circumference, strokeDashoffset, formatTime } =
-		useTimerPanel({
-			timer,
-			sessionOverride
-		});
-
-	const isRunning = timer.status === 'running';
-	const formattedTime = formatTime(timer.remaining_seconds);
-
-	// Determine effective glow color - use red when strict mode is active and running
-	const effectiveGlowColor =
-		strictMode?.is_active && isRunning
-			? STRICT_MODE_COLOR
-			: glowColor;
-
-	// Check if strict mode is blocking controls
-	const isStrictModeBlocking = strictMode?.is_active && isRunning;
+	const {
+		radius,
+		circumference,
+		strokeDashoffset,
+		isRunning,
+		formattedTime,
+		hasOverride,
+		isStrictModeBlocking,
+		effectiveGlowColor
+	} = useTimerPanel({ timer, sessionOverride, glowColor, strictMode });
 
 	return (
 		<div className='panel h-full p-6 flex flex-col items-center justify-center gap-1 relative overflow-hidden group'>
@@ -50,18 +38,13 @@ const TimerPanel = ({
 			{strictMode?.is_active && (
 				<div className='absolute top-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-full bg-red-500/20 border border-red-500/40'>
 					<div className='w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse' />
-					<span className='text-xs font-medium text-red-400'>
-						Strict
-					</span>
+					<span className='text-xs font-medium text-red-400'>Strict</span>
 				</div>
 			)}
 
 			<TimerBackground
-					{...{
-						isRunning,
-						glowColor: effectiveGlowColor
-					}}
-				/>
+				{...{ isRunning, glowColor: effectiveGlowColor }}
+			/>
 
 			{/* The ring takes whatever height is left after the fixed rows, and
 			    derives its width from that. Sizing it by width instead meant a
@@ -78,28 +61,27 @@ const TimerPanel = ({
 					</span>
 
 					<div className='relative h-[clamp(9rem,26dvh,16rem)] aspect-square shrink-0 flex items-center justify-center'>
-					<TimerRing
+						<TimerRing
 							{...{
-								radius: RADIUS,
+								radius,
 								circumference,
 								strokeDashoffset,
 								isRunning,
 								glowColor: effectiveGlowColor,
-								isStrictMode: strictMode?.is_active && isRunning
+								isStrictMode: isStrictModeBlocking
 							}}
 						/>
 
-					{/* Just the clock inside the circle now. */}
-					<div className='absolute inset-0 z-10 flex flex-col items-center justify-center px-[12%]'>
-						<TimerDisplay
+						{/* Just the clock inside the circle now. */}
+						<div className='absolute inset-0 z-10 flex flex-col items-center justify-center px-[12%]'>
+							<TimerDisplay
 								{...{
 									formattedTime,
 									isRunning,
 									glowColor: effectiveGlowColor
 								}}
 							/>
-
-					</div>
+						</div>
 					</div>
 
 					{/* Cycle position and override, below the circle rather than
@@ -120,7 +102,6 @@ const TimerPanel = ({
 						)}
 					</div>
 				</div>
-
 			</div>
 
 			{/* Quick durations, pinned to the right edge of the panel.
@@ -132,35 +113,35 @@ const TimerPanel = ({
 			    overflowed and the chips ended up on top of the ring. Absolute,
 			    it cannot affect the circle's size or centring at all. */}
 			<div className='absolute right-4 top-1/2 -translate-y-1/2 z-10 w-14 flex flex-col items-center gap-2'>
-					{onQuickStart && timer.status === 'idle' && (
-						<>
-							<span className='text-[9px] uppercase tracking-wider text-zetta-text-muted font-bold'>
-								Quick
-							</span>
-							{QUICK_DURATIONS.map(minutes => (
-								<button
-									key={minutes}
-									onClick={() => onQuickStart(minutes)}
-									title={`Start a ${minutes} minute session`}
-									style={{
-										['--chip-glow' as string]: effectiveGlowColor
-									}}
-									className='w-full py-1.5 text-xs font-mono rounded-lg border transition-all duration-200
-										border-[color-mix(in_srgb,var(--chip-glow)_35%,transparent)]
-										bg-[color-mix(in_srgb,var(--chip-glow)_10%,transparent)]
-										text-zetta-text
-										shadow-[0_0_10px_-2px_color-mix(in_srgb,var(--chip-glow)_45%,transparent)]
-										hover:bg-[color-mix(in_srgb,var(--chip-glow)_22%,transparent)]
-										hover:border-[color-mix(in_srgb,var(--chip-glow)_70%,transparent)]
-										hover:shadow-[0_0_16px_-1px_color-mix(in_srgb,var(--chip-glow)_65%,transparent)]
-										active:scale-95'
-								>
-									{minutes}m
-								</button>
-							))}
-						</>
-					)}
-				</div>
+				{onQuickStart && timer.status === 'idle' && (
+					<>
+						<span className='text-[9px] uppercase tracking-wider text-zetta-text-muted font-bold'>
+							Quick
+						</span>
+						{QUICK_DURATIONS.map(minutes => (
+							<button
+								key={minutes}
+								onClick={() => onQuickStart(minutes)}
+								title={`Start a ${minutes} minute session`}
+								style={{
+									['--chip-glow' as string]: effectiveGlowColor
+								}}
+								className='w-full py-1.5 text-xs font-mono rounded-lg border transition-all duration-200
+									border-[color-mix(in_srgb,var(--chip-glow)_35%,transparent)]
+									bg-[color-mix(in_srgb,var(--chip-glow)_10%,transparent)]
+									text-zetta-text
+									shadow-[0_0_10px_-2px_color-mix(in_srgb,var(--chip-glow)_45%,transparent)]
+									hover:bg-[color-mix(in_srgb,var(--chip-glow)_22%,transparent)]
+									hover:border-[color-mix(in_srgb,var(--chip-glow)_70%,transparent)]
+									hover:shadow-[0_0_16px_-1px_color-mix(in_srgb,var(--chip-glow)_65%,transparent)]
+									active:scale-95'
+							>
+								{minutes}m
+							</button>
+						))}
+					</>
+				)}
+			</div>
 
 			{/* Task display */}
 			{currentTask && currentTask.title && isRunning && (
@@ -183,16 +164,15 @@ const TimerPanel = ({
 			)}
 
 			<TimerControls
-					{...{
-						status: timer.status,
-						onStart,
-						onPause,
-						onResume,
-						onStop,
-						isStrictModeBlocking
-					}}
-				/>
-
+				{...{
+					status: timer.status,
+					onStart,
+					onPause,
+					onResume,
+					onStop,
+					isStrictModeBlocking
+				}}
+			/>
 		</div>
 	);
 };

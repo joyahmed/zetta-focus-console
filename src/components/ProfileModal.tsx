@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useProfileModal } from '../hooks/use-profile-modal';
 import LabelledSelect from './profile-modal/LabelledSelect';
 import NumberInput from './profile-modal/NumberInput';
 
@@ -32,133 +32,26 @@ const ProfileModal = ({
 	profile,
 	onSubmit
 }: ProfileModalProps) => {
-	const [name, setName] = useState('');
-	const [focusMin, setFocusMin] = useState(25);
-	const [shortBreakMin, setShortBreakMin] = useState(5);
-	const [longBreakMin, setLongBreakMin] = useState(15);
-	const [sessionsPerCycle, setSessionsPerCycle] = useState(4);
-	const [season, setSeason] = useState('winter');
-	const [intensity, setIntensity] = useState('low');
-	const [sound, setSound] = useState('fireplace');
-	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [error, setError] = useState<string | null>(null);
-
-	const secondsToMinutes = (seconds: number) =>
-		Number((seconds / 60).toFixed(2));
-
-	/** The four steppers, as data. Three of them are minute durations with
-	    identical bounds; only the label, the value and its setter differ. */
-	const intervals: NumberInputProps[] = [
-		{
-			label: 'Focus',
-			value: focusMin,
-			onChange: setFocusMin,
-			min: 0.5,
-			max: 180,
-			step: 0.5,
-			precision: 2
-		},
-		{
-			label: 'Short',
-			value: shortBreakMin,
-			onChange: setShortBreakMin,
-			min: 0.5,
-			max: 60,
-			step: 0.5,
-			precision: 2
-		},
-		{
-			label: 'Long',
-			value: longBreakMin,
-			onChange: setLongBreakMin,
-			min: 0.5,
-			max: 60,
-			step: 0.5,
-			precision: 2
-		},
-		{
-			label: 'Sessions',
-			value: sessionsPerCycle,
-			onChange: setSessionsPerCycle,
-			min: 1,
-			max: 20,
-			step: 1,
-			precision: 0
-		}
-	];
-
-	// Populate form when editing
-	useEffect(() => {
-		if (mode === 'edit' && profile) {
-			setName(profile.name);
-			setFocusMin(secondsToMinutes(profile.focus_duration));
-			setShortBreakMin(secondsToMinutes(profile.short_break_duration));
-			setLongBreakMin(secondsToMinutes(profile.long_break_duration));
-			setSessionsPerCycle(profile.sessions_per_cycle || 4);
-			setSeason(profile.season);
-			setIntensity(profile.motion_intensity);
-			// Extract sound name from filename (e.g. "fireplace.ogg" -> "fireplace").
-			// Any extension, because profiles saved before the switch to Vorbis
-			// still say ".mp3" and must still select the right option.
-			const soundName = profile.sound_file.replace(/\.[^.]+$/, '');
-			setSound(soundName);
-		} else if (mode === 'create') {
-			// Reset to defaults for create mode
-			setName('');
-			setFocusMin(25);
-			setShortBreakMin(5);
-			setLongBreakMin(15);
-			setSessionsPerCycle(4);
-			setSeason('winter');
-			setIntensity('low');
-			setSound('fireplace');
-		}
-		setError(null);
-	}, [mode, profile, isOpen]);
-
-	const handleSubmit = async (e: React.SubmitEvent) => {
-		e.preventDefault();
-		setError(null);
-
-		// Validate name
-		if (!name.trim()) {
-			setError('Profile name is required');
-			return;
-		}
-
-		setIsSubmitting(true);
-		try {
-			const result = await onSubmit({
-				id: mode === 'edit' ? profile?.id : undefined,
-				name: name.trim(),
-				focus_min: focusMin,
-				short_break_min: shortBreakMin,
-				long_break_min: longBreakMin,
-				sessions_per_cycle: sessionsPerCycle,
-				season,
-				intensity,
-				sound
-			});
-
-			if (result.startsWith('Error:')) {
-				setError(result.replace('Error: ', ''));
-			} else {
-				onClose();
-			}
-		} catch (err) {
-			setError(String(err));
-		}
-		setIsSubmitting(false);
-	};
+	const {
+		name,
+		setName,
+		season,
+		setSeason,
+		intensity,
+		setIntensity,
+		sound,
+		setSound,
+		intervals,
+		isSubmitting,
+		error,
+		handleSubmit
+	} = useProfileModal({ isOpen, mode, profile, onClose, onSubmit });
 
 	if (!isOpen) return null;
 
-	const title =
-		mode === 'create' ? 'Create Custom Profile' : 'Edit Profile';
-	const submitLabel =
-		mode === 'create' ? 'Create Profile' : 'Save Changes';
-	const submittingLabel =
-		mode === 'create' ? 'Creating...' : 'Saving...';
+	const title = mode === 'create' ? 'Create Custom Profile' : 'Edit Profile';
+	const submitLabel = mode === 'create' ? 'Create Profile' : 'Save Changes';
+	const submittingLabel = mode === 'create' ? 'Creating...' : 'Saving...';
 
 	return (
 		<div className='fixed inset-0 z-50 flex items-center justify-center'>

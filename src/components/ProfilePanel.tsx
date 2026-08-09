@@ -1,4 +1,9 @@
-import { useProfilePanel } from '../hooks/use-profile-panel';
+import { formatMinutes } from '../utils/format';
+import {
+	getMotionBar,
+	getMotionLabel,
+	getSeasonEmoji
+} from '../utils/profile';
 import DetailRow from './profile-panel/DetailRow';
 import { PencilIcon, PlusIcon, SlidersIcon } from './profile-panel/icons';
 
@@ -37,10 +42,6 @@ const ProfilePanel = ({
 	stats
 }: ProfilePanelProps) => {
 	const otherProfiles = profiles.filter(p => p.id !== profile.id);
-	const formatMinutes = (seconds: number) =>
-		`${Number((seconds / 60).toFixed(2))}m`;
-
-	const { getSeasonEmoji, getMotionLabel, getMotionBar } = useProfilePanel();
 
 	const durations = [
 		{ label: 'Focus', value: formatMinutes(profile.focus_duration) },
