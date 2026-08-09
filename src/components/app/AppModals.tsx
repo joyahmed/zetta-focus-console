@@ -1,8 +1,7 @@
-import { lazy } from 'react';
-const HelpModal = lazy(() => import('../HelpModal'));
-const ProfileModal = lazy(() => import('../ProfileModal'));
-const SettingsPanel = lazy(() => import('../SettingsPanel'));
-const TerminalModal = lazy(() => import('../TerminalModal'));
+import HelpModal from '../HelpModal';
+import ProfileModal from '../ProfileModal';
+import SettingsPanel from '../SettingsPanel';
+import TerminalModal from '../TerminalModal';
 
 const AppModals = ({
 	appState,

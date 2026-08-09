@@ -1,13 +1,8 @@
-import { lazy, Suspense } from 'react';
 import { useTimerPanel } from '../hooks/use-timer-panel';
-const TimerBackground = lazy(
-	() => import('./timer-panel/TimerBackground')
-);
-const TimerRing = lazy(() => import('./timer-panel/TimerRing'));
-const TimerDisplay = lazy(() => import('./timer-panel/TimerDisplay'));
-const TimerControls = lazy(
-	() => import('./timer-panel/TimerControls')
-);
+import TimerBackground from './timer-panel/TimerBackground';
+import TimerRing from './timer-panel/TimerRing';
+import TimerDisplay from './timer-panel/TimerDisplay';
+import TimerControls from './timer-panel/TimerControls';
 
 const RADIUS = 90;
 
@@ -61,14 +56,12 @@ export default function TimerPanel({
 				</div>
 			)}
 
-			<Suspense fallback={null}>
-				<TimerBackground
+			<TimerBackground
 					{...{
 						isRunning,
 						glowColor: effectiveGlowColor
 					}}
 				/>
-			</Suspense>
 
 			{/* The ring takes whatever height is left after the fixed rows, and
 			    derives its width from that. Sizing it by width instead meant a
@@ -85,8 +78,7 @@ export default function TimerPanel({
 					</span>
 
 					<div className='relative h-[clamp(9rem,26dvh,16rem)] aspect-square shrink-0 flex items-center justify-center'>
-					<Suspense fallback={null}>
-						<TimerRing
+					<TimerRing
 							{...{
 								radius: RADIUS,
 								circumference,
@@ -96,19 +88,16 @@ export default function TimerPanel({
 								isStrictMode: strictMode?.is_active && isRunning
 							}}
 						/>
-					</Suspense>
 
 					{/* Just the clock inside the circle now. */}
 					<div className='absolute inset-0 z-10 flex flex-col items-center justify-center px-[12%]'>
-						<Suspense fallback={null}>
-							<TimerDisplay
+						<TimerDisplay
 								{...{
 									formattedTime,
 									isRunning,
 									glowColor: effectiveGlowColor
 								}}
 							/>
-						</Suspense>
 
 					</div>
 					</div>
@@ -193,8 +182,7 @@ export default function TimerPanel({
 				</div>
 			)}
 
-			<Suspense fallback={null}>
-				<TimerControls
+			<TimerControls
 					{...{
 						status: timer.status,
 						onStart,
@@ -204,7 +192,6 @@ export default function TimerPanel({
 						isStrictModeBlocking
 					}}
 				/>
-			</Suspense>
 
 		</div>
 	);

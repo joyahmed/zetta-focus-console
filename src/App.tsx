@@ -1,13 +1,10 @@
-import { lazy, Suspense } from 'react';
 import { useApp } from './hooks/app/use-app';
 //import { useVoiceCues } from './hooks/use-voice-cues';
-const AppPanels = lazy(() => import('./components/app/AppPanels'));
-const AppModals = lazy(() => import('./components/app/AppModals'));
-const Header = lazy(() => import('./components/Header'));
-const AppLoading = lazy(() => import('./components/app/AppLoading'));
-const MeshBackground = lazy(
-	() => import('./components/app/MeshBackground')
-);
+import AppPanels from './components/app/AppPanels';
+import AppModals from './components/app/AppModals';
+import Header from './components/Header';
+import AppLoading from './components/app/AppLoading';
+import MeshBackground from './components/app/MeshBackground';
 
 const App = () => {
 	const {
@@ -53,21 +50,16 @@ const App = () => {
 
 	if (!appState) {
 		return (
-			<Suspense fallback={null}>
-				<AppLoading />
-			</Suspense>
+			<AppLoading />
 		);
 	}
 
 	return (
 		<div className='h-screen w-screen flex flex-col overflow-hidden relative'>
-			<Suspense fallback={null}>
-				<MeshBackground />
-			</Suspense>
+			<MeshBackground />
 
 			<div className='relative z-10 flex flex-col h-full'>
-				<Suspense fallback={null}>
-					<Header
+				<Header
 						{...{
 							activeProfileName: appState.active_profile.name,
 							devMode: appState.dev_mode,
@@ -81,10 +73,8 @@ const App = () => {
 							onThemeChange: handleThemeChange,
 						}}
 					/>
-				</Suspense>
 
-				<Suspense fallback={null}>
-					<AppPanels
+				<AppPanels
 						{...{
 							appState,
 							processCommand,
@@ -95,10 +85,8 @@ const App = () => {
 							setProfileError,
 						}}
 					/>
-				</Suspense>
 
-				<Suspense fallback={null}>
-					<AppModals
+				<AppModals
 						{...{
 							appState,
 							terminalKey,
@@ -128,7 +116,6 @@ const App = () => {
 							onVoiceToggle: handleVoiceToggle
 						}}
 					/>
-				</Suspense>
 			</div>
 		</div>
 	);

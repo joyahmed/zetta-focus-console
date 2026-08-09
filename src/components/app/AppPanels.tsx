@@ -1,8 +1,7 @@
-import { lazy } from 'react';
-const ProfilePanel = lazy(() => import('../ProfilePanel'));
-const StatsPanel = lazy(() => import('../stats-panel/StatsPanel'));
-const AmbientPanel = lazy(() => import('../AmbientPanel'));
-const TimerPanel = lazy(() => import('../TimerPanel'));
+import ProfilePanel from '../ProfilePanel';
+import StatsPanel from '../stats-panel/StatsPanel';
+import AmbientPanel from '../AmbientPanel';
+import TimerPanel from '../TimerPanel';
 
 const AppPanels = ({
 	appState,

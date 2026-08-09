@@ -1,19 +1,15 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAmbientPanel } from '../hooks/use-ambient-panel';
 import { AMBIENT_ANIMATIONS } from './ambient-panel';
 
-const AmbientHeader = lazy(() => import('./ambient-panel/AmbientHeader'));
-const SeasonIndicator = lazy(() => import('./ambient-panel/SeasonIndicator'));
-const LightModePlaceholder = lazy(
-	() => import('./ambient-panel/LightModePlaceholder')
-);
-const GradientBackground = lazy(
-	() => import('./ambient-panel/GradientBackground')
-);
-const WinterScene = lazy(() => import('./ambient-panel/WinterScene'));
-const SummerScene = lazy(() => import('./ambient-panel/SummerScene'));
-const SpringScene = lazy(() => import('./ambient-panel/SpringScene'));
-const AutumnScene = lazy(() => import('./ambient-panel/AutumnScene'));
+import AmbientHeader from './ambient-panel/AmbientHeader';
+import SeasonIndicator from './ambient-panel/SeasonIndicator';
+import LightModePlaceholder from './ambient-panel/LightModePlaceholder';
+import GradientBackground from './ambient-panel/GradientBackground';
+import WinterScene from './ambient-panel/WinterScene';
+import SummerScene from './ambient-panel/SummerScene';
+import SpringScene from './ambient-panel/SpringScene';
+import AutumnScene from './ambient-panel/AutumnScene';
 
 const AmbientPanel = ({
 	season,
@@ -125,9 +121,7 @@ const AmbientPanel = ({
 
 	return (
 		<div className='panel h-full relative overflow-hidden flex flex-col'>
-			<Suspense fallback={null}>
-				<AmbientHeader />
-			</Suspense>
+			<AmbientHeader />
 
 			<div
 				ref={sceneRef}
@@ -138,10 +132,9 @@ const AmbientPanel = ({
 					} as React.CSSProperties
 				}
 			>
-				<Suspense fallback={null}>{renderSeasonContent()}</Suspense>
+				{renderSeasonContent()}
 
-				<Suspense fallback={null}>
-					<SeasonIndicator
+				<SeasonIndicator
 						{...{
 							season,
 							motionIntensity,
@@ -149,7 +142,6 @@ const AmbientPanel = ({
 							isLight
 						}}
 					/>
-				</Suspense>
 			</div>
 
 			<style>{AMBIENT_ANIMATIONS}</style>

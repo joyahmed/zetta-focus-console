@@ -1,32 +1,13 @@
-import { lazy, Suspense } from 'react';
 import Drawer from './Drawer';
-const AmbientSection = lazy(
-	() => import('./settings-panel/AmbientSection')
-);
-const SoundSection = lazy(
-	() => import('./settings-panel/SoundSection')
-);
-const BackgroundSection = lazy(
-	() => import('./settings-panel/BackgroundSection')
-);
-const DevModeSection = lazy(
-	() => import('./settings-panel/DevModeSection')
-);
-const StrictModeSection = lazy(
-	() => import('./settings-panel/StrictModeSection')
-);
-const ResetSection = lazy(
-	() => import('./settings-panel/ResetSection')
-);
-const SettingsFooter = lazy(
-	() => import('./settings-panel/SettingsFooter')
-);
-const VoiceSection = lazy(
-	() => import('./settings-panel/VoiceSection')
-);
-const StartupSection = lazy(
-	() => import('./settings-panel/StartupSection')
-);
+import AmbientSection from './settings-panel/AmbientSection';
+import SoundSection from './settings-panel/SoundSection';
+import BackgroundSection from './settings-panel/BackgroundSection';
+import DevModeSection from './settings-panel/DevModeSection';
+import StrictModeSection from './settings-panel/StrictModeSection';
+import ResetSection from './settings-panel/ResetSection';
+import SettingsFooter from './settings-panel/SettingsFooter';
+import VoiceSection from './settings-panel/VoiceSection';
+import StartupSection from './settings-panel/StartupSection';
 
 const SettingsPanel = ({
 	isOpen,
@@ -56,18 +37,15 @@ const SettingsPanel = ({
 	return (
 		<Drawer isOpen={isOpen} onClose={onClose} title='Settings'>
 				<div className='p-3 sm:p-4 space-y-4'>
-					<Suspense fallback={null}>
-						<AmbientSection
+					<AmbientSection
 							{...{
 								ambienceEnabled,
 								onAmbienceToggle,
 								isLight
 							}}
 						/>
-					</Suspense>
 
-					<Suspense fallback={null}>
-						<SoundSection
+					<SoundSection
 							{...{
 								soundVolume,
 								onVolumeChange,
@@ -79,57 +57,42 @@ const SettingsPanel = ({
 								isLight
 							}}
 						/>
-					</Suspense>
 
-					<Suspense fallback={null}>
-						<VoiceSection
+					<VoiceSection
 							{...{
 								voiceEnabled: voiceEnabled || false,
 								onVoiceToggle: onVoiceToggle || (() => {}),
 								isLight
 							}}
 						/>
-					</Suspense>
 
-					<Suspense fallback={null}>
-						<BackgroundSection
+					<BackgroundSection
 							{...{
 								backgroundType,
 								onBackgroundTypeChange
 							}}
 						/>
-					</Suspense>
 
-					<Suspense fallback={null}>
-						<DevModeSection
+					<DevModeSection
 							{...{
 								devMode,
 								onDevModeToggle,
 								isLight
 							}}
 						/>
-					</Suspense>
 
-					<Suspense fallback={null}>
-						<StrictModeSection
+					<StrictModeSection
 							{...{
 								strictModeActive: strictModeActive || false,
 								onStrictModeToggle: onStrictModeToggle || (() => {}),								isLight
 							}}
 						/>
-					</Suspense>
 
-					<Suspense fallback={null}>
-						<ResetSection onResetSettings={onResetSettings} />
-					</Suspense>
+					<ResetSection onResetSettings={onResetSettings} />
 
-					<Suspense fallback={null}>
-						<StartupSection isLight={isLight} />
-					</Suspense>
+					<StartupSection isLight={isLight} />
 
-					<Suspense fallback={null}>
-						<SettingsFooter />
-					</Suspense>
+					<SettingsFooter />
 				</div>
 		</Drawer>
 	);

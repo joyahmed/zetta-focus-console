@@ -1,13 +1,10 @@
-import { lazy, Suspense } from 'react';
-const LogoBrand = lazy(() => import('./header/Logo'));
-const CommandSpotlight = lazy(
-	() => import('./header/CommandSpotlight')
-);
-const ProfilePill = lazy(() => import('./header/ProfilePill'));
-const VolumeControl = lazy(() => import('./header/VolumeControl'));
-const ThemeToggle = lazy(() => import('./header/ThemeToggle'));
-const SettingsButton = lazy(() => import('./header/SettingsButton'));
-const ShortcutsMenu = lazy(() => import('./header/ShortcutsMenu'));
+import LogoBrand from './header/Logo';
+import CommandSpotlight from './header/CommandSpotlight';
+import ProfilePill from './header/ProfilePill';
+import VolumeControl from './header/VolumeControl';
+import ThemeToggle from './header/ThemeToggle';
+import SettingsButton from './header/SettingsButton';
+import ShortcutsMenu from './header/ShortcutsMenu';
 
 const Header = ({
 	activeProfileName,
@@ -32,23 +29,16 @@ const Header = ({
 						: 'shadow-glass hover:shadow-neon/20 hover:border-white/10'
 				}`}
 			>
-				<Suspense fallback={null}>
-					<LogoBrand {...{ devMode }} />
-				</Suspense>
+				<LogoBrand {...{ devMode }} />
 
-				<Suspense fallback={null}>
-					<CommandSpotlight onClick={onTerminalClick} />
-				</Suspense>
+				<CommandSpotlight onClick={onTerminalClick} />
 
 				<div className='flex items-center justify-end gap-3 w-1/4'>
-					<Suspense fallback={null}>
-						<ProfilePill {...{ activeProfileName }} />
-					</Suspense>
+					<ProfilePill {...{ activeProfileName }} />
 
 					<div className='h-4 w-[1px] bg-zetta-border mx-1' />
 
-					<Suspense fallback={null}>
-						<VolumeControl
+					<VolumeControl
 							{...{
 								volume,
 								isMuted,
@@ -56,19 +46,12 @@ const Header = ({
 								onMuteToggle
 							}}
 						/>
-					</Suspense>
 
-					<Suspense fallback={null}>
-						<ThemeToggle {...{ theme, onThemeChange }} />
-					</Suspense>
+					<ThemeToggle {...{ theme, onThemeChange }} />
 					
-					<Suspense fallback={null}>
-						<ShortcutsMenu />
-					</Suspense>
+					<ShortcutsMenu />
 
-					<Suspense fallback={null}>
-						<SettingsButton onClick={onSettingsClick} />
-					</Suspense>
+					<SettingsButton onClick={onSettingsClick} />
 				</div>
 			</div>
 		</header>
