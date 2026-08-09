@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 // Number input with increment/decrement buttons
-function NumberInput({
+const NumberInput = ({
 	value,
 	onChange,
 	min,
@@ -17,7 +17,7 @@ function NumberInput({
 	label: string;
 	step?: number;
 	precision?: number;
-}) {
+}) => {
 	const clampValue = (nextValue: number) => {
 		const clamped = Math.min(max, Math.max(min, nextValue));
 		return Number(clamped.toFixed(precision));
@@ -99,15 +99,15 @@ function NumberInput({
 			</div>
 		</div>
 	);
-}
+};
 
-export default function ProfileModal({
+const ProfileModal = ({
 	isOpen,
 	onClose,
 	mode,
 	profile,
 	onSubmit
-}: ProfileModalProps) {
+}: ProfileModalProps) => {
 	const [name, setName] = useState('');
 	const [focusMin, setFocusMin] = useState(25);
 	const [shortBreakMin, setShortBreakMin] = useState(5);
@@ -431,4 +431,6 @@ export default function ProfileModal({
 			</div>
 		</div>
 	);
-}
+};
+
+export default ProfileModal;

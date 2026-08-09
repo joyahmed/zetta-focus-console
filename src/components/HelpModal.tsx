@@ -1,10 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { commandGroups } from '../configs/modal-config';
 
-export default function HelpModal({
-	isOpen,
-	onClose
-}: HelpModalProps) {
+const HelpModal = ({ isOpen, onClose }: HelpModalProps) => {
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const listRef = useRef<HTMLDivElement>(null);
 
@@ -160,4 +157,6 @@ export default function HelpModal({
 			</div>
 		</div>
 	);
-}
+};
+
+export default HelpModal;

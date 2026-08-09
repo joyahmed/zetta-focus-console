@@ -1,6 +1,6 @@
 import { useTerminalModal } from '../hooks/use-terminal-modal';
 
-export default function TerminalModal({
+const TerminalModal = ({
 	isOpen,
 	onClose,
 	onCommand,
@@ -8,7 +8,7 @@ export default function TerminalModal({
 	sessionSummary,
 	onSummaryRead,
 	theme
-}: TerminalModalProps) {
+}: TerminalModalProps) => {
 	const isLight = theme === 'light';
 
 	const {
@@ -157,4 +157,6 @@ export default function TerminalModal({
 			</div>
 		</div>
 	);
-}
+};
+
+export default TerminalModal;

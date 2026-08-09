@@ -13,7 +13,7 @@ const QUICK_DURATIONS = [5, 15, 25, 50];
 // Red color for Strict Mode
 const STRICT_MODE_COLOR = '#ef4444';
 
-export default function TimerPanel({
+const TimerPanel = ({
 	timer,
 	glowColor,
 	sessionOverride,
@@ -25,7 +25,7 @@ export default function TimerPanel({
 	onStop,
 	onQuickStart,
 	theme: _theme = 'dark'
-}: TimerPanelProps) {
+}: TimerPanelProps) => {
 	const { hasOverride, circumference, strokeDashoffset, formatTime } =
 		useTimerPanel({
 			timer,
@@ -195,4 +195,6 @@ export default function TimerPanel({
 
 		</div>
 	);
-}
+};
+
+export default TimerPanel;

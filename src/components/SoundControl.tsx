@@ -1,11 +1,11 @@
 import { useSoundControl } from '../hooks/use-sound-control';
 
-export default function SoundControl({
+const SoundControl = ({
 	isPlaying,
 	isMuted,
 	volume,
 	currentSound
-}: SoundControlProps) {
+}: SoundControlProps) => {
 	const {
 		localVolume,
 		handleVolumeChange,
@@ -113,4 +113,6 @@ export default function SoundControl({
 			)}
 		</div>
 	);
-}
+};
+
+export default SoundControl;

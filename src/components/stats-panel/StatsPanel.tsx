@@ -28,7 +28,7 @@ const clock = (totalSeconds: number): string => {
 	return `${minutes}:${String(seconds).padStart(2, '0')}`;
 };
 
-export default function StatsPanel({ appState }: StatsPanelProps) {
+const StatsPanel = ({ appState }: StatsPanelProps) => {
 	const {
 		timer,
 		active_profile: profile,
@@ -288,4 +288,6 @@ export default function StatsPanel({ appState }: StatsPanelProps) {
 			</div>
 		</div>
 	);
-}
+};
+
+export default StatsPanel;

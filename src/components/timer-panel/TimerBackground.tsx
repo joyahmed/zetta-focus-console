@@ -12,20 +12,15 @@ interface TimerBackgroundProps {
  * session started or stopped, while `transition-opacity` sat there doing
  * nothing on an opacity that never moved.
  */
-function TimerBackground({
-	isRunning,
-	glowColor
-}: TimerBackgroundProps) {
-	return (
-		<div
-			className={`absolute inset-0 transition-opacity duration-700 ease-out pointer-events-none ${
-				isRunning ? 'opacity-20' : 'opacity-0'
-			}`}
-			style={{
-				background: `radial-gradient(circle at center, ${glowColor} 0%, transparent 70%)`
-			}}
-		/>
-	);
-}
+const TimerBackground = ({ isRunning, glowColor }: TimerBackgroundProps) => (
+	<div
+		className={`absolute inset-0 transition-opacity duration-700 ease-out pointer-events-none ${
+			isRunning ? 'opacity-20' : 'opacity-0'
+		}`}
+		style={{
+			background: `radial-gradient(circle at center, ${glowColor} 0%, transparent 70%)`
+		}}
+	/>
+);
 
 export default TimerBackground;

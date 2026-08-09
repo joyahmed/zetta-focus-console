@@ -1,6 +1,6 @@
 import { useProfilePanel } from '../hooks/use-profile-panel';
 
-export default function ProfilePanel({
+const ProfilePanel = ({
 	profile,
 	profiles,
 	onProfileSwitch,
@@ -9,7 +9,7 @@ export default function ProfilePanel({
 	errorMessage,
 	onErrorDismiss,
 	stats
-}: ProfilePanelProps) {
+}: ProfilePanelProps) => {
 	const otherProfiles = profiles.filter(p => p.id !== profile.id);
 	const formatMinutes = (seconds: number) =>
 		`${Number((seconds / 60).toFixed(2))}m`;
@@ -297,4 +297,6 @@ export default function ProfilePanel({
 				</div>
 		</div>
 	);
-}
+};
+
+export default ProfilePanel;

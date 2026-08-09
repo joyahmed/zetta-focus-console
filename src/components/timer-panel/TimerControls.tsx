@@ -10,13 +10,13 @@ interface ControlButtonProps {
 	disabled?: boolean;
 }
 
-function ControlButton({
+const ControlButton = ({
 	onClick,
 	title,
 	variant,
 	children,
 	disabled = false
-}: ControlButtonProps) {
+}: ControlButtonProps) => {
 	const baseStyles =
 		'h-16 w-16 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95';
 
@@ -42,7 +42,7 @@ function ControlButton({
 			{children}
 		</button>
 	);
-}
+};
 
 interface TimerControlsProps {
 	status: TimerStatus;
@@ -53,14 +53,14 @@ interface TimerControlsProps {
 	isStrictModeBlocking?: boolean;
 }
 
-function TimerControls({
+const TimerControls = ({
 	status,
 	onStart,
 	onPause,
 	onResume,
 	onStop,
 	isStrictModeBlocking = false
-}: TimerControlsProps) {
+}: TimerControlsProps) => {
 	// When strict mode is blocking, show only the stop button as disabled
 	// and show a tooltip explaining why
 	return (
@@ -130,6 +130,6 @@ function TimerControls({
 			)}
 		</div>
 	);
-}
+};
 
 export default TimerControls;

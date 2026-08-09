@@ -11,11 +11,11 @@ interface TimerDisplayProps {
  * which said the same thing as the "Session 1/4" line now sitting below it —
  * two indicators for one fact, stacked, in the middle of a circle.
  */
-function TimerDisplay({
+const TimerDisplay = ({
 	formattedTime,
 	isRunning,
 	glowColor
-}: TimerDisplayProps) {
+}: TimerDisplayProps) => {
 	const opacity = isRunning ? 1 : 0.7;
 	const textShadow = isRunning ? `0 0 20px ${glowColor}50` : 'none';
 
@@ -31,6 +31,6 @@ function TimerDisplay({
 			{formattedTime}
 		</div>
 	);
-}
+};
 
 export default TimerDisplay;

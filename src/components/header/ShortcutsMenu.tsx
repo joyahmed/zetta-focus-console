@@ -51,7 +51,7 @@ const SHORTCUT_GROUPS: { title: string; shortcuts: Shortcut[] }[] = [
 	}
 ];
 
-export default function ShortcutsMenu() {
+const ShortcutsMenu = () => {
 	const [isOpen, setIsOpen] = useState(false);
 
 	return (
@@ -107,4 +107,6 @@ export default function ShortcutsMenu() {
 			</Drawer>
 		</>
 	);
-}
+};
+
+export default ShortcutsMenu;
