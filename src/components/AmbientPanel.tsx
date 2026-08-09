@@ -124,7 +124,7 @@ const AmbientPanel = ({
 	};
 
 	return (
-		<div className='glass-panel h-full relative rounded-xl border border-zetta-border bg-zetta-card hover:bg-zetta-bg transition-colors overflow-hidden flex flex-col'>
+		<div className='panel h-full relative overflow-hidden flex flex-col'>
 			<Suspense fallback={null}>
 				<AmbientHeader />
 			</Suspense>

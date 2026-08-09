@@ -24,12 +24,17 @@ const GradientBackground = ({
 	const clampedProgress = Math.max(0, Math.min(1, progress));
 	const nearEndUrgency = isRunning ? Math.max(0, (clampedProgress - 0.8) / 0.2) : 0;
 
-	const baseOpacity = isLight ? '30' : isRunning ? '1a' : '10';
-	const midOpacity = isLight ? '15' : isRunning ? '0d' : '07';
+	// Idle values used to be 0x10 and 0x07 — about 6% and 3% alpha, behind 42px
+	// of blur. On a dark background that is indistinguishable from nothing, so
+	// the panel read as broken whenever the timer was not running, which is
+	// most of the time anyone is looking at it. Idle is still quieter than a
+	// running session; it is just visible.
+	const baseOpacity = isLight ? '30' : isRunning ? '1a' : '14';
+	const midOpacity = isLight ? '15' : isRunning ? '0d' : '0b';
 	const driftDuration = isRunning ? (isBreakSession ? '32s' : '22s') : '48s';
 	const pulseDuration = isRunning ? (isBreakSession ? '10s' : '6s') : '18s';
 	const playState = isPaused ? 'paused' : 'running';
-	const pulseOpacity = isRunning ? (isBreakSession ? 0.45 : 0.6) : 0.25;
+	const pulseOpacity = isRunning ? (isBreakSession ? 0.45 : 0.6) : 0.4;
 	const accentOpacityA = isBreakSession ? '18' : '22';
 	const accentOpacityB = isBreakSession ? '12' : '16';
 	const spreadOpacity = isBreakSession ? '08' : '0d';
@@ -63,7 +68,7 @@ const GradientBackground = ({
 					filter: 'blur(58px)',
 					animation: `ambientGradientDrift ${isBreakSession ? '38s' : '28s'} ease-in-out infinite alternate-reverse`,
 					animationPlayState: playState,
-					opacity: isRunning ? 0.85 : 0.5,
+					opacity: isRunning ? 0.85 : 0.65,
 					mixBlendMode: 'screen'
 				}}
 			/>
@@ -72,7 +77,7 @@ const GradientBackground = ({
 				style={{
 					background: `radial-gradient(circle at 50% 54%, ${getGlowColor(spreadOpacity)} 0%, transparent 72%)`,
 					filter: 'blur(30px)',
-					opacity: isRunning ? 0.8 : 0.45
+					opacity: isRunning ? 0.8 : 0.6
 				}}
 			/>
 			<div

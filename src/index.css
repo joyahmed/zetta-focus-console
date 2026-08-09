@@ -156,6 +156,27 @@ body::before {
 		}
 	}
 
+	/*
+	 * The four main panels. Each of these used to repeat the same five classes
+	 * inline, and one of them — the timer — had quietly lost its hover state,
+	 * which is the failure mode of keeping four copies of one idea in sync by
+	 * hand.
+	 */
+	.panel {
+		background: var(--bg-card);
+		backdrop-filter: blur(var(--glass-blur, 16px));
+		-webkit-backdrop-filter: blur(var(--glass-blur, 16px));
+		border: 1px solid var(--border-color);
+		border-radius: 1rem;
+		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+		transition: background-color 150ms ease, border-color 150ms ease;
+	}
+
+	.panel:hover {
+		background: var(--bg-secondary);
+		border-color: var(--border-highlight);
+	}
+
 	.glass-panel-hover:hover {
 		background: var(--bg-secondary);
 		border-color: var(--border-highlight);

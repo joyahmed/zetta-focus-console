@@ -22,7 +22,7 @@ export default function ProfilePanel({
 
 	return (
 
-		<div className='flex-1 h-full glass-panel p-3 md:p-4 lg:p-6 rounded-2xl border border-zetta-border bg-zetta-card hover:bg-zetta-bg transition-colors overflow-hidden flex flex-col gap-4'>
+		<div className='panel flex-1 h-full p-3 md:p-4 lg:p-6 overflow-hidden flex flex-col gap-4'>
 			<div className='flex items-center justify-between shrink-0'>
 				<div className='flex items-center gap-2'>
 					<div className='p-1.5 rounded-lg bg-zetta-bg border border-zetta-border'>
@@ -215,8 +215,9 @@ export default function ProfilePanel({
 					</div>
 				)}
 
-				{/* Actions Area */}
-				<div className='mt-2 md:mt-4 pt-2 md:pt-4 border-t border-zetta-border'>
+				{/* Actions Area — pinned to the bottom so the panel does not
+				    trail off into empty space when the profile list is short. */}
+				<div className='mt-auto pt-2 md:pt-4 border-t border-zetta-border'>
 					{/* Error Message - Cyber Minimalist */}
 					{errorMessage && (
 						<div className='mb-3 relative group overflow-hidden rounded-md bg-red-500/5 border border-red-500/20'>

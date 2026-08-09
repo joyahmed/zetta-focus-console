@@ -25,7 +25,7 @@ export default function StatsPanel({
 }: StatsPanelProps) {
 
 	return (
-		<div className='glass-panel h-full flex flex-col gap-3 md:gap-4 p-3 md:p-4 rounded-2xl border border-zetta-border bg-zetta-card hover:bg-zetta-bg transition-colors overflow-hidden'>
+		<div className='panel h-full flex flex-col gap-3 md:gap-4 p-3 md:p-4 overflow-hidden'>
 			{/* The grid gives this panel an equal half of the window, which is
 			    more room than its content needs. Rather than leaving a void
 			    underneath, the sections space out and the meters sit against
@@ -168,8 +168,9 @@ export default function StatsPanel({
 					</div>
 				</div>
 
-				{/* Engine State Section - Always visible */}
-				<div className='p-2.5 md:p-3 rounded-xl border border-yellow-500/20 bg-yellow-500/5  w-full'>
+				{/* Engine diagnostics. Grows into whatever the cards leave
+				    behind rather than letting the panel end in a void. */}
+				<div className='p-2.5 md:p-3 rounded-xl border border-yellow-500/20 bg-yellow-500/5 w-full flex-1 flex flex-col'>
 					<div className='flex items-center gap-2 mb-2'>
 						<div
 							className={`w-1.5 h-1.5 rounded-full ${devMode ? 'bg-yellow-500 animate-pulse' : 'bg-zetta-text-muted'}`}

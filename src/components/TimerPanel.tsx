@@ -48,7 +48,7 @@ export default function TimerPanel({
 	const isStrictModeBlocking = strictMode?.is_active && isRunning;
 
 	return (
-		<div className='glass-panel h-full rounded-2xl p-6 flex flex-col items-center justify-center relative overflow-hidden group'>
+		<div className='panel h-full p-6 flex flex-col items-center justify-center relative overflow-hidden group'>
 			{/* Strict Mode indicator */}
 			{strictMode?.is_active && (
 				<div className='absolute top-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-full bg-red-500/20 border border-red-500/40'>
