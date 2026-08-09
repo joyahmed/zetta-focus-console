@@ -16,7 +16,7 @@ const AppPanels = ({
 	return (
 		<main className='flex-1 p-4 overflow-auto'>
 			<div
-				className='grid grid-cols-2 gap-4 h-full w-full max-w-[1800px] mx-auto'
+				className='grid grid-cols-2 gap-4 h-full w-full'
 				style={{ gridTemplateRows: '1fr 1fr' }}
 			>
 				{/* Top Left: Timer */}
@@ -53,8 +53,6 @@ const AppPanels = ({
 				<div className='min-h-0'>
 					<StatsPanel
 						stats={appState.stats}
-						systemStats={appState.system_stats}
-						appStats={appState.app_stats}
 						devMode={appState.dev_mode}
 						timerStatus={appState.timer.status}
 						activeProfileName={appState.active_profile.name}

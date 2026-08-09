@@ -200,7 +200,7 @@ pub fn process_command(
 
         "engine" => engine_command(args, app_state),
 
-        "app" => app_command(args, app_state),
+        "app" => app_command(args),
 
         "system" | "sysinfo" => system_command(),
 
@@ -945,12 +945,9 @@ fn engine_command(args: &[&str], app_state: &mut AppState) -> String {
     }
 }
 
-fn app_command(args: &[&str], app_state: &mut AppState) -> String {
+fn app_command(args: &[&str]) -> String {
     match args.first() {
-        Some(&"usage") => format!(
-            "App Usage:\n  CPU: {:.1}%\n  Memory: {} MB",
-            app_state.app_stats.cpu_usage, app_state.app_stats.memory_used
-        ),
+        Some(&"usage") => format!("Engine process:\n  Memory: {:.1} MB", engine_memory_mb()),
         _ => "Error: Usage: app usage".to_string(),
     }
 }
@@ -1018,8 +1015,9 @@ fn usage_command(app_state: &AppState) -> String {
     };
 
     format!(
-        "App Usage:\n  CPU: {:.1}%\n  Memory: {} MB\n  Uptime: {}",
-        app_state.app_stats.cpu_usage, app_state.app_stats.memory_used, uptime_str
+        "Engine process:\n  Memory: {:.1} MB\n  Uptime: {}",
+        engine_memory_mb(),
+        uptime_str
     )
 }
 
@@ -1239,54 +1237,20 @@ pub fn tick_timer(state: State<EngineState>, app_handle: AppHandle) -> Result<()
     Ok(())
 }
 
-#[tauri::command]
-pub fn tick_system_stats(state: State<EngineState>, app_handle: AppHandle) -> Result<(), String> {
-    let mut app_state = state.app_state.lock().map_err(|e| e.to_string())?;
-
-    let mut sys = state.system.lock().map_err(|e| e.to_string())?;
-    sys.refresh_cpu_usage();
-    sys.refresh_memory();
-    let cpus = sys.cpus();
-
-    let cpu_usage = if !cpus.is_empty() {
-        cpus.iter().map(|c| c.cpu_usage()).sum::<f32>() / cpus.len() as f32
-    } else {
-        0.0
-    };
-
-    app_state.system_stats = crate::types::SystemStats {
-        cpu_usage: cpu_usage.min(100.0),
-        memory_used: sys.used_memory() / 1024 / 1024,
-        memory_total: sys.total_memory() / 1024 / 1024,
-    };
-
-    // This process only, deliberately.
-    //
-    // A Tauri app on Windows is several processes — this one plus the WebView2
-    // host and its renderers — and summing them looks like the honest thing to
-    // do. It is not: they share large DLL mappings, and a working set counts
-    // shared pages in full for every process that maps them. Adding them up
-    // reported 512 MB for an app that costs the machine a fraction of that.
-    //
-    // There is no single true number here, so this reports the one that is
-    // stable, cheap to read, and actually attributable to our own code. The UI
-    // labels it as the engine process rather than as the whole application.
+/// Read this process's memory on demand.
+///
+/// The app used to poll this every five seconds into `AppState` so a pair of
+/// meters could render it. That cost a `sysinfo` refresh and a full state
+/// broadcast on a timer, to display a number that could not be made honest:
+/// a Tauri app is several processes sharing mapped pages, so no single figure
+/// describes "the app". It is a diagnostic now — computed only when asked for,
+/// and clearly the engine process rather than the whole application.
+fn engine_memory_mb() -> f32 {
     let pid = sysinfo::Pid::from_u32(std::process::id());
+    let mut sys = System::new();
     sys.refresh_processes(sysinfo::ProcessesToUpdate::Some(&[pid]), true);
-    if let Some(process) = sys.process(pid) {
-        // sysinfo reports bytes; keep the fraction rather than truncating to MB.
-        app_state.app_stats = crate::types::AppStats {
-            cpu_usage: process.cpu_usage().min(100.0),
-            memory_used: process.memory() as f32 / 1_048_576.0,
-        };
-    }
 
-    let _ = app_handle.emit(
-        "state-updated",
-        StateEvent {
-            state: app_state.clone(),
-        },
-    );
-
-    Ok(())
+    sys.process(pid)
+        .map(|process| process.memory() as f32 / 1_048_576.0)
+        .unwrap_or(0.0)
 }

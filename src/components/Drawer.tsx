@@ -1,4 +1,5 @@
 import { ReactNode, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 /**
  * A panel that slides in from the right.
@@ -32,7 +33,14 @@ const Drawer = ({ isOpen, onClose, title, children }: DrawerProps) => {
 		return () => window.removeEventListener('keydown', onKeyDown);
 	}, [isOpen, onClose]);
 
-	return (
+	// Rendered into <body> rather than in place.
+	//
+	// `position: fixed` is only relative to the viewport if no ancestor
+	// establishes a containing block, and `backdrop-filter` does exactly that.
+	// Every panel here carries one through .glass-panel, so a drawer opened
+	// from a button inside the header anchored itself to the header bar — a
+	// short strip floating at the top right, outside the app entirely.
+	return createPortal(
 		<>
 			{/* Kept mounted and faded rather than unmounted, so the panel can
 			    animate out instead of vanishing. */}
@@ -77,7 +85,8 @@ const Drawer = ({ isOpen, onClose, title, children }: DrawerProps) => {
 					{children}
 				</div>
 			</aside>
-		</>
+		</>,
+		document.body
 	);
 };
 

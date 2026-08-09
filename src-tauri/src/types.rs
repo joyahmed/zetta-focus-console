@@ -99,62 +99,6 @@ pub struct Stats {
     pub last_session_duration: u32,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SystemStats {
-    pub cpu_usage: f32,
-    pub memory_used: u64,
-    pub memory_total: u64,
-}
-
-impl Default for SystemStats {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl SystemStats {
-    /// Deliberately empty rather than probing the machine here.
-    ///
-    /// This used to build a `System::new_all()` — a snapshot of every process,
-    /// disk and network — to fill in numbers that the first tick overwrites 5
-    /// seconds later anyway. It also reported `cpu_usage: 0.0` every time,
-    /// because CPU usage is a delta between two refreshes and there had only
-    /// been one.
-    ///
-    /// The engine holds one long-lived `System` and refreshes it on tick; this
-    /// is just the placeholder shown until the first of those lands.
-    pub fn new() -> Self {
-        Self {
-            cpu_usage: 0.0,
-            memory_used: 0,
-            memory_total: 0,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AppStats {
-    pub cpu_usage: f32,
-    /// Megabytes, fractional. Integer MB rounded an 18.6 MB process down to
-    /// "18 MB", which is a big enough lie at this scale to be worth a float.
-    pub memory_used: f32,
-}
-
-impl Default for AppStats {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl AppStats {
-    pub fn new() -> Self {
-        Self {
-            cpu_usage: 0.0,
-            memory_used: 0.0,
-        }
-    }
-}
-
 // ============================================================================
 // SOUND/SETTINGS TYPES
 // ============================================================================

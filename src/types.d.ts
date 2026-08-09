@@ -87,17 +87,6 @@ interface Stats {
 	last_session_duration: number;
 }
 
-interface SystemStats {
-	cpu_usage: number;
-	memory_used: number;
-	memory_total: number;
-}
-
-interface AppStats {
-	cpu_usage: number;
-	memory_used: number;
-}
-
 interface SoundState {
 	current_sound: string | null;
 	play_ambient_sound: boolean;
@@ -128,8 +117,6 @@ interface AppState {
 	active_profile: Profile;
 	profiles: Profile[];
 	stats: Stats;
-	system_stats: SystemStats;
-	app_stats: AppStats;
 	dev_mode: boolean;
 	sound_state: SoundState;
 	session_override: SessionOverride | null;
@@ -294,21 +281,8 @@ interface Stats {
 	last_session_duration: number;
 }
 
-interface SystemStats {
-	cpu_usage: number;
-	memory_used: number;
-	memory_total: number;
-}
-
-interface AppStats {
-	cpu_usage: number;
-	memory_used: number;
-}
-
 interface StatsPanelProps {
 	stats: Stats;
-	systemStats: SystemStats;
-	appStats: AppStats;
 	devMode?: boolean;
 	timerStatus?: string;
 	activeProfileName?: string;

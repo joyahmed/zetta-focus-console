@@ -1,5 +1,3 @@
-import { lazy } from 'react';
-const MonitorSection = lazy(() => import('./MonitorSection'));
 
 /** Unix seconds -> "2h 14m". The engine records when it started, not how long
     it has run, so the elapsed time is derived here rather than ticked. */
@@ -20,8 +18,6 @@ const formatUptime = (startedAtUnixSeconds?: number): string => {
 
 export default function StatsPanel({
 	stats,
-	systemStats,
-	appStats,
 	devMode,
 	timerStatus,
 	activeProfileName,
@@ -29,8 +25,12 @@ export default function StatsPanel({
 }: StatsPanelProps) {
 
 	return (
-		<div className='glass-panel h-full flex-1 flex-col gap-3 md:gap-4  p-3 md:p-4 rounded-2xl border border-zetta-border bg-zetta-card hover:bg-zetta-bg transition-colors overfllow-hidden'>
-			<div className='flex flex-col items-center shrink-0 w-full overflow-y-auto h-full gap-y-4'>
+		<div className='glass-panel h-full flex flex-col gap-3 md:gap-4 p-3 md:p-4 rounded-2xl border border-zetta-border bg-zetta-card hover:bg-zetta-bg transition-colors overflow-hidden'>
+			{/* The grid gives this panel an equal half of the window, which is
+			    more room than its content needs. Rather than leaving a void
+			    underneath, the sections space out and the meters sit against
+			    the bottom edge. */}
+			<div className='flex flex-col w-full h-full overflow-y-auto custom-scrollbar gap-y-4'>
 				{/* Header Section */}
 				<div className='flex items-center justify-between  w-full'>
 					<div className='flex items-center gap-2'>
@@ -216,19 +216,6 @@ export default function StatsPanel({
 					</div>
 				</div>
 
-				{/* System Monitors - Responsive flex container */}
-				<div className='flex flex-col sm:flex-row gap-2 sm:gap-2 w-full'>
-					<MonitorSection
-						title='SYSTEM'
-						memoryUsed={systemStats.memory_used}
-						memoryTotal={systemStats.memory_total}
-					/>
-
-					<MonitorSection
-						title='ENGINE'
-						memoryUsed={appStats.memory_used}
-					/>
-				</div>
 			</div>
 		</div>
 	);

@@ -218,7 +218,6 @@ export const appReactivities = ({
 		}, 1000);
 
 		const systemInterval = setInterval(() => {
-			invoke('tick_system_stats').catch(console.error);
 		}, 5000);
 
 		return () => {

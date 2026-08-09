@@ -6,8 +6,7 @@ mod storage;
 mod types;
 
 use engine::{
-    execute_command, get_state, get_theme, set_theme, set_total_sessions, tick_system_stats,
-    tick_timer, EngineState,
+    execute_command, get_state, get_theme, set_theme, set_total_sessions, tick_timer, EngineState,
 };
 
 use tauri::{
@@ -213,7 +212,6 @@ pub fn run() {
             set_total_sessions,
             execute_command,
             tick_timer,
-            tick_system_stats,
             // Tray commands
             update_tray_state,
             // Autostart commands

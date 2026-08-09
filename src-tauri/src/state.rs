@@ -1,8 +1,8 @@
 //! State module - application state, persistence mapping, and state events.
 
 use crate::types::{
-    AppStats, BackgroundType, CurrentTask, MotionIntensity, Profile, Season, SessionOverride,
-    SessionType, SoundState, Stats, StrictModeState, SystemStats, TimerState, TimerStatus,
+    BackgroundType, CurrentTask, MotionIntensity, Profile, Season, SessionOverride, SessionType,
+    SoundState, Stats, StrictModeState, TimerState, TimerStatus,
 };
 use serde::{Deserialize, Serialize};
 
@@ -44,8 +44,6 @@ pub struct AppState {
     pub active_profile: Profile,
     pub profiles: Vec<Profile>,
     pub stats: Stats,
-    pub system_stats: SystemStats,
-    pub app_stats: AppStats,
     pub dev_mode: bool,
     pub sound_state: SoundState,
     pub session_override: Option<SessionOverride>,
@@ -147,8 +145,6 @@ impl AppState {
                 current_streak: 7,
                 last_session_duration: 25,
             },
-            system_stats: SystemStats::new(),
-            app_stats: AppStats::new(),
             dev_mode: false,
             sound_state: SoundState::new(),
             session_override: None,

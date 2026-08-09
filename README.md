@@ -135,7 +135,8 @@ task set "name" --category coding
 ```
 stats                   Session statistics
 system                  Host CPU and memory
-memory | cpu | usage    Narrower views of the same
+memory | cpu            Narrower views of the same
+usage                   Engine process memory and uptime
 engine state            Full engine state dump
 engine reset            Reset the engine
 devmode on/off          Developer diagnostics
