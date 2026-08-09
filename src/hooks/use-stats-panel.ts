@@ -1,4 +1,8 @@
-import { formatClock, formatUptime, stripExtension } from '../utils/format';
+import {
+	formatClock,
+	formatSoundName,
+	formatUptime
+} from '../utils/format';
 
 const SESSION_LABELS: Record<TimerState['session_type'], string> = {
 	focus: 'FOCUS',
@@ -31,7 +35,7 @@ export const useStatsPanel = (appState: AppState): DiagnosticField[] => {
 		if (sound.is_muted) return 'MUTED';
 		if (!sound.is_playing) return 'STOPPED';
 
-		const name = stripExtension(sound.current_sound ?? '') || 'ON';
+		const name = formatSoundName(sound.current_sound ?? '') || 'ON';
 		return `${name} ${sound.volume}%`;
 	};
 

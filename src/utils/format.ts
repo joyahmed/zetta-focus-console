@@ -51,6 +51,16 @@ export const stripExtension = (filename: string): string =>
 	filename.replace(/\.[^.]+$/, '');
 
 /**
+ * "soft_rain.ogg" -> "SOFT RAIN".
+ *
+ * The diagnostics were printing the file stem straight out of the engine,
+ * underscore and all, next to values like MUTED and STOPPED. It is a filename
+ * on disk and a soundscape on screen.
+ */
+export const formatSoundName = (filename: string): string =>
+	stripExtension(filename).replace(/[_-]+/g, ' ').trim().toUpperCase();
+
+/**
  * What someone typed into the clock, as an argument the engine understands.
  *
  * The `timer` command takes "25m" or "90s", but nobody editing a clock reading
