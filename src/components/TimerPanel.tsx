@@ -29,6 +29,7 @@ const TimerPanel = ({
 		circumference,
 		strokeDashoffset,
 		isRunning,
+		showsCycle,
 		formattedTime,
 		hasOverride,
 		isStrictModeBlocking,
@@ -92,11 +93,15 @@ const TimerPanel = ({
 					{/* Cycle position and override, below the circle rather than
 					    crowded inside it. Both rows keep their height whether or
 					    not they have anything to say, so the circle above them
-					    does not move when an override is set or cleared. */}
+					    does not move when an override is set, cleared, or when a
+					    one-off run drops the counter entirely. */}
 					<div className='flex items-center h-5 shrink-0'>
-						<span className='text-[10px] font-medium uppercase tracking-wider text-zetta-text-muted/70 whitespace-nowrap'>
-							Session {timer.current_session}/{timer.total_sessions}
-						</span>
+						{showsCycle && (
+							<span className='text-[10px] font-medium uppercase tracking-wider text-zetta-text-muted/70 whitespace-nowrap'>
+								Session {timer.current_session}/
+								{timer.total_sessions}
+							</span>
+						)}
 					</div>
 
 					<div className='flex items-center h-6 shrink-0'>

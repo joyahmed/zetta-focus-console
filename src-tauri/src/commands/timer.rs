@@ -1242,10 +1242,30 @@ fn effective_break_seconds(app_state: &AppState, long: bool) -> u32 {
         })
 }
 
-/// How many focus runs this cycle: the loop override if one is set, else the
-/// profile's. The `loop` command has always accepted a count and printed it
-/// back in the override message; nothing ever applied it to the timer.
+/// A duration typed into the clock or picked from the quick chips, with no
+/// loop count asked for.
+///
+/// That is a one-off — twenty minutes on this, now — and it has nothing to do
+/// with the profile's cycle. It should not borrow the profile's session count,
+/// should not roll into the profile's break, and should not leave "Session 1/4"
+/// on screen describing a cycle nobody started. Asking for `loop 3` alongside
+/// the duration is asking for a cycle, and gets one.
+fn is_adhoc_run(app_state: &AppState) -> bool {
+    app_state
+        .session_override
+        .as_ref()
+        .is_some_and(|o| o.focus_duration.is_some() && o.loop_count.is_none())
+}
+
+/// How many focus runs this cycle: the loop override if one is set, one for an
+/// ad-hoc duration, else the profile's. The `loop` command has always accepted
+/// a count and printed it back in the override message; nothing ever applied it
+/// to the timer.
 fn effective_total_sessions(app_state: &AppState) -> u32 {
+    if is_adhoc_run(app_state) {
+        return 1;
+    }
+
     app_state
         .session_override
         .as_ref()
@@ -1290,6 +1310,24 @@ fn advance_from_finished(app_state: &mut AppState) -> &'static str {
     let total = app_state.timer.total_sessions.max(1);
 
     match finished {
+        // A one-off ends when it ends. No break follows it, because nothing
+        // follows it — and the override retires with it, so the next start is
+        // the profile's again rather than a silent repeat of this duration.
+        SessionType::Focus if is_adhoc_run(app_state) => {
+            app_state.session_override = None;
+            let seconds = effective_focus_seconds(app_state);
+
+            app_state.timer = TimerState {
+                remaining_seconds: seconds,
+                total_seconds: seconds,
+                status: TimerStatus::Idle,
+                session_type: SessionType::Focus,
+                current_session: 1,
+                total_sessions: app_state.active_profile.sessions_per_cycle.max(1),
+            };
+
+            ALARM_SESSION_END
+        }
         SessionType::Focus => {
             let is_final = current >= total;
             let seconds = effective_break_seconds(app_state, is_final);

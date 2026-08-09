@@ -56,11 +56,21 @@ export const useTimerPanel = ({
 	const isRunning = timer.status === 'running';
 	const isStrictModeBlocking = Boolean(strictMode?.is_active) && isRunning;
 
+	/**
+	 * A run of one is not a cycle, so it does not get a counter.
+	 *
+	 * A duration typed into the clock or picked from the quick chips is a
+	 * one-off; the engine gives it a total of one. "Session 1/4" there was the
+	 * profile's cycle describing a run that had nothing to do with it.
+	 */
+	const showsCycle = timer.total_sessions > 1;
+
 	return {
 		radius: RADIUS,
 		circumference,
 		strokeDashoffset: circumference - (progress / 100) * circumference,
 		isRunning,
+		showsCycle,
 		formattedTime: formatTime(timer.remaining_seconds),
 		hasOverride: isOverrideActive(sessionOverride),
 		isStrictModeBlocking,
