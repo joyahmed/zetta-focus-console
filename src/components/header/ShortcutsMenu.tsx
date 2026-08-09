@@ -52,7 +52,7 @@ const ShortcutsMenu = () => {
 		<>
 			<button
 				onClick={() => setIsOpen(true)}
-				className='p-2 rounded-lg transition-all duration-200 hover:bg-white/10 text-zetta-text-secondary hover:text-zetta-text-primary'
+				className='p-2 rounded-lg transition-all duration-200 hover:bg-zetta-panel text-zetta-text-secondary hover:text-zetta-text'
 				title='Keyboard Shortcuts'
 			>
 				<KeyboardIcon className='w-5 h-5' />
@@ -73,7 +73,7 @@ const ShortcutsMenu = () => {
 								{group.shortcuts.map(shortcut => (
 									<div
 										key={shortcut.key}
-										className='flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-zetta-border bg-zetta-bg'
+										className='flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-zetta-border bg-zetta-panel'
 									>
 										<span className='text-sm text-zetta-text'>
 											{shortcut.description}
@@ -83,7 +83,7 @@ const ShortcutsMenu = () => {
 												</span>
 											)}
 										</span>
-										<kbd className='shrink-0 px-2 py-1 text-xs font-mono bg-zetta-card border border-zetta-border rounded text-zetta-accent-primary'>
+										<kbd className='shrink-0 px-2 py-1 text-xs font-mono bg-zetta-inset border border-zetta-border rounded text-zetta-neon'>
 											{shortcut.key}
 										</kbd>
 									</div>

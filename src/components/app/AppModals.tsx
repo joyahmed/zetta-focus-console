@@ -44,7 +44,6 @@ const AppModals = ({
 				}}
 				sessionSummary={sessionSummary}
 				onSummaryRead={() => setSessionSummary(null)}
-				theme={appState.theme}
 			/>
 
 			<SettingsPanel

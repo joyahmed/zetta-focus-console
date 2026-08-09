@@ -24,7 +24,6 @@ const Modal = ({
 	title,
 	size = 'md',
 	fillHeight = false,
-	panelClassName = '',
 	children
 }: ModalProps) => {
 	useModalDismiss({ isOpen, onClose });
@@ -36,13 +35,10 @@ const Modal = ({
 			{/* Scrim. Light enough to keep the season visible behind it — the
 			    ambience is the point of the app, and blacking it out to 70%
 			    threw that away every time a dialog opened. */}
-			<div
-				className='absolute inset-0 bg-black/50 backdrop-blur-sm'
-				onClick={onClose}
-			/>
+			<div className='absolute inset-0 modal-scrim' onClick={onClose} />
 
 			<div
-				className={`relative bg-zetta-card backdrop-blur-xl border border-zetta-border rounded-lg shadow-2xl w-full ${SIZES[size]} ${fillHeight ? 'h-[80vh]' : 'max-h-[80vh]'} flex flex-col m-4 ${panelClassName}`}
+				className={`relative elevated-surface border border-zetta-border rounded-lg w-full ${SIZES[size]} ${fillHeight ? 'h-[80vh]' : 'max-h-[80vh]'} flex flex-col m-4`}
 			>
 				{title !== undefined && (
 					<div className='flex items-center justify-between px-5 py-4 border-b border-zetta-border shrink-0'>
@@ -52,7 +48,7 @@ const Modal = ({
 						<button
 							onClick={onClose}
 							aria-label='Close'
-							className='p-1 rounded transition-colors text-zetta-text-secondary hover:text-zetta-text hover:bg-white/10'
+							className='p-1 rounded transition-colors text-zetta-text-secondary hover:text-zetta-text hover:bg-zetta-panel'
 						>
 							<svg
 								className='w-5 h-5'

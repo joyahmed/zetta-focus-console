@@ -7,11 +7,8 @@ const TerminalModal = ({
 	onCommand,
 	onHelp,
 	sessionSummary,
-	onSummaryRead,
-	theme
+	onSummaryRead
 }: TerminalModalProps) => {
-	const isLight = theme === 'light';
-
 	const {
 		input,
 		setInput,
@@ -29,8 +26,7 @@ const TerminalModal = ({
 		onCommand,
 		onHelp,
 		sessionSummary,
-		onSummaryRead,
-		isLight
+		onSummaryRead
 	});
 
 	return (
@@ -39,47 +35,34 @@ const TerminalModal = ({
 				isOpen,
 				onClose,
 				size: 'lg' as ModalSize,
-				fillHeight: true,
-				/* The console is the one dialog that wants an opaque panel in
-				   light mode — a wall of monospace on a translucent card is
-				   hard to read. The class is a CSS hook rather than a Tailwind
-				   colour, because a `bg-white` passed alongside the shell's
-				   `bg-zetta-card` loses or wins on stylesheet order; see
-				   index.css. It is inert outside the light theme. */
-				panelClassName: 'terminal-modal-white'
+				fillHeight: true
 			}}
 		>
 			{/* Its header is its own: a prompt on the left and the shortcut
-			    that closes it on the right, rather than a plain title. */}
-			<div
-				className={`flex items-center justify-between px-4 py-2 border-b shrink-0 ${isLight ? 'border-gray-300 bg-gray-100' : 'border-zetta-border bg-zetta-bg/50'}`}
-			>
+			    that closes it on the right, rather than a plain title.
+
+			    Every colour in this dialog used to be a ternary on the theme —
+			    gray-100 against zetta-bg, gray-800 against white, twelve of
+			    them — which is how the console ended up looking like a
+			    different application in the light theme. They are tokens now,
+			    and the tokens already know which theme they are in. */}
+			<div className='flex items-center justify-between px-4 py-2 border-b border-zetta-border bg-zetta-panel shrink-0'>
 				<div className='flex items-center gap-2'>
-					<span
-						className={`font-mono text-sm ${isLight ? 'text-green-600' : 'text-green-400'}`}
-					>
-						$
-					</span>
-					<span
-						className={`text-sm font-medium ${isLight ? 'text-gray-900' : 'text-white'}`}
-					>
+					<span className='font-mono text-sm text-zetta-success'>$</span>
+					<span className='text-sm font-medium text-zetta-text'>
 						Zetta Focus — Console
 					</span>
 				</div>
 				<div className='flex items-center gap-3'>
-					<span
-						className={`text-xs ${isLight ? 'text-gray-600' : 'text-zetta-text-secondary'}`}
-					>
-						<span
-							className={`px-1.5 py-0.5 rounded border font-mono mr-1 ${isLight ? 'bg-gray-200 border-gray-300 text-gray-800' : 'bg-white/10 border-white/15 text-zetta-text'}`}
-						>
+					<span className='text-xs text-zetta-text-secondary'>
+						<span className='px-1.5 py-0.5 rounded border border-zetta-border bg-zetta-inset font-mono mr-1 text-zetta-text'>
 							Ctrl+T
 						</span>{' '}
 						to close
 					</span>
 					<button
 						onClick={onClose}
-						className={`p-1 transition-colors ${isLight ? 'text-gray-600 hover:text-gray-900' : 'text-zetta-text-secondary hover:text-white'}`}
+						className='p-1 transition-colors text-zetta-text-secondary hover:text-zetta-text'
 					>
 						<svg
 							xmlns='http://www.w3.org/2000/svg'
@@ -102,7 +85,7 @@ const TerminalModal = ({
 			{/* Output Area - Scrollable */}
 			<div
 				ref={outputRef}
-				className={`flex-1 p-4 overflow-y-auto font-mono text-sm space-y-1 ${isLight ? 'bg-gray-50' : ''}`}
+				className='flex-1 p-4 overflow-y-auto font-mono text-sm space-y-1'
 			>
 				{history.map((line, i) => (
 					<div
@@ -120,14 +103,8 @@ const TerminalModal = ({
 				    just shows the engine working. */}
 				{isExecuting && (
 					<div className='flex items-center gap-2 h-5'>
-						<span
-							className={`font-mono ${isLight ? 'text-green-600' : 'text-green-400'}`}
-						>
-							$
-						</span>
-						<span
-							className={`w-2 h-4 animate-pulse ${isLight ? 'bg-green-600' : 'bg-green-400'}`}
-						/>
+						<span className='font-mono text-zetta-success'>$</span>
+						<span className='w-2 h-4 animate-pulse bg-zetta-success' />
 					</div>
 				)}
 			</div>
@@ -135,21 +112,17 @@ const TerminalModal = ({
 			{/* Input Line - Fixed at bottom */}
 			<form
 				onSubmit={handleSubmit}
-				className={`px-4 py-3 border-t shrink-0 ${isLight ? 'border-gray-300 bg-gray-100' : 'border-zetta-border bg-zetta-bg/50'}`}
+				className='px-4 py-3 border-t border-zetta-border bg-zetta-panel shrink-0'
 			>
 				<div className='flex items-center gap-2'>
-					<span
-						className={`font-mono text-sm ${isLight ? 'text-green-600' : 'text-green-400'}`}
-					>
-						$
-					</span>
+					<span className='font-mono text-sm text-zetta-success'>$</span>
 					<input
 						ref={inputRef}
 						type='text'
 						value={input}
 						onChange={e => setInput(e.target.value)}
 						onKeyDown={handleKeyDown}
-						className={`flex-1 bg-transparent font-mono text-sm outline-none ${isLight ? 'text-gray-900 placeholder-gray-400' : 'text-white placeholder-gray-600'}`}
+						className='flex-1 bg-transparent font-mono text-sm outline-none text-zetta-text placeholder-zetta-text-muted'
 						placeholder='Enter command...'
 						autoFocus
 						disabled={isExecuting}

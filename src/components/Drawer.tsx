@@ -31,7 +31,8 @@ const Drawer = ({ isOpen, onClose, title, children }: DrawerProps) => {
 	//
 	// `position: fixed` is only relative to the viewport if no ancestor
 	// establishes a containing block, and `backdrop-filter` does exactly that.
-	// Every panel here carries one through .glass-panel, so a drawer opened
+	// Every panel here carries one through .glass-panel or .elevated-surface,
+	// so a drawer opened
 	// from a button inside the header anchored itself to the header bar — a
 	// short strip floating at the top right, outside the app entirely.
 	return createPortal(
@@ -39,14 +40,14 @@ const Drawer = ({ isOpen, onClose, title, children }: DrawerProps) => {
 			{/* Kept mounted and faded rather than unmounted, so the panel can
 			    animate out instead of vanishing. */}
 			<div
-				className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300 ${
+				className={`fixed inset-0 modal-scrim z-40 transition-opacity duration-300 ${
 					isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
 				}`}
 				onClick={onClose}
 			/>
 
 			<aside
-				className={`fixed top-0 right-0 h-full z-50 flex flex-col glass-panel border-l border-zetta-border transform transition-transform duration-300 w-full sm:w-96 lg:w-[28rem] 2xl:w-[32rem] ${
+				className={`fixed top-0 right-0 h-full z-50 flex flex-col elevated-surface border-l border-zetta-border transform transition-transform duration-300 w-full sm:w-96 lg:w-[28rem] 2xl:w-[32rem] ${
 					isOpen ? 'translate-x-0' : 'translate-x-full'
 				}`}
 			>
@@ -57,7 +58,7 @@ const Drawer = ({ isOpen, onClose, title, children }: DrawerProps) => {
 					<button
 						onClick={onClose}
 						aria-label='Close'
-						className='p-1.5 rounded-md text-zetta-text-secondary hover:text-zetta-text hover:bg-white/10 transition-colors'
+						className='p-1.5 rounded-md text-zetta-text-secondary hover:text-zetta-text hover:bg-zetta-panel transition-colors'
 					>
 						<svg
 							className='w-5 h-5'

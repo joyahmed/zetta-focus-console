@@ -42,7 +42,7 @@ const TimerPanel = ({
 			{strictMode?.is_active && (
 				<div className='absolute top-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-full bg-red-500/20 border border-red-500/40'>
 					<div className='w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse' />
-					<span className='text-xs font-medium text-red-400'>Strict</span>
+					<span className='text-xs font-medium text-zetta-danger'>Strict</span>
 				</div>
 			)}
 
@@ -155,7 +155,7 @@ const TimerPanel = ({
 
 			{/* Task display */}
 			{currentTask && currentTask.title && isRunning && (
-				<div className='mb-4 px-3 py-2 rounded-lg bg-zetta-bg/50 border border-zetta-border/50 backdrop-blur-sm'>
+				<div className='mb-4 px-3 py-2 rounded-lg bg-zetta-panel border border-zetta-border backdrop-blur-sm'>
 					<div className='flex items-center gap-2 text-sm'>
 						<span
 							className={`px-1.5 py-0.5 rounded text-xs font-medium ${

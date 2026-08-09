@@ -255,13 +255,13 @@ const ProfilePanel = ({
 					<div className='mb-3 relative group overflow-hidden rounded-md bg-red-500/5 border border-red-500/20'>
 						<div className='absolute inset-y-0 left-0 w-1 bg-red-500/50' />
 						<div className='p-2 pl-3 flex items-center justify-between'>
-							<span className='text-[10px] md:text-xs text-red-400 font-medium tracking-wide'>
+							<span className='text-[10px] md:text-xs text-zetta-danger font-medium tracking-wide'>
 								{errorMessage}
 							</span>
 							{onErrorDismiss && (
 								<button
 									onClick={onErrorDismiss}
-									className='text-red-400/50 hover:text-red-400 transition-colors p-1'
+									className='text-zetta-danger/50 hover:text-zetta-danger transition-colors p-1'
 								>
 									✕
 								</button>

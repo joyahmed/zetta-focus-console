@@ -20,7 +20,7 @@ const CommandSpotlight = ({ onClick }: CommandSpotlightProps) => (
 				{['Ctrl', 'T'].map(key => (
 					<kbd
 						key={key}
-						className='hidden md:inline-flex items-center h-5 px-1.5 text-[10px] font-mono text-zetta-text bg-white/10 border border-white/15 rounded backdrop-blur-sm'
+						className='hidden md:inline-flex items-center h-5 px-1.5 text-[10px] font-mono text-zetta-text bg-zetta-panel border border-zetta-border rounded backdrop-blur-sm'
 					>
 						{key}
 					</kbd>

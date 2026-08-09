@@ -65,35 +65,99 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * SURFACES
+ *
+ * Five of them, and the distinction is the whole reason the light theme used to
+ * read as one flat sheet of white: `--bg-primary` was doing duty as the page,
+ * as every field well and as every row, so on a near-white page all three came
+ * out the same colour and nothing had an edge. They are separate now, and each
+ * one means a position in the stack rather than a shade:
+ *
+ *   --bg-primary    the page behind everything
+ *   --bg-card       the four main panels, translucent over it
+ *   --bg-elevated   dialogs, drawers and popovers — above the scrim, opaque
+ *   --bg-panel      a recessed block, row or chip inside a card or a dialog
+ *   --bg-inset      an editable field: input, stepper, dropdown trigger
+ *
+ * `--bg-panel` and `--bg-inset` deliberately move in opposite directions per
+ * theme. A field has to separate from the block it sits in, and in the dark
+ * that means going darker while in the light it means going white — the same
+ * relationship, not the same colour.
+ *
+ * CHANNELS
+ *
+ * Solid colours are declared as channels and the usable value is derived from
+ * them one line down.
+ *
+ * Tailwind can only honour an opacity modifier — `bg-zetta-bg/50`,
+ * `ring-zetta-neon/30` — on a colour it can take apart, and it cannot take
+ * apart `var(--accent-neon)`. It does not warn: it silently emits no rule at
+ * all, so a dozen classes across the app were doing nothing. Half the
+ * statistics tiles had no background, the selected row in the command list had
+ * no highlight, and every focus ring in the profile form was invisible.
+ *
+ * Channels plus `<alpha-value>` in the config fix that without a second set of
+ * numbers to keep in sync: the theme sets `--x-rgb` and `--x` is defined once
+ * in terms of it, so `var(--x)` still works everywhere it already did.
+ */
 :root {
 	/*
 	 * MIDNIGHT THEME (Default / Dark Mode)
 	 * High contrast, deep void background, neon accents
 	 */
-	--bg-primary: #050510;       /* The Void - nearly black blue */
-	--bg-secondary: #0a0a16;     /* Slightly lighter void */
+	--bg-primary-rgb: 5 5 16;      /* The Void - nearly black blue */
+	--bg-secondary-rgb: 10 10 22;  /* Slightly lighter void */
+	--bg-primary: rgb(var(--bg-primary-rgb));
+	--bg-secondary: rgb(var(--bg-secondary-rgb));
 
 	/* Glassmorphism panels */
 	--bg-card: rgba(20, 20, 35, 0.4);
 	--bg-panel: rgba(15, 15, 25, 0.5);
+	--bg-elevated: rgba(17, 17, 30, 0.94);
+	--bg-inset: rgba(5, 5, 16, 0.55);
+	/* A dropdown list. Lighter than a dialog on purpose — it is a small thing
+	   floating over the app rather than a surface that replaces it — and the
+	   blur behind it is what keeps the text under it from reading through. */
+	--bg-popover: rgba(20, 20, 34, 0.9);
 
 	/* Ultra-thin borders */
 	--border-color: rgba(255, 255, 255, 0.06);
 	--border-highlight: rgba(255, 255, 255, 0.15);
+
+	/* Depth. A panel and a dialog are at different heights and should not cast
+	   the same shadow; the dialog also has a scrim under it. */
+	--shadow-panel: 0 4px 6px -1px rgba(0, 0, 0, 0.35),
+		0 2px 4px -1px rgba(0, 0, 0, 0.25);
+	--shadow-elevated: 0 24px 60px -12px rgba(0, 0, 0, 0.7);
+	--scrim: rgba(0, 0, 0, 0.5);
+
+	/* Status. Both are the tint that reads on this theme's background — the
+	   400s are legible on the void and muddy on paper, and the 600s the other
+	   way round. */
+	--color-success-rgb: 74 222 128;
+	--color-danger-rgb: 248 113 113;
+	--color-success: rgb(var(--color-success-rgb));
+	--color-danger: rgb(var(--color-danger-rgb));
 
 	/* Text.
 	   `--text-muted` carries labels, hints and keycaps, not decoration, so it
 	   has to be readable rather than merely present. At #7e8185 it sat just
 	   under 5:1 against the void and the statistics labels genuinely could not
 	   be read; #9ba1a8 is a little over 7:1. */
-	--text-primary: #f8fafc;
-	--text-secondary: #a8b4c4;
-	--text-muted: #9ba1a8;
+	--text-primary-rgb: 248 250 252;
+	--text-secondary-rgb: 168 180 196;
+	--text-muted-rgb: 155 161 168;
+	--text-primary: rgb(var(--text-primary-rgb));
+	--text-secondary: rgb(var(--text-secondary-rgb));
+	--text-muted: rgb(var(--text-muted-rgb));
 
 	/* Accents - Neon */
-	--accent-neon: #8b5cf6;            /* Violet Neon */
-	--accent-neon-secondary: #06b6d4;  /* Cyan Neon */
-	--accent-neon-glow: rgba(139, 92, 246, 0.5);
+	--accent-neon-rgb: 139 92 246;             /* Violet Neon */
+	--accent-neon-secondary-rgb: 6 182 212;    /* Cyan Neon */
+	--accent-neon: rgb(var(--accent-neon-rgb));
+	--accent-neon-secondary: rgb(var(--accent-neon-secondary-rgb));
+	--accent-neon-glow: rgb(var(--accent-neon-rgb) / 0.5);
 
 	/* Timer Ring */
 	--color-ring-base: rgba(255, 255, 255, 0.1);
@@ -108,53 +172,54 @@
 	/*
 	 * LIGHT MODE (Clean / Engineered)
 	 * Precision feel, cool gray-blue tones
+	 *
+	 * The page used to be #f4f6fa with 70%-white cards on it: two shades of
+	 * white a hair apart, so the panels had no edge and the whole window read
+	 * as one bright sheet. The page is a proper cool grey now and the cards are
+	 * nearly white, which is what makes them look like cards.
 	 */
-	--bg-primary: #f4f6fa;
-	--bg-secondary: #ffffff;
+	--bg-primary-rgb: 227 232 240;
+	--bg-secondary-rgb: 255 255 255;
 
-	--bg-card: rgba(255, 255, 255, 0.7);
-	--bg-panel: rgba(255, 255, 255, 0.5);
+	--bg-card: rgba(255, 255, 255, 0.82);
+	--bg-panel: #f1f5fa;
+	--bg-elevated: #ffffff;
+	--bg-inset: #ffffff;
+	--bg-popover: rgba(255, 255, 255, 0.94);
 
-	--border-color: rgba(0, 0, 0, 0.06);
-	--border-highlight: rgba(0, 0, 0, 0.1);
+	/* Slate rather than pure black: a neutral border over a cool grey page
+	   reads slightly warm against it. */
+	--border-color: rgba(15, 23, 42, 0.1);
+	--border-highlight: rgba(15, 23, 42, 0.18);
 
-	--text-primary: #0f172a;
-	--text-secondary: #475569;
+	--text-primary-rgb: 15 23 42;
+	--text-secondary-rgb: 71 85 105;
 	/* Same reasoning as the dark theme: #94a3b8 on near-white was under 3:1. */
-	--text-muted: #64748b;
+	--text-muted-rgb: 100 116 139;
 
-	--accent-neon: #6366f1;   /* Indigo */
-	--accent-neon-secondary: #0ea5e9; /* Sky Blue */
-	--accent-neon-glow: rgba(99, 102, 241, 0.3);
+	--accent-neon-rgb: 99 102 241;             /* Indigo */
+	--accent-neon-secondary-rgb: 14 165 233;   /* Sky Blue */
+	--accent-neon-glow: rgb(var(--accent-neon-rgb) / 0.3);
 
 	--color-ring-base: rgba(0, 0, 0, 0.05);
 	--color-ring-progress: #6366f1;
 
+	/* Wide and soft rather than tight and dark. On paper a hard drop shadow
+	   looks like a sticker; the lift has to come from a large, faint pool. */
+	--shadow-panel: 0 1px 2px rgba(15, 23, 42, 0.05),
+		0 10px 24px -14px rgba(15, 23, 42, 0.25);
+	--shadow-elevated: 0 2px 8px rgba(15, 23, 42, 0.06),
+		0 24px 56px -20px rgba(15, 23, 42, 0.3);
+	/* Slate at a third, not black at a half. A heavy scrim on a light window
+	   turns the app behind it grey and dirty. */
+	--scrim: rgba(15, 23, 42, 0.32);
+
+	--color-success-rgb: 22 163 74;
+	--color-danger-rgb: 220 38 38;
+
 	/* Command Bar */
 	--bg-command: rgba(0, 0, 0, 0.04);
 	--bg-command-hover: rgba(0, 0, 0, 0.06);
-}
-
-[data-theme='light'] .profile-modal-white {
-	background-color: #ffffff !important;
-}
-
-[data-theme='light'] .help-modal-white {
-	background-color: #ffffff !important;
-}
-
-/*
- * The console panel, opaque in light mode.
- *
- * It cannot be a `bg-white` passed alongside the shell's `bg-zetta-card`:
- * both are background-color utilities of equal specificity, so which one wins
- * is decided by their order in the generated stylesheet, not by the order they
- * appear in the class attribute — and the custom colour is emitted last. Same
- * hook as the two dialogs above, for the same reason.
- */
-[data-theme='light'] .terminal-modal-white {
-	background-color: #ffffff !important;
-	border-color: #d1d5db !important;
 }
 
 * {
@@ -207,7 +272,42 @@ body {
 		backdrop-filter: blur(var(--glass-blur, 16px));
 		-webkit-backdrop-filter: blur(var(--glass-blur, 16px));
 		border: 1px solid var(--border-color);
-		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+		box-shadow: var(--shadow-panel);
+	}
+
+	/*
+	 * The surface a dialog or a drawer is drawn on.
+	 *
+	 * Opaque, and that is the point. It used to be `bg-zetta-card` — 70% white
+	 * in the light theme — so a form sat on a translucent sheet over its own
+	 * blurred reflection and every field in it lost its edge. Three separate
+	 * `!important` overrides existed to force white back on, one per dialog,
+	 * each having to be repeated on every child that showed the sheet through.
+	 * One token replaces all of it.
+	 */
+	.elevated-surface {
+		background: var(--bg-elevated);
+		backdrop-filter: blur(var(--glass-blur, 16px));
+		-webkit-backdrop-filter: blur(var(--glass-blur, 16px));
+		box-shadow: var(--shadow-elevated);
+	}
+
+	/* A dropdown list: translucent, blurred, and lifted off the dialog under
+	   it by a shadow rather than by being a solid slab. */
+	.popover-surface {
+		background: var(--bg-popover);
+		backdrop-filter: blur(16px) saturate(140%);
+		-webkit-backdrop-filter: blur(16px) saturate(140%);
+		border: 1px solid var(--border-highlight);
+		box-shadow: var(--shadow-elevated);
+	}
+
+	/* What sits between a dialog and the app: dark and heavy in the dark
+	   theme, slate and light in the light one. */
+	.modal-scrim {
+		background: var(--scrim);
+		backdrop-filter: blur(2px);
+		-webkit-backdrop-filter: blur(2px);
 	}
 
 	/*
@@ -251,7 +351,7 @@ body {
 		-webkit-backdrop-filter: blur(var(--glass-blur, 16px));
 		border: 1px solid var(--border-color);
 		border-radius: 1rem;
-		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+		box-shadow: var(--shadow-panel);
 		transition: background-color 150ms ease, border-color 150ms ease;
 	}
 
@@ -263,7 +363,7 @@ body {
 	.glass-panel-hover:hover {
 		background: var(--bg-secondary);
 		border-color: var(--border-highlight);
-		box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+		box-shadow: var(--shadow-elevated);
 	}
 
 	/* Neon Text */
@@ -332,6 +432,22 @@ body {
 	:focus-visible {
 		outline: 2px solid var(--accent-neon);
 		outline-offset: 2px;
+	}
+
+	/*
+	 * Fields opt out of it.
+	 *
+	 * A text field, a stepper and the dropdown trigger all turn their border to
+	 * the accent when they take focus, so the ring outside them was a second
+	 * announcement of the same state — and in a form where the controls sit
+	 * three to a row, an offset 2px halo around each one is what made the
+	 * profile dialog look busy. Buttons and links keep theirs: they have no
+	 * border to change.
+	 */
+	input:focus-visible,
+	textarea:focus-visible,
+	[role='combobox']:focus-visible {
+		outline: none;
 	}
 }
 

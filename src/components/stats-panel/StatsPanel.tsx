@@ -70,7 +70,7 @@ const StatsPanel = ({ appState }: StatsPanelProps) => {
 					{STAT_CARDS.map(({ label, unit, tone, Icon, read }) => (
 						<div
 							key={label}
-							className='flex-1 basis-28 min-w-0 p-3 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'
+							className='flex-1 basis-28 min-w-0 p-3 rounded-xl border border-zetta-border bg-zetta-panel hover:bg-zetta-surface transition-colors group relative overflow-hidden'
 						>
 							{/* The icon was a 15% watermark, which against this
 							    background is not a faint icon so much as no icon. */}
@@ -96,7 +96,7 @@ const StatsPanel = ({ appState }: StatsPanelProps) => {
 				    container with a border around nothing. The engine knows a
 				    good deal more than four things about itself, and a panel
 				    called diagnostics should say so. */}
-				<div className='p-2.5 md:p-3 rounded-xl border border-zetta-border bg-zetta-bg/50 w-full flex-1 flex flex-col min-h-0'>
+				<div className='p-2.5 md:p-3 rounded-xl border border-zetta-border bg-zetta-panel w-full flex-1 flex flex-col min-h-0'>
 					<div className='flex items-center gap-2 mb-2 shrink-0'>
 						<div
 							className={`w-1.5 h-1.5 rounded-full ${devMode ? 'bg-zetta-neon animate-pulse' : 'bg-zetta-text-muted'}`}
@@ -117,7 +117,7 @@ const StatsPanel = ({ appState }: StatsPanelProps) => {
 						{fields.map(field => (
 							<div
 								key={field.label}
-								className='flex flex-col gap-0.5 min-w-0 pb-1.5 border-b border-zetta-border/50'
+								className='flex flex-col gap-0.5 min-w-0 pb-1.5 border-b border-zetta-border'
 							>
 								<dt className='text-[9px] uppercase tracking-wider text-zetta-text-muted'>
 									{field.label}
@@ -125,7 +125,7 @@ const StatsPanel = ({ appState }: StatsPanelProps) => {
 								<dd
 									className={`font-mono text-[11px] truncate ${
 										field.accent === 'good'
-											? 'text-green-400'
+											? 'text-zetta-success'
 											: field.accent === 'warn'
 												? 'text-amber-400'
 												: 'text-zetta-text'

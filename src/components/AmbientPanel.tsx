@@ -4,7 +4,6 @@ import { AMBIENT_ANIMATIONS } from './ambient-panel';
 
 import AmbientHeader from './ambient-panel/AmbientHeader';
 import SeasonIndicator from './ambient-panel/SeasonIndicator';
-import LightModePlaceholder from './ambient-panel/LightModePlaceholder';
 import SeasonScene from './ambient-panel/SeasonScene';
 
 const AmbientPanel = ({
@@ -49,7 +48,7 @@ const AmbientPanel = ({
 		return null;
 	}
 
-	/**
+	/*
 	 * Particles, and nothing behind them.
 	 *
 	 * There used to be a second mode — a full-panel wash, latterly an aurora —
@@ -60,15 +59,13 @@ const AmbientPanel = ({
 	 * compositor keep a copy of everything behind it as well. Particles are a
 	 * handful of tiny layers by comparison, and they were always the part worth
 	 * looking at.
+	 *
+	 * The light theme used to get a static pastel gradient and the words
+	 * "Ambience disabled in light mode" instead of any of this — the one panel
+	 * in the app that simply stopped working when you pressed Ctrl+D. Nothing
+	 * about a season needs a dark background; the particles just needed to be
+	 * drawn for it, which is a shade of opacity and a shadow under the glyph.
 	 */
-	const renderSeasonContent = () =>
-		isLight ? (
-			<LightModePlaceholder />
-		) : (
-			<SeasonScene
-				{...{ season, particles, isPaused, isLight, speedMultiplier }}
-			/>
-		);
 
 	return (
 		<div className='panel h-full relative overflow-hidden flex flex-col'>
@@ -83,15 +80,11 @@ const AmbientPanel = ({
 					} as React.CSSProperties
 				}
 			>
-				{renderSeasonContent()}
+				<SeasonScene
+					{...{ season, particles, isPaused, isLight, speedMultiplier }}
+				/>
 
-				<SeasonIndicator
-						{...{
-							season,
-							motionIntensity,
-							isLight
-						}}
-					/>
+				<SeasonIndicator {...{ season, motionIntensity }} />
 			</div>
 
 			<style>{AMBIENT_ANIMATIONS}</style>

@@ -79,8 +79,7 @@ const ProfileModal = ({
 				isOpen,
 				onClose,
 				title,
-				size: 'form' as ModalSize,
-				panelClassName: 'profile-modal-white'
+				size: 'form' as ModalSize
 			}}
 		>
 			{/* The form scrolls; the shell's header stays put above it. */}
@@ -89,7 +88,7 @@ const ProfileModal = ({
 				className='p-5 space-y-5 overflow-y-auto custom-scrollbar'
 			>
 				{error && (
-					<div className='p-3 bg-red-500/15 border border-red-500/30 rounded-md text-red-400 text-xs flex items-center gap-2'>
+					<div className='p-3 bg-red-500/10 border border-red-500/30 rounded-md text-zetta-danger text-xs flex items-center gap-2'>
 						<svg
 							xmlns='http://www.w3.org/2000/svg'
 							viewBox='0 0 20 20'
@@ -105,13 +104,13 @@ const ProfileModal = ({
 						{error}
 					</div>
 				)}
-	
+
 				{/* Profile Name */}
 				<div>
 					<h3 className='text-xs font-semibold text-zetta-text-muted uppercase tracking-wider mb-2'>
 						Identity
 					</h3>
-					<div className='profile-modal-white bg-zetta-panel rounded-lg p-3 border border-zetta-border'>
+					<div className='bg-zetta-panel rounded-lg p-3 border border-zetta-border'>
 						<label className='block text-xs text-zetta-text-secondary mb-1.5 font-medium'>
 							Profile Name
 						</label>
@@ -120,7 +119,7 @@ const ProfileModal = ({
 							value={name}
 							onChange={e => setName(e.target.value)}
 							placeholder='My Custom Profile'
-							className='profile-modal-white w-full px-3 py-2 bg-zetta-bg border border-zetta-border rounded text-sm text-zetta-text placeholder-zetta-text-muted focus:outline-none focus:border-zetta-neon focus:ring-1 focus:ring-zetta-neon/30 transition-all font-medium'
+							className='w-full px-3 py-2 bg-zetta-inset border border-zetta-border rounded text-sm text-zetta-text placeholder-zetta-text-muted focus:outline-none transition-colors font-medium'
 							autoFocus
 						/>
 						{mode === 'create' && (
@@ -142,7 +141,7 @@ const ProfileModal = ({
 						)}
 						{mode === 'edit' && profile && (
 							<p className='text-[10px] text-zetta-text-muted mt-1.5 flex items-center gap-1.5 font-mono'>
-								<span className='profile-modal-white px-1.5 py-0.5 bg-zetta-bg border border-zetta-border rounded text-[10px]'>
+								<span className='px-1.5 py-0.5 bg-zetta-inset border border-zetta-border rounded text-[10px]'>
 									ID
 								</span>
 								<span className='text-zetta-text-secondary'>
@@ -152,7 +151,7 @@ const ProfileModal = ({
 						)}
 					</div>
 				</div>
-	
+
 				{/* Durations */}
 				<div>
 					<h3 className='text-xs font-semibold text-zetta-text-muted uppercase tracking-wider mb-2'>
@@ -161,20 +160,20 @@ const ProfileModal = ({
 					{/* Two across, not four. In a 500px dialog four steppers left
 					    each field about 35px between its own minus and plus
 					    buttons — too narrow to read "0.5" in, let alone type in. */}
-					<div className='profile-modal-white grid grid-cols-2 gap-3 bg-zetta-panel rounded-lg p-3 border border-zetta-border'>
+					<div className='grid grid-cols-2 gap-3 bg-zetta-panel rounded-lg p-3 border border-zetta-border'>
 						{intervals.map(interval => (
 							<NumberInput key={interval.label} {...interval} />
 						))}
 					</div>
 				</div>
-	
+
 				{/* Ambience */}
 				<div>
 					<h3 className='text-xs font-semibold text-zetta-text-muted uppercase tracking-wider mb-2'>
 						Ambience Configuration
 					</h3>
-	
-					<div className='profile-modal-white bg-zetta-panel rounded-lg p-3 space-y-3 border border-zetta-border'>
+
+					<div className='bg-zetta-panel rounded-lg p-3 space-y-3 border border-zetta-border'>
 						{/* Season & Intensity */}
 						<div className='grid grid-cols-2 gap-3'>
 							<LabelledSelect
@@ -194,7 +193,7 @@ const ProfileModal = ({
 								}}
 							/>
 						</div>
-	
+
 						{/* Sound */}
 						<LabelledSelect
 							{...{
@@ -206,7 +205,7 @@ const ProfileModal = ({
 						/>
 					</div>
 				</div>
-	
+
 				{/* Actions */}
 				<div className='flex justify-end gap-3 pt-4 border-t border-zetta-border'>
 					<button

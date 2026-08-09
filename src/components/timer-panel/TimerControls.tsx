@@ -106,7 +106,7 @@ const TimerControls = ({
 
 			{/* Strict Mode blocker overlay - shows when blocking */}
 			{isStrictModeBlocking && status === 'running' && (
-				<div className='absolute bottom-20 text-xs text-red-400 opacity-70'>
+				<div className='absolute bottom-20 text-xs text-zetta-danger opacity-70'>
 					Strict Mode: Session cannot be paused or stopped
 				</div>
 			)}

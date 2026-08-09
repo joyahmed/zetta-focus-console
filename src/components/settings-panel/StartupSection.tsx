@@ -16,7 +16,7 @@ const StartupSection = ({ isLight }: StartupSectionProps) => {
 					{STARTUP_SETTINGS.map(setting => (
 						<div
 							key={setting.key}
-							className='h-12 bg-gray-700 rounded-lg'
+							className='h-12 bg-zetta-panel rounded-lg'
 						/>
 					))}
 				</div>

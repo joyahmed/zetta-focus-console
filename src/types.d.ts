@@ -162,7 +162,7 @@ interface AppModalsProps {
 }
 
 /* ==========================================================================
-   Shells — Modal and Drawer
+   Shells — Modal, Drawer and Select
    ========================================================================== */
 
 type ModalSize = 'sm' | 'form' | 'md' | 'lg';
@@ -175,8 +175,6 @@ interface ModalProps {
 	size?: ModalSize;
 	/** Fills the available height rather than hugging its content. */
 	fillHeight?: boolean;
-	/** For the one dialog that needs an opaque panel in light mode. */
-	panelClassName?: string;
 	children: React.ReactNode;
 }
 
@@ -185,6 +183,28 @@ interface DrawerProps {
 	onClose: () => void;
 	title: React.ReactNode;
 	children: React.ReactNode;
+}
+
+interface UseSelectProps {
+	value: string;
+	options: SelectOption[];
+	onChange: (value: string) => void;
+}
+
+/** Where the portalled list is pinned, in window coordinates. */
+interface SelectPosition {
+	top: number;
+	left: number;
+	width: number;
+	maxHeight: number;
+	/** Which side of the trigger it opened on, once the room was measured. */
+	placement: 'above' | 'below';
+}
+
+interface SelectProps extends UseSelectProps {
+	/** Id of the element naming this control — the trigger is a button, so a
+	    `<label for>` cannot bind to it. */
+	labelledBy?: string;
 }
 
 /* ==========================================================================
@@ -302,7 +322,6 @@ interface SeasonParticleProps extends Omit<SceneProps, 'glowColor'> {
 interface SeasonIndicatorProps {
 	season: AmbientPanelProps['season'];
 	motionIntensity: AmbientPanelProps['motionIntensity'];
-	isLight: boolean;
 }
 
 /* ==========================================================================
@@ -621,7 +640,6 @@ interface TerminalModalProps {
 	onHelp: () => void;
 	sessionSummary?: string | null;
 	onSummaryRead?: () => void;
-	theme: string;
 }
 
 interface HelpModalProps {
@@ -704,6 +722,5 @@ interface UseTerminalModalProps {
 	onHelp: () => void;
 	sessionSummary?: string | null;
 	onSummaryRead?: () => void;
-	isLight: boolean;
 }
 

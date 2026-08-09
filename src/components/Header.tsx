@@ -17,45 +17,34 @@ const Header = ({
 	onMuteToggle,
 	theme,
 	onThemeChange
-}: HeaderProps) => {
-	const isLight = theme === 'light';
+}: HeaderProps) => (
+	<header className='w-full px-4 pt-6 pb-2 z-40 flex justify-center'>
+		{/* The bar used to pick its shadow and its border from the theme by
+		    hand — a black/5 border and shadow-sm in the light, a white/10 and
+		    shadow-glass in the dark. Both are what `.glass-panel` and the
+		    border tokens now say on their own. */}
+		<div className='glass-panel flex items-center justify-between w-full rounded-2xl px-4 py-2.5 transition-all duration-300 hover:border-zetta-border hover:shadow-elevated'>
+			<LogoBrand {...{ devMode }} />
 
-	return (
-		<header className='w-full px-4 pt-6 pb-2 z-40 flex justify-center'>
-			<div
-				className={`glass-panel flex items-center justify-between w-full rounded-2xl px-4 py-2.5 transition-all duration-300 ${
-					isLight
-						? 'shadow-sm border-black/5 hover:shadow-md'
-						: 'shadow-glass hover:shadow-neon/20 hover:border-white/10'
-				}`}
-			>
-				<LogoBrand {...{ devMode }} />
+			<CommandSpotlight onClick={onTerminalClick} />
 
-				<CommandSpotlight onClick={onTerminalClick} />
+			<div className='flex items-center justify-end gap-3 w-1/4'>
+				<ProfilePill {...{ activeProfileName }} />
 
-				<div className='flex items-center justify-end gap-3 w-1/4'>
-					<ProfilePill {...{ activeProfileName }} />
+				<div className='h-4 w-[1px] bg-zetta-border mx-1' />
 
-					<div className='h-4 w-[1px] bg-zetta-border mx-1' />
+				<VolumeControl
+					{...{ volume, isMuted, onVolumeChange, onMuteToggle }}
+				/>
 
-					<VolumeControl
-							{...{
-								volume,
-								isMuted,
-								onVolumeChange,
-								onMuteToggle
-							}}
-						/>
+				<ThemeToggle {...{ theme, onThemeChange }} />
 
-					<ThemeToggle {...{ theme, onThemeChange }} />
-					
-					<ShortcutsMenu />
+				<ShortcutsMenu />
 
-					<SettingsButton onClick={onSettingsClick} />
-				</div>
+				<SettingsButton onClick={onSettingsClick} />
 			</div>
-		</header>
-	);
-};
+		</div>
+	</header>
+);
 
 export default Header;

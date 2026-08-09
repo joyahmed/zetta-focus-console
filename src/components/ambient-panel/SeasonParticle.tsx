@@ -10,6 +10,14 @@
  * Everything that varies — where it enters, how big, how fast, how far it
  * wanders, how far it turns — is per particle, so a dozen copies of one
  * character do not read as a dozen copies of one character.
+ *
+ * The light theme takes them nearly opaque and puts a shadow under them. A
+ * snowflake is pale blue and a blossom is pale pink, and on a white panel at
+ * the dark theme's 50–95% they vanished — which is most of why the panel was
+ * given up on in the light theme rather than drawn for it. `text-shadow` is
+ * the cheap way to get the edge back: the glyph is already on its own layer
+ * because it is animating, so the shadow costs a wider raster of the same
+ * layer, where `filter: drop-shadow` would cost a second pass over it.
  */
 const SeasonParticle = ({
 	icon,
@@ -29,7 +37,12 @@ const SeasonParticle = ({
 				bottom: rises ? 0 : undefined,
 				fontSize: particle.size,
 				lineHeight: 1,
-				'--particle-opacity': isLight ? 0.85 : particle.opacity,
+				'--particle-opacity': isLight
+					? Math.min(1, particle.opacity + 0.25)
+					: particle.opacity,
+				textShadow: isLight
+					? '0 1px 2px rgba(15, 23, 42, 0.28)'
+					: undefined,
 				'--drift-mid': `${particle.drift}px`,
 				'--drift-end': `${-particle.drift * 0.6}px`,
 				'--spin': `${particle.spin}deg`,

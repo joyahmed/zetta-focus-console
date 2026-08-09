@@ -143,7 +143,7 @@ const SoundSection = ({
 				onClick={playAmbientSound ? onSoundStop : onSoundPlay}
 				className={`w-full p-3 rounded-lg border transition-colors glass-panel  backdrop-blur-xl ${
 					playAmbientSound
-						? 'bg-red-500/10 border-red-500/30 text-red-400'
+						? 'bg-red-500/10 border-red-500/30 text-zetta-danger'
 						: 'border-opacity-50'
 				}`}
 				style={{

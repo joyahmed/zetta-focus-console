@@ -1,5 +1,5 @@
 const STEPPER_STYLES =
-	'profile-modal-white w-8 h-8 flex items-center justify-center bg-zetta-bg border border-zetta-border text-zetta-text-secondary hover:text-zetta-text hover:bg-zetta-panel transition-all disabled:opacity-40 disabled:cursor-not-allowed';
+	'w-8 h-8 flex items-center justify-center bg-zetta-inset border border-zetta-border text-zetta-text-secondary hover:text-zetta-text hover:bg-zetta-panel transition-all disabled:opacity-40 disabled:cursor-not-allowed';
 
 /** The minus and plus glyphs are the same 20x20 filled box; only the path
     differs, so the svg is written once. */
@@ -82,7 +82,7 @@ const NumberInput = ({
 					step={step}
 					value={value}
 					onChange={handleManualChange}
-					className='profile-modal-white flex-1 h-8 bg-zetta-bg border-t border-b border-zetta-border text-sm text-zetta-text font-mono font-medium text-center focus:outline-none focus:border-zetta-neon focus:ring-1 focus:ring-zetta-neon/30'
+					className='flex-1 h-8 bg-zetta-inset border-t border-b border-zetta-border text-sm text-zetta-text font-mono font-medium text-center focus:outline-none'
 				/>
 				<button
 					type='button'

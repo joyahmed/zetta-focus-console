@@ -41,13 +41,20 @@ const COMMANDS = [
 const HISTORY_STORAGE_KEY = 'zetta_terminal_history';
 const MAX_HISTORY_SIZE = 100;
 
+/** One colour per kind of line, in tokens that already follow the theme. */
+const LINE_COLORS: Record<TerminalLine['type'], string> = {
+	input: 'text-zetta-text',
+	output: 'text-zetta-text-secondary',
+	error: 'text-zetta-danger',
+	success: 'text-zetta-success'
+};
+
 export const useTerminalModal = ({
 	isOpen,
 	onCommand,
 	onHelp: _onHelp,
 	sessionSummary,
-	onSummaryRead,
-	isLight
+	onSummaryRead
 }: UseTerminalModalProps) => {
 	// Load persisted history from localStorage
 	const loadPersistedHistory = (): string[] => {
@@ -282,34 +289,15 @@ export const useTerminalModal = ({
 		// close calls for one keypress.
 	};
 
-	const getLineColor = (type: TerminalLine['type']) => {
-		if (isLight) {
-			switch (type) {
-				case 'input':
-					return 'text-gray-800';
-				case 'output':
-					return 'text-gray-700';
-				case 'error':
-					return 'text-red-600';
-				case 'success':
-					return 'text-green-600';
-				default:
-					return 'text-gray-700';
-			}
-		}
-		switch (type) {
-			case 'input':
-				return 'text-gray-300';
-			case 'output':
-				return 'text-gray-400';
-			case 'error':
-				return 'text-red-400';
-			case 'success':
-				return 'text-green-400';
-			default:
-				return 'text-gray-400';
-		}
-	};
+	/**
+	 * What a line is, in colour.
+	 *
+	 * This was two switches — one set of grays and greens for the dark theme,
+	 * another for the light — and the console had to be told which theme it was
+	 * in to pick between them. Both sets said the same four things, so they are
+	 * one table of tokens that already move with the theme.
+	 */
+	const getLineColor = (type: TerminalLine['type']) => LINE_COLORS[type];
 
 	return {
 		input,

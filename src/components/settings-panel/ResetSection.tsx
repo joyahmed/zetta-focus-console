@@ -19,7 +19,7 @@ const ResetSection = ({ onResetSettings }: ResetSectionProps) => (
 		>
 			<div>
 				<div
-					className='text-sm group-hover:text-red-400'
+					className='text-sm group-hover:text-zetta-danger'
 					style={{ color: 'var(--text-primary)' }}
 				>
 					Reset Settings
@@ -31,7 +31,7 @@ const ResetSection = ({ onResetSettings }: ResetSectionProps) => (
 					Restore default configuration
 				</div>
 			</div>
-			<RefreshIcon className='w-5 h-5 text-[var(--text-muted)] group-hover:text-red-400 transition-colors' />
+			<RefreshIcon className='w-5 h-5 text-[var(--text-muted)] group-hover:text-zetta-danger transition-colors' />
 		</button>
 	</section>
 );
