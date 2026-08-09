@@ -70,22 +70,25 @@ export default function TimerPanel({
 				/>
 			</Suspense>
 
-			{/* Session type, above the circle rather than inside it. In normal
-			    flow with a height of its own, so the ring sizes around it
-			    instead of into it. */}
-			<div className='flex items-center justify-center h-5 shrink-0'>
-				<span className='text-[10px] font-bold uppercase tracking-[0.2em] text-zetta-text-muted whitespace-nowrap'>
-					{timer.session_type.replace('_', ' ')}
-				</span>
-			</div>
-
 			{/* The ring takes whatever height is left after the fixed rows, and
 			    derives its width from that. Sizing it by width instead meant a
 			    short, wide panel asked for a circle taller than the space it had
 			    — `overflow-hidden` then cut the top off, taking the session
 			    label with it. Height is the scarce axis here, so height decides. */}
-			<div className='flex-1 min-h-0 w-full flex items-center justify-center my-2'>
-				<div className='relative h-full max-h-64 aspect-square min-h-[9rem] flex items-center justify-center'>
+			<div className='flex-1 min-h-0 w-full flex items-center justify-center gap-4 my-2'>
+				{/* Spacer matching the quick column, so the circle stays centred
+				    in the panel rather than being pushed off to the left by it. */}
+				<div className='w-16 shrink-0' aria-hidden />
+
+				{/* Label and circle are one group with a tight gap, so the label
+				    stays attached to the ring instead of drifting toward the top
+				    of the panel as the available height changes. */}
+				<div className='h-full min-h-0 flex flex-col items-center justify-center gap-1.5'>
+					<span className='text-[10px] font-bold uppercase tracking-[0.2em] text-zetta-text-muted whitespace-nowrap shrink-0'>
+						{timer.session_type.replace('_', ' ')}
+					</span>
+
+					<div className='relative flex-1 min-h-0 max-h-64 aspect-square flex items-center justify-center'>
 					<Suspense fallback={null}>
 						<TimerRing
 							{...{
@@ -128,6 +131,44 @@ export default function TimerPanel({
 							)}
 						</div>
 					</div>
+					</div>
+				</div>
+
+				{/* Quick durations, stacked beside the circle rather than under
+				    it. Height is the scarce axis in this panel — every clipping
+				    problem it has had was vertical — and there is width to spare,
+				    so the one row that does not need to be under the timer moves
+				    off that axis. The column keeps its width whether or not it
+				    has anything in it, so the circle does not shift on start. */}
+				<div className='w-16 shrink-0 flex flex-col items-center justify-center gap-1.5'>
+					{onQuickStart && timer.status === 'idle' && (
+						<>
+							<span className='text-[9px] uppercase tracking-wider text-zetta-text-muted font-bold'>
+								Quick
+							</span>
+							{QUICK_DURATIONS.map(minutes => (
+								<button
+									key={minutes}
+									onClick={() => onQuickStart(minutes)}
+									title={`Start a ${minutes} minute session`}
+									style={{
+										['--chip-glow' as string]: effectiveGlowColor
+									}}
+									className='w-full py-1.5 text-xs font-mono rounded-lg border transition-all duration-200
+										border-[color-mix(in_srgb,var(--chip-glow)_35%,transparent)]
+										bg-[color-mix(in_srgb,var(--chip-glow)_10%,transparent)]
+										text-zetta-text
+										shadow-[0_0_10px_-2px_color-mix(in_srgb,var(--chip-glow)_45%,transparent)]
+										hover:bg-[color-mix(in_srgb,var(--chip-glow)_22%,transparent)]
+										hover:border-[color-mix(in_srgb,var(--chip-glow)_70%,transparent)]
+										hover:shadow-[0_0_16px_-1px_color-mix(in_srgb,var(--chip-glow)_65%,transparent)]
+										active:scale-95'
+								>
+									{minutes}m
+								</button>
+							))}
+						</>
+					)}
 				</div>
 			</div>
 
@@ -164,47 +205,6 @@ export default function TimerPanel({
 				/>
 			</Suspense>
 
-			{/* Quick durations.
-			    Until now the only way to run anything other than the profile's
-			    25 minutes was `timer 5m` in the terminal, or building a whole
-			    custom profile for it. A five-minute session is not a profile.
-
-			    The row keeps its height whether or not it has anything in it.
-			    It only appears while idle, and if it collapsed on start the
-			    ring would resize under the cursor every time you pressed play. */}
-
-			<div className='relative z-10 flex items-center justify-center gap-2 h-[4.5rem] shrink-0'>
-				{onQuickStart && timer.status === 'idle' && (
-					<div className='flex flex-col gap-2'>
-						<div className='flex gap-2'>
-							{QUICK_DURATIONS.map(minutes => (
-								<button
-									key={minutes}
-									onClick={() => onQuickStart(minutes)}
-									title={`Start a ${minutes} minute session`}
-									style={{
-										['--chip-glow' as string]: effectiveGlowColor
-									}}
-									className='px-3 py-1.5 text-xs font-mono rounded-lg border transition-all duration-200
-										border-[color-mix(in_srgb,var(--chip-glow)_35%,transparent)]
-										bg-[color-mix(in_srgb,var(--chip-glow)_10%,transparent)]
-										text-zetta-text
-										shadow-[0_0_10px_-2px_color-mix(in_srgb,var(--chip-glow)_45%,transparent)]
-										hover:bg-[color-mix(in_srgb,var(--chip-glow)_22%,transparent)]
-										hover:border-[color-mix(in_srgb,var(--chip-glow)_70%,transparent)]
-										hover:shadow-[0_0_16px_-1px_color-mix(in_srgb,var(--chip-glow)_65%,transparent)]
-										active:scale-95'
-								>
-									{minutes}m
-								</button>
-							))}
-						</div>
-						<span className='text-[10px] uppercase tracking-wider text-zetta-text-muted mr-0.5 text-center font-bold'>
-							Quick
-						</span>
-					</div>
-				)}
-			</div>
 		</div>
 	);
 }
