@@ -429,6 +429,8 @@ interface ProfilePanelProps {
 	onCreateProfile?: () => void;
 	onEditProfile?: () => void;
 	onDuplicateProfile?: () => void;
+	/** Editing is closed while a session runs — see ProfilePanel. */
+	isSessionRunning?: boolean;
 	errorMessage?: string | null;
 	onErrorDismiss?: () => void;
 	stats?: Stats;

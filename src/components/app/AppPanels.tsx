@@ -44,7 +44,8 @@ const AppPanels = ({
 		onDuplicateProfile: openDuplicateProfile,
 		errorMessage: profileError,
 		onErrorDismiss: () => setProfileError(null),
-		stats: appState.stats
+		stats: appState.stats,
+		isSessionRunning: appState.timer.status === 'running'
 	};
 
 	const ambientProps: AmbientPanelProps = {

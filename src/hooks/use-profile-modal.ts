@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { secondsToMinutes, stripExtension } from '../utils/format';
 
 const DEFAULTS = {
@@ -39,7 +39,28 @@ export const useProfileModal = ({
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
+	/**
+	 * What the form was last filled from, so it is filled exactly once.
+	 *
+	 * `profile` is `appState.active_profile`, and the engine replaces the whole
+	 * state object on every event — once a second while a session runs. Seeding
+	 * on that identity meant the effect re-ran every tick and put every field
+	 * back to the profile's stored value, wiping whatever had just been typed.
+	 * That is why editing appeared to work only while the timer was stopped:
+	 * with no ticks there was nothing to overwrite it.
+	 */
+	const seededFrom = useRef<string | null>(null);
+
 	useEffect(() => {
+		if (!isOpen) {
+			seededFrom.current = null;
+			return;
+		}
+
+		const source = `${mode}:${profile?.id ?? 'new'}`;
+		if (seededFrom.current === source) return;
+		seededFrom.current = source;
+
 		// Duplicate seeds from the profile exactly as edit does; the only
 		// differences are the name it suggests and that it submits without an
 		// id, so the engine creates rather than updates.

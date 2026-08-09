@@ -51,6 +51,7 @@ const ProfilePanel = ({
 	onCreateProfile,
 	onEditProfile,
 	onDuplicateProfile,
+	isSessionRunning = false,
 	errorMessage,
 	onErrorDismiss,
 	stats
@@ -73,9 +74,27 @@ const ProfilePanel = ({
 		duplicate: profile.is_preset ? onDuplicateProfile : undefined
 	};
 
-	const actions = PROFILE_ACTIONS.filter(
-		action => handlers[action.key]
-	).map(action => ({ ...action, onClick: handlers[action.key]! }));
+	/**
+	 * Editing is closed while a session runs.
+	 *
+	 * The engine will not shorten or lengthen a session already in progress —
+	 * quite right — so an edit made mid-session changes the profile but not the
+	 * clock in front of you, and looks like it did nothing. Creating and
+	 * duplicating stay open: neither touches the profile that is running.
+	 */
+	const blocked: Partial<Record<ProfileAction['key'], string>> = {
+		edit: isSessionRunning
+			? 'Stop the session to edit this profile'
+			: undefined
+	};
+
+	const actions = PROFILE_ACTIONS.filter(action => handlers[action.key]).map(
+		action => ({
+			...action,
+			onClick: handlers[action.key]!,
+			blockedReason: blocked[action.key]
+		})
+	);
 
 	return (
 		<div className='panel flex-1 h-full p-3 md:p-4 lg:p-6 overflow-hidden flex flex-col gap-4'>
@@ -188,7 +207,6 @@ const ProfilePanel = ({
 						</div>
 					</div>
 
-
 					<div className='pt-2 border-t border-zetta-border'>
 						<div className='grid grid-cols-4 gap-1 md:gap-2 text-xs'>
 							{durations.map(({ label, value }) => (
@@ -253,11 +271,27 @@ const ProfilePanel = ({
 				)}
 
 				<div className='flex gap-3'>
-					{actions.map(({ key, label, Icon, frame, wash, text, onClick }) => (
+					{actions.map(
+						({
+							key,
+							label,
+							Icon,
+							frame,
+							wash,
+							text,
+							onClick,
+							blockedReason
+						}) => (
 						<button
 							key={key}
 							onClick={onClick}
-							className={`flex-1 group relative overflow-hidden px-3 py-2.5 rounded-xl border transition-all duration-300 ${frame}`}
+							disabled={Boolean(blockedReason)}
+							title={blockedReason}
+							className={`flex-1 group relative overflow-hidden px-3 py-2.5 rounded-xl border transition-all duration-300 ${frame} ${
+								blockedReason
+									? 'opacity-40 cursor-not-allowed'
+									: ''
+							}`}
 						>
 							<div
 								className={`absolute inset-0 translate-y-full group-hover:translate-y-0 bg-gradient-to-t to-transparent transition-transform duration-300 ${wash}`}
@@ -271,7 +305,8 @@ const ProfilePanel = ({
 								</span>
 							</div>
 						</button>
-					))}
+						)
+					)}
 				</div>
 			</div>
 		</div>
