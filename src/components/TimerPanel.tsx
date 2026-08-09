@@ -75,11 +75,7 @@ export default function TimerPanel({
 			    short, wide panel asked for a circle taller than the space it had
 			    — `overflow-hidden` then cut the top off, taking the session
 			    label with it. Height is the scarce axis here, so height decides. */}
-			<div className='flex-1 min-h-0 w-full flex items-center justify-center gap-4 my-2'>
-				{/* Spacer matching the quick column, so the circle stays centred
-				    in the panel rather than being pushed off to the left by it. */}
-				<div className='w-16 shrink-0' aria-hidden />
-
+			<div className='flex-1 min-h-0 w-full flex items-center justify-center my-2'>
 				{/* Label and circle are one group with a tight gap, so the label
 				    stays attached to the ring instead of drifting toward the top
 				    of the panel as the available height changes. */}
@@ -134,13 +130,17 @@ export default function TimerPanel({
 					</div>
 				</div>
 
-				{/* Quick durations, stacked beside the circle rather than under
-				    it. Height is the scarce axis in this panel — every clipping
-				    problem it has had was vertical — and there is width to spare,
-				    so the one row that does not need to be under the timer moves
-				    off that axis. The column keeps its width whether or not it
-				    has anything in it, so the circle does not shift on start. */}
-				<div className='w-16 shrink-0 flex flex-col items-center justify-center gap-1.5'>
+			</div>
+
+			{/* Quick durations, pinned to the right edge of the panel.
+			    Height is the scarce axis here — every clipping problem this panel
+			    has had was vertical — so the one row that need not sit under the
+			    timer moves off that axis. Taken out of the flow entirely rather
+			    than made a flex column: in the row it competed with the circle
+			    for width, and on a narrow window the two of them together
+			    overflowed and the chips ended up on top of the ring. Absolute,
+			    it cannot affect the circle's size or centring at all. */}
+			<div className='absolute right-4 top-1/2 -translate-y-1/2 z-10 w-14 flex flex-col items-center gap-1.5'>
 					{onQuickStart && timer.status === 'idle' && (
 						<>
 							<span className='text-[9px] uppercase tracking-wider text-zetta-text-muted font-bold'>
