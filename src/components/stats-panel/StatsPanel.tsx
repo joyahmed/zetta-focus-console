@@ -125,9 +125,9 @@ export default function StatsPanel({ appState }: StatsPanelProps) {
 				</div>
 
 				{/* Main Grid - Responsive */}
-				<div className='grid grid-cols-4 gap-2 w-full shrink-0'>
+				<div className='flex flex-wrap gap-2 w-full shrink-0'>
 					{/* Sessions Card */}
-					<div className='p-2 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
+					<div className='flex-1 basis-28 min-w-0 p-2 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
 						<div className='absolute right-1.5 top-1.5 opacity-15 group-hover:opacity-25 transition-opacity'>
 							<svg
 								xmlns='http://www.w3.org/2000/svg'
@@ -155,7 +155,7 @@ export default function StatsPanel({ appState }: StatsPanelProps) {
 					</div>
 
 					{/* Focus Time Card */}
-					<div className='p-2 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
+					<div className='flex-1 basis-28 min-w-0 p-2 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
 						<div className='absolute right-1.5 top-1.5 opacity-15 group-hover:opacity-25 transition-opacity'>
 							<svg
 								xmlns='http://www.w3.org/2000/svg'
@@ -182,7 +182,7 @@ export default function StatsPanel({ appState }: StatsPanelProps) {
 					</div>
 
 					{/* Streak Card */}
-					<div className='p-2 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
+					<div className='flex-1 basis-28 min-w-0 p-2 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
 						<div className='absolute right-1.5 top-1.5 opacity-15 group-hover:opacity-25 transition-opacity'>
 							<svg
 								xmlns='http://www.w3.org/2000/svg'
@@ -210,7 +210,7 @@ export default function StatsPanel({ appState }: StatsPanelProps) {
 					</div>
 
 					{/* Last Session Card */}
-					<div className='p-2 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
+					<div className='flex-1 basis-28 min-w-0 p-2 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
 						<div className='absolute right-1.5 top-1.5 opacity-15 group-hover:opacity-25 transition-opacity'>
 							<svg
 								xmlns='http://www.w3.org/2000/svg'

@@ -3,18 +3,27 @@ interface TimerBackgroundProps {
 	glowColor: string;
 }
 
+/**
+ * The glow behind the ring.
+ *
+ * The gradient is always painted and only its opacity changes. Swapping
+ * `background` between a gradient and `none` cannot be transitioned — there is
+ * nothing to interpolate — so the glow used to pop in and out the instant a
+ * session started or stopped, while `transition-opacity` sat there doing
+ * nothing on an opacity that never moved.
+ */
 function TimerBackground({
 	isRunning,
 	glowColor
 }: TimerBackgroundProps) {
-	const background = isRunning
-		? `radial-gradient(circle at center, ${glowColor} 0%, transparent 70%)`
-		: 'none';
-
 	return (
 		<div
-			className='absolute inset-0 opacity-20 transition-opacity duration-1000 pointer-events-none'
-			style={{ background }}
+			className={`absolute inset-0 transition-opacity duration-700 ease-out pointer-events-none ${
+				isRunning ? 'opacity-20' : 'opacity-0'
+			}`}
+			style={{
+				background: `radial-gradient(circle at center, ${glowColor} 0%, transparent 70%)`
+			}}
 		/>
 	);
 }

@@ -2,47 +2,33 @@ interface TimerDisplayProps {
 	formattedTime: string;
 	isRunning: boolean;
 	glowColor: string;
-	currentSession: number;
-	totalSessions: number;
 }
 
+/**
+ * Just the clock.
+ *
+ * This used to draw a row of dots underneath for the position in the cycle,
+ * which said the same thing as the "Session 1/4" line now sitting below it —
+ * two indicators for one fact, stacked, in the middle of a circle.
+ */
 function TimerDisplay({
 	formattedTime,
 	isRunning,
-	glowColor,
-	currentSession,
-	totalSessions
+	glowColor
 }: TimerDisplayProps) {
 	const opacity = isRunning ? 1 : 0.7;
 	const textShadow = isRunning ? `0 0 20px ${glowColor}50` : 'none';
 
 	return (
-		<div className='z-10 flex flex-col items-center gap-2'>
-			<div
-				className='font-mono text-[clamp(2rem,3.2dvw,3.75rem)] font-medium tracking-wide tabular-nums transition-colors duration-300'
-				style={{
-					color: 'var(--text-primary)',
-					opacity,
-					textShadow
-				}}
-			>
-				{formattedTime}
-			</div>
-			{/* Session indicator inside the circle */}
-			<div className='flex items-center gap-1.5 mt-1'>
-				{Array.from({ length: totalSessions }, (_, i) => (
-					<div
-						key={i}
-						className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-							i < currentSession
-								? 'bg-zetta-accent'
-								: i === currentSession - 1
-								? 'bg-zetta-accent/80 ring-1 ring-zetta-accent/30'
-								: 'bg-zetta-text-muted/30'
-						}`}
-					/>
-				))}
-			</div>
+		<div
+			className='z-10 font-mono text-[clamp(2rem,3.2dvw,3.75rem)] font-medium tracking-wide tabular-nums transition-colors duration-300'
+			style={{
+				color: 'var(--text-primary)',
+				opacity,
+				textShadow
+			}}
+		>
+			{formattedTime}
 		</div>
 	);
 }

@@ -113,6 +113,16 @@ const TimerRing = ({
 				}}
 			/>
 
+			{/* Only the progress is animated, and only while a session is
+			    running.
+
+			    `transition-all` meant the stroke colour and the drop-shadow
+			    animated over a full second alongside it, so starting or stopping
+			    washed the whole ring through a slow colour change. And because
+			    the offset jumps the length of the circle when a session begins
+			    or is reset, the transition swept the arc all the way round —
+			    twice, once for each change. While idle there is nothing to
+			    animate, so it snaps. */}
 			<Circle
 				{...{
 					radius,
@@ -120,7 +130,9 @@ const TimerRing = ({
 					strokeLinecap: 'round',
 					strokeDasharray: circumference,
 					strokeDashoffset,
-					className: 'transition-all duration-1000 ease-linear',
+					className: isRunning
+						? 'transition-[stroke-dashoffset] duration-1000 ease-linear'
+						: 'transition-none',
 					style: progressStyle,
 					gradientId
 				}}

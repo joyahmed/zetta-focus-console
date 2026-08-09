@@ -106,7 +106,7 @@ export default function ProfilePanel({
 						</div>
 					</div>
 				</div>
-			<div className='flex-1 min-h-0 overflow-y-auto custom-scrollbar -mr-2 pr-2'>
+			<div className='flex-1 min-h-0 overflow-y-auto custom-scrollbar -mr-2 pr-2 pb-2'>
 
 				<div className='space-y-2 md:space-y-4'>
 					<div>

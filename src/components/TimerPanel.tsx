@@ -3,9 +3,6 @@ import { useTimerPanel } from '../hooks/use-timer-panel';
 const TimerBackground = lazy(
 	() => import('./timer-panel/TimerBackground')
 );
-const SessionIndicator = lazy(
-	() => import('./timer-panel/SessionIndicator')
-);
 const TimerRing = lazy(() => import('./timer-panel/TimerRing'));
 const TimerDisplay = lazy(() => import('./timer-panel/TimerDisplay'));
 const TimerControls = lazy(
@@ -53,7 +50,7 @@ export default function TimerPanel({
 	const isStrictModeBlocking = strictMode?.is_active && isRunning;
 
 	return (
-		<div className='panel h-full p-6 flex flex-col items-center justify-center relative overflow-hidden group'>
+		<div className='panel h-full p-6 flex flex-col items-center justify-center gap-1 relative overflow-hidden group'>
 			{/* Strict Mode indicator */}
 			{strictMode?.is_active && (
 				<div className='absolute top-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-full bg-red-500/20 border border-red-500/40'>
@@ -73,42 +70,63 @@ export default function TimerPanel({
 				/>
 			</Suspense>
 
-			<Suspense fallback={null}>
-				<SessionIndicator
-					{...{
-						sessionType: timer.session_type,
-						hasOverride,
-						currentSession: timer.current_session,
-						totalSessions: timer.total_sessions
-					}}
-				/>
-			</Suspense>
+			{/* The ring takes whatever height is left after the fixed rows, and
+			    derives its width from that. Sizing it by width instead meant a
+			    short, wide panel asked for a circle taller than the space it had
+			    — `overflow-hidden` then cut the top off, taking the session
+			    label with it. Height is the scarce axis here, so height decides. */}
+			<div className='flex-1 min-h-0 w-full flex items-center justify-center my-2'>
+				<div className='relative h-full max-h-64 aspect-square min-h-[9rem] flex items-center justify-center'>
+					<Suspense fallback={null}>
+						<TimerRing
+							{...{
+								radius: RADIUS,
+								circumference,
+								strokeDashoffset,
+								isRunning,
+								glowColor: effectiveGlowColor,
+								isStrictMode: strictMode?.is_active && isRunning
+							}}
+						/>
+					</Suspense>
 
-			<div className='relative w-[min(16rem,45%)] min-w-[11rem] aspect-square shrink-0 flex items-center justify-center my-4'>
-				<Suspense fallback={null}>
-					<TimerRing
-						{...{
-							radius: RADIUS,
-							circumference,
-							strokeDashoffset,
-							isRunning,
-							glowColor: effectiveGlowColor,
-							isStrictMode: strictMode?.is_active && isRunning
-						}}
-					/>
-				</Suspense>
+					{/* Four rows inside the circle: what kind of session, the clock,
+				    where you are in the cycle, and any override. Laid out as a
+				    stack rather than positioned at percentages, so nothing has
+				    to be nudged when a row appears or disappears. The override
+				    row keeps its height either way. */}
+					<div className='absolute inset-0 z-10 flex flex-col items-center justify-center px-[12%]'>
+						<div className='flex items-center h-5 mb-2'>
+							<span className='text-[10px] font-bold uppercase tracking-[0.2em] text-zetta-text-muted whitespace-nowrap'>
+								{timer.session_type.replace('_', ' ')}
+							</span>
+						</div>
 
-				<Suspense fallback={null}>
-					<TimerDisplay
-						{...{
-							formattedTime,
-							isRunning,
-							glowColor: effectiveGlowColor,
-							currentSession: timer.current_session,
-							totalSessions: timer.total_sessions
-						}}
-					/>
-				</Suspense>
+						<Suspense fallback={null}>
+							<TimerDisplay
+								{...{
+									formattedTime,
+									isRunning,
+									glowColor: effectiveGlowColor
+								}}
+							/>
+						</Suspense>
+
+						<div className='flex items-center h-5 mt-1'>
+							<span className='text-[10px] font-medium uppercase tracking-wider text-zetta-text-muted/70 whitespace-nowrap'>
+								Session {timer.current_session}/{timer.total_sessions}
+							</span>
+						</div>
+
+						<div className='flex items-center h-6'>
+							{hasOverride && (
+								<span className='px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-500 bg-amber-500/10 rounded-full border border-amber-500/20 whitespace-nowrap'>
+									Override
+								</span>
+							)}
+						</div>
+					</div>
+				</div>
 			</div>
 
 			{/* Task display */}
@@ -152,33 +170,37 @@ export default function TimerPanel({
 			    The row keeps its height whether or not it has anything in it.
 			    It only appears while idle, and if it collapsed on start the
 			    ring would resize under the cursor every time you pressed play. */}
-			<div className='relative z-10 flex items-center justify-center gap-2 h-12 shrink-0'>
-				{onQuickStart && timer.status === 'idle' && (
-					<>
-					<span className='text-[10px] uppercase tracking-wider text-zetta-text-muted mr-0.5'>
-						Quick
-					</span>
-					{QUICK_DURATIONS.map(minutes => (
-						<button
-							key={minutes}
-							onClick={() => onQuickStart(minutes)}
-							title={`Start a ${minutes} minute session`}
-							style={{ ['--chip-glow' as string]: effectiveGlowColor }}
-							className='px-3 py-1.5 text-xs font-mono rounded-lg border transition-all duration-200
-								border-[color-mix(in_srgb,var(--chip-glow)_35%,transparent)]
-								bg-[color-mix(in_srgb,var(--chip-glow)_10%,transparent)]
-								text-zetta-text
-								shadow-[0_0_10px_-2px_color-mix(in_srgb,var(--chip-glow)_45%,transparent)]
-								hover:bg-[color-mix(in_srgb,var(--chip-glow)_22%,transparent)]
-								hover:border-[color-mix(in_srgb,var(--chip-glow)_70%,transparent)]
-								hover:shadow-[0_0_16px_-1px_color-mix(in_srgb,var(--chip-glow)_65%,transparent)]
-								active:scale-95'
-						>
-							{minutes}m
-						</button>
-					))}
-					</>
-				)}
+			<div className='flex flex-col -mb-2'>
+				<div className='relative z-10 flex items-center justify-center gap-2 h-12 shrink-0'>
+					{onQuickStart && timer.status === 'idle' && (
+						<>
+							{QUICK_DURATIONS.map(minutes => (
+								<button
+									key={minutes}
+									onClick={() => onQuickStart(minutes)}
+									title={`Start a ${minutes} minute session`}
+									style={{
+										['--chip-glow' as string]: effectiveGlowColor
+									}}
+									className='px-3 py-1.5 text-xs font-mono rounded-lg border transition-all duration-200
+									border-[color-mix(in_srgb,var(--chip-glow)_35%,transparent)]
+									bg-[color-mix(in_srgb,var(--chip-glow)_10%,transparent)]
+									text-zetta-text
+									shadow-[0_0_10px_-2px_color-mix(in_srgb,var(--chip-glow)_45%,transparent)]
+									hover:bg-[color-mix(in_srgb,var(--chip-glow)_22%,transparent)]
+									hover:border-[color-mix(in_srgb,var(--chip-glow)_70%,transparent)]
+									hover:shadow-[0_0_16px_-1px_color-mix(in_srgb,var(--chip-glow)_65%,transparent)]
+									active:scale-95'
+								>
+									{minutes}m
+								</button>
+							))}
+						</>
+					)}
+				</div>
+				<span className='text-[10px] uppercase tracking-wider text-zetta-text-muted mr-0.5 text-center font-bold'>
+					Quick
+				</span>
 			</div>
 		</div>
 	);
