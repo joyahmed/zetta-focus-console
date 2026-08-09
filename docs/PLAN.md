@@ -61,28 +61,7 @@ Real unfinished work, verified rather than remembered.
 
 ---
 
-## Phase 3 — the website
-
-Listing it here so it is not forgotten; the work happens in the zettabyte
-Next.js repo, not this one.
-
-- [ ] An `/open-source` page, driven by a data file rather than hardcoded
-      cards, reading live from the GitHub API server-side with
-      `revalidate: 3600` — stars, latest tag, per-asset download counts.
-      Unauthenticated is 60 requests an hour per IP, which ISR makes free.
-- [ ] Detect the visitor's platform and surface the matching installer first.
-- [ ] Launch it with both Zetta Com and Zetta Focus Console. Two entries read
-      as a practice; one reads as a one-off.
-- [ ] Rename the `Gift` nav item to `Open Source` in Navbar, NavbarCorporate
-      and FooterLinks.
-- [ ] Permanent redirect from `/gift`. That link has been shared; it must not
-      404.
-- [ ] Delete the installers committed under `public/gift/` once releases carry
-      them. They are a much older build.
-
----
-
-## Phase 4 — tidying
+## Phase 3 — tidying
 
 Not urgent. Worth doing when touching the surrounding code anyway.
 
@@ -95,7 +74,7 @@ Not urgent. Worth doing when touching the surrounding code anyway.
 
 ---
 
-## Phase 5 — after release
+## Phase 4 — after release
 
 - [ ] Use the app on Linux and macOS. Both build; neither has been used in
       anger.
