@@ -46,8 +46,7 @@ export default function ProfilePanel({
 				</div>
 			</div>
 
-			<div className='flex-1 min-h-0 overflow-y-auto custom-scrollbar -mr-2 pr-2'>
-				<div className='flex items-center gap-2 md:gap-3 mb-2 md:mb-4'>
+				<div className='flex items-center gap-2 md:gap-3 shrink-0'>
 					<div
 						className='w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center text-base md:text-xl'
 						style={{ backgroundColor: `${profile.glow_color}20` }}
@@ -107,6 +106,7 @@ export default function ProfilePanel({
 						</div>
 					</div>
 				</div>
+			<div className='flex-1 min-h-0 overflow-y-auto custom-scrollbar -mr-2 pr-2'>
 
 				<div className='space-y-2 md:space-y-4'>
 					<div>
