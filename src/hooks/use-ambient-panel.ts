@@ -17,6 +17,11 @@ export const useAmbientPanel = ({
 		setIsPaused(!isRunning);
 	}, [isRunning]);
 
+	// Counts stay fixed regardless of display size. Each particle is an
+	// independently animated compositor layer, and scaling them with the
+	// viewport is exactly the wrong trade on a 4K panel — the cost of the scene
+	// is the number of moving layers, not their size. Visibility at large sizes
+	// is handled by making the fall distance follow the container instead.
 	const particleCount = useMemo(() => {
 		const counts = {
 			low: { winter: 10, autumn: 2, default: 8 },

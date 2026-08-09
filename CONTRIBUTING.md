@@ -4,20 +4,20 @@ Bug reports and pull requests are welcome.
 
 ## Getting set up
 
-Needs [Rust](https://rustup.rs), Node 20+ and pnpm. On Linux, also the Tauri
+Needs [Rust](https://rustup.rs), Node 20+ and [Bun](https://bun.sh). On Linux, also the Tauri
 system dependencies — webkit2gtk, plus `libasound2-dev`, which `rodio` builds
 against for audio. A missing ALSA header surfaces as a Rust compile error, not
 an obviously missing package.
 
 ```bash
-pnpm install
-pnpm tauri dev
+bun install
+bun run tauri dev
 ```
 
 ## Before you open a pull request
 
 ```bash
-pnpm build                          # tsc --noEmit, then vite build
+bun run build                          # tsc --noEmit, then vite build
 cd src-tauri && cargo check         # must be clean — no warnings
 ```
 

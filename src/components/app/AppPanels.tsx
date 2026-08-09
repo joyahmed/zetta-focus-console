@@ -16,7 +16,7 @@ const AppPanels = ({
 	return (
 		<main className='flex-1 p-4 overflow-auto'>
 			<div
-				className='grid grid-cols-2 gap-4 h-full'
+				className='grid grid-cols-2 gap-4 h-full w-full max-w-[1800px] mx-auto'
 				style={{ gridTemplateRows: '1fr 1fr' }}
 			>
 				{/* Top Left: Timer */}
@@ -58,6 +58,7 @@ const AppPanels = ({
 						devMode={appState.dev_mode}
 						timerStatus={appState.timer.status}
 						activeProfileName={appState.active_profile.name}
+						appStartTime={appState.app_start_time}
 					/>
 				</div>
 

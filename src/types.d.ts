@@ -312,6 +312,7 @@ interface StatsPanelProps {
 	devMode?: boolean;
 	timerStatus?: string;
 	activeProfileName?: string;
+	appStartTime?: number;
 }
 
 /**Terminal Modal  */

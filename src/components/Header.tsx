@@ -26,7 +26,7 @@ const Header = ({
 	return (
 		<header className='w-full px-4 pt-6 pb-2 z-40 flex justify-center'>
 			<div
-				className={`glass-panel flex items-center justify-between w-full rounded-2xl px-4 py-2.5 transition-all duration-300 ${
+				className={`glass-panel flex items-center justify-between w-full max-w-[1800px] rounded-2xl px-4 py-2.5 transition-all duration-300 ${
 					isLight
 						? 'shadow-sm border-black/5 hover:shadow-md'
 						: 'shadow-glass hover:shadow-neon/20 hover:border-white/10'

@@ -121,10 +121,39 @@ body::before {
 	/* Glass Panel Utility */
 	.glass-panel {
 		background: var(--bg-card);
-		backdrop-filter: blur(16px);
-		-webkit-backdrop-filter: blur(16px);
+		backdrop-filter: blur(var(--glass-blur, 16px));
+		-webkit-backdrop-filter: blur(var(--glass-blur, 16px));
 		border: 1px solid var(--border-color);
 		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+	}
+
+	/*
+	 * Backdrop blur is the most expensive thing this interface does, and its
+	 * cost scales with both radius and the area behind it. These panels cover
+	 * most of the window, so on a 4K display the compositor is blurring roughly
+	 * four times the pixels for the same visual effect — the radius is relative
+	 * to the element, so a wider blur buys nothing at that size.
+	 */
+	@media (min-width: 2400px) {
+		:root {
+			--glass-blur: 10px;
+		}
+	}
+
+	/*
+	 * Nothing in this app conveys information through motion — the particles
+	 * are decoration and the timer is a number. Anyone who has asked their
+	 * system for less of it should get a still scene.
+	 */
+	@media (prefers-reduced-motion: reduce) {
+		*,
+		*::before,
+		*::after {
+			animation-duration: 0.01ms !important;
+			animation-iteration-count: 1 !important;
+			transition-duration: 0.01ms !important;
+			scroll-behavior: auto !important;
+		}
 	}
 
 	.glass-panel-hover:hover {

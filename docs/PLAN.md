@@ -107,6 +107,6 @@ Verification, all currently clean:
 
 ```bash
 cd src-tauri && cargo check && cargo fmt --check
-pnpm build          # tsc --noEmit, then vite build
-pnpm tauri build    # 4.5 MB NSIS installer
+bun run build          # tsc --noEmit, then vite build
+bun run tauri build    # 4.5 MB NSIS installer
 ```

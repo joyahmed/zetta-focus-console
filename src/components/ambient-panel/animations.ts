@@ -1,7 +1,7 @@
 export const AMBIENT_ANIMATIONS = `
 	@keyframes snowfall {
 		0% {
-			transform: translateY(-10px) translateX(0);
+			transform: translate3d(0, -10px, 0);
 			opacity: 0;
 		}
 		10% {
@@ -11,7 +11,7 @@ export const AMBIENT_ANIMATIONS = `
 			opacity: 1;
 		}
 		100% {
-			transform: translateY(220px) translateX(20px);
+			transform: translate3d(20px, var(--fall-distance, 220px), 0);
 			opacity: 0;
 		}
 	}
@@ -32,7 +32,7 @@ export const AMBIENT_ANIMATIONS = `
 			opacity: 0.4;
 		}
 		100% {
-			transform: translateY(200px) translateX(-20px);
+			transform: translate3d(-20px, var(--fall-distance, 200px), 0);
 			opacity: 0;
 		}
 	}
@@ -49,7 +49,7 @@ export const AMBIENT_ANIMATIONS = `
 			transform: translateY(100px) translateX(40px);
 		}
 		100% {
-			transform: translateY(220px) translateX(-30px);
+			transform: translate3d(-30px, var(--fall-distance, 220px), 0);
 			opacity: 0;
 		}
 	}

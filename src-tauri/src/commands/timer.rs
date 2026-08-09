@@ -1260,18 +1260,24 @@ pub fn tick_system_stats(state: State<EngineState>, app_handle: AppHandle) -> Re
         memory_total: sys.total_memory() / 1024 / 1024,
     };
 
-    // Only this process needs refreshing — the previous code walked every
-    // process on the system twice per tick to find one PID.
+    // This process only, deliberately.
+    //
+    // A Tauri app on Windows is several processes — this one plus the WebView2
+    // host and its renderers — and summing them looks like the honest thing to
+    // do. It is not: they share large DLL mappings, and a working set counts
+    // shared pages in full for every process that maps them. Adding them up
+    // reported 512 MB for an app that costs the machine a fraction of that.
+    //
+    // There is no single true number here, so this reports the one that is
+    // stable, cheap to read, and actually attributable to our own code. The UI
+    // labels it as the engine process rather than as the whole application.
     let pid = sysinfo::Pid::from_u32(std::process::id());
     sys.refresh_processes(sysinfo::ProcessesToUpdate::Some(&[pid]), true);
     if let Some(process) = sys.process(pid) {
         // sysinfo reports bytes; keep the fraction rather than truncating to MB.
-        let memory_used = process.memory() as f32 / 1_048_576.0;
-        let cpu_percent = process.cpu_usage();
-
         app_state.app_stats = crate::types::AppStats {
-            cpu_usage: cpu_percent.min(100.0),
-            memory_used,
+            cpu_usage: process.cpu_usage().min(100.0),
+            memory_used: process.memory() as f32 / 1_048_576.0,
         };
     }
 

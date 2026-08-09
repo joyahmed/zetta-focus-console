@@ -1,6 +1,23 @@
 import { lazy } from 'react';
 const MonitorSection = lazy(() => import('./MonitorSection'));
 
+/** Unix seconds -> "2h 14m". The engine records when it started, not how long
+    it has run, so the elapsed time is derived here rather than ticked. */
+const formatUptime = (startedAtUnixSeconds?: number): string => {
+	if (!startedAtUnixSeconds) return '--';
+
+	const seconds = Math.max(
+		0,
+		Math.floor(Date.now() / 1000) - startedAtUnixSeconds
+	);
+	const hours = Math.floor(seconds / 3600);
+	const minutes = Math.floor((seconds % 3600) / 60);
+
+	if (hours > 0) return `${hours}h ${minutes}m`;
+	if (minutes > 0) return `${minutes}m`;
+	return `${seconds}s`;
+};
+
 export default function StatsPanel({
 	stats,
 	systemStats,
@@ -8,6 +25,7 @@ export default function StatsPanel({
 	devMode,
 	timerStatus,
 	activeProfileName,
+	appStartTime
 }: StatsPanelProps) {
 
 	return (
@@ -179,7 +197,7 @@ export default function StatsPanel({
 						</div>
 						<div className='flex flex-col gap-0.5'>
 							<span className='text-zetta-text-muted font-medium'>
-								FOCUS ENGINE
+								DEV MODE
 							</span>
 							<span
 								className={`font-mono font-medium px-2 py-1 rounded border ${devMode ? 'bg-green-500/10 text-green-500 border-green-500/30' : 'bg-zetta-bg text-zetta-text-muted border-zetta-border'}`}
@@ -189,10 +207,10 @@ export default function StatsPanel({
 						</div>
 						<div className='flex flex-col gap-0.5'>
 							<span className='text-zetta-text-muted font-medium'>
-								SYSTEM
+								UPTIME
 							</span>
 							<span className='font-mono font-medium text-zetta-text bg-zetta-bg px-2 py-1 rounded border border-zetta-border truncate'>
-								--
+								{formatUptime(appStartTime)}
 							</span>
 						</div>
 					</div>
@@ -207,7 +225,7 @@ export default function StatsPanel({
 					/>
 
 					<MonitorSection
-						title='APP'
+						title='ENGINE'
 						memoryUsed={appStats.memory_used}
 					/>
 				</div>

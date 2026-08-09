@@ -24,6 +24,11 @@ const Snowflake = ({
 			`,
 			boxShadow: `0 0 6px ${glowColor}`,
 			opacity: isLight ? 0.7 : particle.opacity,
+			// Promote to its own compositor layer. Without this the browser is
+			// free to repaint the glow on every frame, which at 4K is the
+			// difference between the scene costing nothing and costing the
+			// whole frame budget.
+			willChange: isPaused ? 'auto' : 'transform, opacity',
 			animation: isPaused
 				? 'none'
 				: `snowfall ${particle.duration * speedMultiplier}s linear ${particle.delay}s infinite`

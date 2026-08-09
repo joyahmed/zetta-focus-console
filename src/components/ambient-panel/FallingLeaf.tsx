@@ -21,6 +21,7 @@ const FallingLeaf = ({
 			fontSize: leaf.size,
 			opacity: isLight ? 1.0 : leaf.opacity,
 			color: glowColor,
+			willChange: isPaused ? 'auto' : 'transform, opacity',
 			animation: isPaused
 				? 'none'
 				: `leafFall ${leaf.duration * speedMultiplier}s ease-in-out ${leaf.delay}s infinite, leafRotate ${leaf.rotationDuration}s linear ${leaf.delay}s infinite`

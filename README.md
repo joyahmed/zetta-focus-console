@@ -55,14 +55,14 @@ Grab an installer from [**releases**](../../releases), or build it yourself.
 
 ### Build it yourself
 
-Needs [Rust](https://rustup.rs), Node 20+, and pnpm. On Linux you will also
+Needs [Rust](https://rustup.rs), Node 20+, and [Bun](https://bun.sh). On Linux you will also
 need the Tauri system dependencies — webkit2gtk, and `libasound2-dev` for
 audio.
 
 ```bash
-pnpm install
-pnpm tauri build      # installers land in src-tauri/target/release/bundle
-pnpm tauri dev        # or run it in development
+bun install
+bun run tauri build      # installers land in src-tauri/target/release/bundle
+bun run tauri dev        # or run it in development
 ```
 
 ---

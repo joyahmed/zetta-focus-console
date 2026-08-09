@@ -24,6 +24,7 @@ const SpringParticle = ({
 			`,
 			boxShadow: `0 0 8px ${glowColor}`,
 			opacity: isLight ? 0.7 : particle.opacity,
+			willChange: isPaused ? 'auto' : 'transform, opacity',
 			animation: isPaused
 				? 'none'
 				: `drift ${particle.duration * speedMultiplier}s ease-in-out ${particle.delay}s infinite`
