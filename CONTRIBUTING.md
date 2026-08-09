@@ -18,10 +18,11 @@ bun run tauri dev
 
 ```bash
 bun run build                          # tsc --noEmit, then vite build
-cd src-tauri && cargo check         # must be clean — no warnings
+cd src-tauri && cargo check            # must be clean — no warnings
+cd src-tauri && cargo fmt --check      # formatting
 ```
 
-Both are currently green with zero warnings. Please keep them that way; a
+All three are currently green with zero warnings. Please keep them that way; a
 warning nobody intends to fix trains everyone to ignore the ones that matter.
 
 ## The one architectural rule

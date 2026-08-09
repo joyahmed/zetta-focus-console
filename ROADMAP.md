@@ -16,11 +16,12 @@ The engine is done and the app is usable every day.
 - Rust owns the timer, profiles, sound and strict mode; the UI renders state
   events and keeps no clock of its own
 - A terminal with aliases, tab completion, persistent history and ~30 commands
-- Runtime overrides (`timer 50m break 10m loop 3`) that survive a stop
-- Four seasonal ambient scenes, drawn in CSS
+- Runtime overrides (`timer 50m break 10m loop 3`) that survive a stop, and a
+  full session cycle: focus, auto-break, and a long break that closes it
+- Seasonal ambience — the profile’s own icon drifting through the panel
 - Four seamless 45-second Vorbis loops
-- Custom profiles, Strict Mode, voice cues, autostart, tray, global shortcuts
-- 4.5 MB installer, ~8 MB resident, one JSON file of state, no network
+- Custom profiles, Strict Mode, session alarms, autostart, tray, global shortcuts
+- 4.9 MB installer, one JSON file of state, no network
 
 ---
 
@@ -41,6 +42,10 @@ pitch, and right now you have to install the app to see it.
 **A pull-request check.** `cargo check`, `cargo fmt --check`, `tsc --noEmit`
 and `vite build` are all clean today. Something should keep them that way.
 
+**Tests for the engine.** `cargo test` runs nothing at all. The session cycle —
+start, tick, advance, stop — is a state machine, which is the easiest kind of
+thing to test and the easiest to break quietly.
+
 ---
 
 ## Later
@@ -51,9 +56,9 @@ timing history, transition traces, what the engine did and when — for people
 who want to operate the timer rather than just use it.
 
 **More ambience.** Four seasons and four sounds is a floor, not a ceiling. The
-scenes are ordinary DOM and CSS, so new ones are approachable — see
-`src/components/ambient-panel/`. New audio has to clear the licensing bar in
-[ASSETS.md](ASSETS.md).
+particles are ordinary DOM and CSS — see `src/components/ambient-panel/`, which
+is one scene component and one particle component. New audio has to clear the
+licensing bar in [ASSETS.md](ASSETS.md).
 
 **Session history worth reading.** The stats panel counts sessions. It does not
 yet tell you anything about your week.

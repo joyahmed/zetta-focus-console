@@ -12,12 +12,15 @@ Tick things here as they land.
 
 Blocking. None of the rest matters if these are not done.
 
-- [ ] **Fill the audio provenance table in [ASSETS.md](../ASSETS.md).** Per
-      file: where it came from, its licence, whether attribution is required.
-- [ ] **Replace any track that is non-commercial.** CC-BY-NC cannot ship inside
-      an MIT-licensed binary at all. CC-BY is fine, but the author has to be
-      credited by name in `ASSETS.md`.
-- [ ] Re-encode any replacement to match the others — 45 s, Vorbis q3,
+- [x] **Audio provenance settled.** All four tracks came from Pixabay or
+      Pexels. Neither site licenses per file — one site-wide licence covers
+      everything they host, both allow commercial use and distribution inside a
+      product, and neither requires attribution. So the terms are the same
+      either way and there is nothing to credit. Recorded in
+      [ASSETS.md](../ASSETS.md).
+- [x] ~~Replace any track that is non-commercial.~~ Not applicable: neither
+      site hosts non-commercial-only material.
+- [ ] Re-encode any *future* track to match the others — 45 s, Vorbis q3,
       44.1 kHz, 3 s crossfade tail-to-head. The exact `ffmpeg` command is in
       `ASSETS.md`.
 - [ ] Read `README.md` start to finish as somebody who has never seen the app.
@@ -65,7 +68,14 @@ Real unfinished work, verified rather than remembered.
 
 Not urgent. Worth doing when touching the surrounding code anyway.
 
-- [ ] The fourteen files in `src/components/settings-panel/` share enough
+- [ ] **Tests for the engine.** `cargo test` runs nothing. The session cycle is
+      a state machine — start, tick, advance, stop — and every bug found in it
+      so far was found by using the app rather than by the repository.
+- [ ] **The light theme.** `AmbientPanel` swaps the entire panel for a static
+      placeholder when the theme is light, so the particles never render at
+      all; and the console hand-branches on `isLight` for nearly every colour
+      it draws, where the rest of the app uses tokens that switch themselves.
+- [ ] The files in `src/components/settings-panel/` share enough
       structure to be driven by a list instead.
 - [ ] Revisit the older UI audit — a couple of its findings are fixed
       (the debug command name mismatch, the `System::new_all()` cost in
@@ -108,5 +118,5 @@ Verification, all currently clean:
 ```bash
 cd src-tauri && cargo check && cargo fmt --check
 bun run build          # tsc --noEmit, then vite build
-bun run tauri build    # 4.5 MB NSIS installer
+bun run tauri build    # 4.9 MB NSIS installer
 ```

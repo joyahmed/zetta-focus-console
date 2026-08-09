@@ -5,10 +5,10 @@ press enter, and get back to work.
 
 It is a Pomodoro timer, but the interface is a command line rather than a
 settings screen, the timer state lives in Rust rather than in the browser, and
-the window behind it renders a season — snow, falling leaves, drifting pollen —
-drawn entirely in CSS, with an ambient loop underneath it.
+the window behind it drifts with the season — snow in winter, blossom in
+spring, falling leaves in autumn — with an ambient loop underneath it.
 
-Free, MIT, no account, no telemetry, nothing leaves your machine. A 4.5 MB
+Free, MIT, no account, no telemetry, nothing leaves your machine. A 4.9 MB
 installer.
 
 ---
@@ -40,12 +40,12 @@ three and `timer` cover most days.
 |---|---|
 | **Terminal control** | Set durations, switch profiles, inspect engine state, all by typing. Aliases for the commands you use constantly. |
 | **Rust owns the clock** | The timer is a state machine in Rust; the UI renders what it reports. Reload the window and the session keeps its own time. |
-| **Seasons** | Four ambient scenes — spring, summer, autumn, winter — drawn procedurally in CSS. No video, no sprite sheets, no WebGL. |
+| **Seasons** | The active profile’s own icon drifts through the ambience panel: snow falls in winter, blossom in spring, leaves in autumn, sun rises off summer. Ordinary DOM and CSS — no video, no sprite sheets, no WebGL. |
 | **Ambient sound** | Fireplace, soft rain, light wind, rain on a window. Seamless 45-second Vorbis loops, embedded in the binary. |
 | **Strict Mode** | Start a session that cannot be paused or stopped. Force-closing the app marks it failed. |
 | **Profiles** | Four presets, plus as many of your own as you want — duration, season, motion, sound and volume per profile. |
 | **Tray and global keys** | Runs from the tray. `Ctrl+H` hides and restores the window from anywhere. |
-| **Voice cues** | Off by default. Calm announcements at session boundaries, no motivational filler. |
+| **Alarms** | Three synthesised tones, one each for the end of a session, the end of a break, and the end of the cycle. Generated in the app, so nothing is downloaded and they sound the same everywhere. |
 
 ---
 
@@ -93,8 +93,13 @@ loop 3                  Override session count
 override clear          Drop the override, return to profile defaults
 ```
 
-Durations accept `25m`, `90s`, or a bare number read as minutes. An override
-survives `stop`, so stopping and restarting keeps your chosen length.
+Durations accept `25m`, `90s`, or a bare number read as minutes. You can also
+click the clock itself while it is idle and type into it.
+
+A duration on its own is a one-off — one run, no break after it, no session
+counter, and the override retires when it finishes. Add `loop 3` and you are
+asking for a cycle instead, which you get: three focus runs with breaks between
+them.
 
 ### Profiles
 
@@ -114,12 +119,11 @@ Presets are read-only — duplicate one to base your own on it.
 ```
 season [name]           spring | summer | autumn | winter
 theme [mode]            dark | light | system
-ambience on/off         Toggle the animated background
-background [type]       gradient | particles
+ambience on/off         Show or hide the drifting particles
 sound play | stop       Ambient audio
 sound volume [0-100]
 sound mute
-voice on/off            Spoken session announcements
+alarm on/off            Tones at session, break and cycle end
 ```
 
 ### Discipline
@@ -150,7 +154,7 @@ clear                   Clear the terminal
 | Key | Action |
 |---|---|
 | `Ctrl+H` | Hide or restore the window, from any application |
-| `Ctrl+B` | Toggle the background particles |
+| `Ctrl+B` | Show or hide the ambience |
 
 The tray menu carries start, stop, pause, resume, settings and quit.
 
@@ -190,7 +194,7 @@ src-tauri/src/
   sound.rs       Vorbis playback via rodio
   storage.rs     preferences.json
 src/
-  components/    UI, including the four seasonal scenes in ambient-panel/
+  components/    UI, including the ambience in ambient-panel/
   hooks/app/     the bridge to Rust — one state subscription, no local clock
 ```
 
@@ -206,26 +210,29 @@ Some notes on choices that are not obvious:
   every process, disk and network on the machine. Building one every five
   seconds to read two numbers is both wasteful and wrong — CPU usage is a delta
   between refreshes, so a fresh `System` always reports zero.
-- **Seasons in CSS.** Snow, leaves and pollen are ordinary DOM elements with
-  transforms. It keeps the bundle small and the GPU quiet.
+- **The ambience is text.** Each particle is the profile’s emoji in a `div`,
+  moved by a CSS transform. A glyph is rasterised into a shared cache once and
+  reused by every particle, where an SVG is a path subtree each and a blurred
+  gradient is a texture — so the cheapest thing to draw is also the one that
+  ties the panel to the profile.
 
 ---
 
 ## History
 
-This repository begins at a single commit, which is deliberate and worth
-explaining rather than leaving as a puzzle.
+This repository begins at a single commit. That is deliberate, and I would
+rather explain it than leave it as a puzzle.
 
-The app was built through the first half of 2026 as a private project, over
-about eighty commits. That history was squashed when the repository was opened
-up, for two reasons. It carried 42 MB of the original uncompressed audio in its
-objects — every clone would have paid for that forever, to fetch files the app
-no longer uses. And it carried a large set of planning documents describing a
-version of this product that no longer exists, which would have been actively
-misleading to read.
+I built the app through the first half of 2026 as a private project, over about
+eighty commits, and squashed that history when I opened the repository up. Two
+reasons. It carried 42 MB of the original uncompressed audio in its objects, so
+every clone would have paid for that forever to fetch files the app no longer
+uses. And it carried a pile of planning documents describing a paid version of
+this product that no longer exists, which would have been actively misleading to
+read.
 
-Nothing about the code is withheld. What is in this repository is the whole
-application, and [CHANGELOG.md](CHANGELOG.md) tracks it from here.
+I am not withholding any of the code. What is here is the whole application, and
+[CHANGELOG.md](CHANGELOG.md) tracks it from this point on.
 
 ## What is next
 
