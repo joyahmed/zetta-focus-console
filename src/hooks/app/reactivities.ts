@@ -76,11 +76,11 @@ export const appReactivities = ({
 					break;
 
 				// Special features
-				case 'toggle_voice':
+				case 'toggle_alarm':
 					await invoke('execute_command', {
-						command: currentState?.voice_enabled
-							? 'voice off'
-							: 'voice on'
+						command: currentState?.alarm_enabled
+							? 'alarm off'
+							: 'alarm on'
 					});
 					break;
 				case 'toggle_particles':
@@ -317,13 +317,13 @@ export const appReactivities = ({
 					command: 'sound volume down'
 				});
 			}
-			// Ctrl+V - Voice cues
+			// Ctrl+V - Session alarms
 			else if (ctrl && !e.shiftKey && key === 'v') {
 				e.preventDefault();
 				e.stopPropagation();
-				const voiceEnabled = appStateRef.current?.voice_enabled;
+				const alarmEnabled = appStateRef.current?.alarm_enabled;
 				await invoke('execute_command', {
-					command: voiceEnabled ? 'voice off' : 'voice on'
+					command: alarmEnabled ? 'alarm off' : 'alarm on'
 				});
 			}
 			// Ctrl+B - Toggle background particles

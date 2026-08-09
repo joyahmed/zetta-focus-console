@@ -1,5 +1,5 @@
 import { useApp } from './hooks/app/use-app';
-//import { useVoiceCues } from './hooks/use-voice-cues';
+import { useSessionAlarms } from './hooks/use-session-alarms';
 import AppLoading from './components/app/AppLoading';
 import AppModals from './components/app/AppModals';
 import AppPanels from './components/app/AppPanels';
@@ -39,11 +39,10 @@ const App = () => {
 		openCreateProfile,
 		openEditProfile,
 		openDuplicateProfile,
-		handleVoiceToggle
+		handleAlarmToggle
 	} = useApp();
 
-	// Initialize voice cues
-	//useVoiceCues();
+	useSessionAlarms(appState?.alarm_enabled ?? false);
 
 	if (!appState) {
 		return <AppLoading />;
@@ -106,8 +105,8 @@ const App = () => {
 						profileModalMode,
 						handleCreateProfile,
 						setProfileError,
-						voiceEnabled: appState.voice_enabled,
-						onVoiceToggle: handleVoiceToggle
+						alarmEnabled: appState.alarm_enabled,
+						onAlarmToggle: handleAlarmToggle
 					}}
 				/>
 			</div>

@@ -108,7 +108,7 @@ interface AppState {
 	theme: string;
 	strict_mode: StrictModeState;
 	current_task: CurrentTask;
-	voice_enabled: boolean;
+	alarm_enabled: boolean;
 	app_start_time: number;
 	last_session_date: string;
 }
@@ -157,8 +157,8 @@ interface AppModalsProps {
 	profileModalMode: ProfileModalMode;
 	handleCreateProfile: (profileData: ProfileFormData) => Promise<string>;
 	setProfileError: (value: React.SetStateAction<string | null>) => void;
-	voiceEnabled?: boolean;
-	onVoiceToggle?: () => void;
+	alarmEnabled?: boolean;
+	onAlarmToggle?: () => void;
 }
 
 /* ==========================================================================
@@ -542,8 +542,8 @@ interface SettingsPanelProps {
 	theme: string;
 	strictModeActive?: boolean;
 	onStrictModeToggle?: () => void;
-	voiceEnabled?: boolean;
-	onVoiceToggle?: () => void;
+	alarmEnabled?: boolean;
+	onAlarmToggle?: () => void;
 }
 
 interface SectionHeaderProps {
@@ -608,9 +608,9 @@ interface StrictModeSectionProps {
 	isLight: boolean;
 }
 
-interface VoiceSectionProps {
-	voiceEnabled: boolean;
-	onVoiceToggle: () => void;
+interface AlarmSectionProps {
+	alarmEnabled: boolean;
+	onAlarmToggle: () => void;
 	isLight: boolean;
 }
 

@@ -27,8 +27,8 @@ const AppModals = ({
 	profileModalMode,
 	handleCreateProfile,
 	setProfileError,
-	voiceEnabled,
-	onVoiceToggle
+	alarmEnabled,
+	onAlarmToggle
 }: AppModalsProps) => {
 
 	return (
@@ -70,8 +70,8 @@ const AppModals = ({
 						: 'strict on';
 					processCommand(cmd);
 				}}
-				voiceEnabled={voiceEnabled}
-				onVoiceToggle={onVoiceToggle}
+				alarmEnabled={alarmEnabled}
+				onAlarmToggle={onAlarmToggle}
 			/>
 
 			<HelpModal

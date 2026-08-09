@@ -16,7 +16,10 @@ pub struct Preferences {
     pub is_muted: bool,
     pub dev_mode: bool,
     pub theme: String,
-    pub voice_enabled: bool,
+    /// Renamed from `voice_enabled`. The alias keeps preferences files
+    /// written before the rename loading instead of falling back to defaults.
+    #[serde(alias = "voice_enabled")]
+    pub alarm_enabled: bool,
     pub custom_profiles: Vec<Profile>,
     pub start_minimized: bool,
     /// Statistics survive restarts. They used to live only in memory, seeded
@@ -41,7 +44,7 @@ impl Default for Preferences {
             is_muted: false,
             dev_mode: false,
             theme: "system".to_string(),
-            voice_enabled: false,
+            alarm_enabled: false,
             custom_profiles: vec![],
             start_minimized: false,
             stats: Stats::default(),
@@ -63,7 +66,7 @@ pub struct AppState {
     pub theme: String,
     pub strict_mode: StrictModeState,
     pub current_task: CurrentTask,
-    pub voice_enabled: bool,
+    pub alarm_enabled: bool,
     pub app_start_time: i64,
     /// Local date of the last completed session, YYYY-MM-DD. Empty until one
     /// finishes. Drives both the streak and the daily reset.
@@ -162,7 +165,7 @@ impl AppState {
             theme: "system".to_string(),
             strict_mode: StrictModeState::default(),
             current_task: CurrentTask::default(),
-            voice_enabled: false,
+            alarm_enabled: false,
             last_session_date: String::new(),
             app_start_time: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -241,7 +244,7 @@ impl AppStateExt for AppState {
         self.sound_state.volume = prefs.volume;
         self.sound_state.is_muted = prefs.is_muted;
         self.theme = prefs.theme;
-        self.voice_enabled = prefs.voice_enabled;
+        self.alarm_enabled = prefs.alarm_enabled;
 
         // Sessions today are only "today" if the saved date is today. Coming
         // back after a break should show a clean count, not the last day used.
@@ -296,7 +299,7 @@ impl AppStateExt for AppState {
             is_muted: self.sound_state.is_muted,
             dev_mode: self.dev_mode,
             theme: self.theme.clone(),
-            voice_enabled: self.voice_enabled,
+            alarm_enabled: self.alarm_enabled,
             custom_profiles,
             start_minimized: false,
             stats: self.stats.clone(),

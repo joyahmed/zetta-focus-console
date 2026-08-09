@@ -98,7 +98,7 @@ pub fn execute_command(
     // Save preferences after command execution (only for preference-modifying commands)
     let should_save = matches!(
         cmd.as_str(),
-        "devmode" | "ambience" | "sound" | "profile" | "background" | "reset" | "theme" | "voice"
+        "devmode" | "ambience" | "sound" | "profile" | "background" | "reset" | "theme" | "alarm"
     );
     if should_save {
         let _ = app_state.save_preferences();
@@ -210,7 +210,7 @@ pub fn process_command(
 
         "usage" => usage_command(app_state),
 
-        "voice" => voice_command(args, app_state),
+        "alarm" => alarm_command(args, app_state),
 
         "sound" => sound_command(args, app_state, sound_manager),
 
@@ -252,7 +252,7 @@ fn help_command(advanced_commands: &str) -> String {
    sound stop            - Stop ambient sound
    sound volume [0-100]  - Set volume level
    sound mute            - Toggle mute
-   voice on/off          - Toggle voice announcements
+   alarm on/off          - Toggle the end-of-session alarms
    system                - Show system information
    memory                - Show memory usage
    cpu                   - Show CPU usage
@@ -583,20 +583,20 @@ fn start_command(app_state: &mut AppState) -> String {
         );
     }
 
-    let focus_seconds = app_state
-        .session_override
-        .as_ref()
-        .and_then(|o| o.focus_duration)
-        .unwrap_or(app_state.active_profile.focus_duration);
+    let focus_seconds = effective_focus_seconds(&app_state);
+    let total_sessions = effective_total_sessions(&app_state);
 
-    let total_sessions = app_state.active_profile.sessions_per_cycle;
+    // Starting after a break continues the cycle rather than restarting it.
+    // `current_session` was hard-assigned 1 here, so even once the cycle
+    // advanced, the next start would have knocked it back to the beginning.
+    let current_session = app_state.timer.current_session.clamp(1, total_sessions);
 
     app_state.timer = TimerState {
         remaining_seconds: focus_seconds,
         total_seconds: focus_seconds,
         status: TimerStatus::Running,
         session_type: SessionType::Focus,
-        current_session: 1,
+        current_session,
         total_sessions,
     };
 
@@ -641,13 +641,13 @@ fn stop_command(app_state: &mut AppState) -> String {
     // which drove the ring's arc to five times its circumference and animated
     // it there. It also ignored a preserved override, so the clock claimed the
     // profile's duration for a session that would start at the override's.
-    let focus_seconds = app_state
-        .session_override
-        .as_ref()
-        .and_then(|o| o.focus_duration)
-        .unwrap_or(app_state.active_profile.focus_duration);
+    let focus_seconds = effective_focus_seconds(&app_state);
 
+    // Stopping abandons the cycle, not just the session, so the counter goes
+    // back to the start rather than resuming halfway through next time.
     app_state.timer.status = TimerStatus::Idle;
+    app_state.timer.session_type = SessionType::Focus;
+    app_state.timer.current_session = 1;
     app_state.timer.remaining_seconds = focus_seconds;
     app_state.timer.total_seconds = focus_seconds;
 
@@ -1038,24 +1038,24 @@ fn usage_command(app_state: &AppState) -> String {
     )
 }
 
-fn voice_command(args: &[&str], app_state: &mut AppState) -> String {
+fn alarm_command(args: &[&str], app_state: &mut AppState) -> String {
     match args.first() {
         Some(&"on") => {
-            app_state.voice_enabled = true;
+            app_state.alarm_enabled = true;
             "Voice announcements enabled.".to_string()
         }
         Some(&"off") => {
-            app_state.voice_enabled = false;
+            app_state.alarm_enabled = false;
             "Voice announcements disabled.".to_string()
         }
         _ => {
-            let status = if app_state.voice_enabled {
+            let status = if app_state.alarm_enabled {
                 "enabled"
             } else {
                 "disabled"
             };
             format!(
-                "Voice: {}\nUse 'voice on' or 'voice off' to toggle.",
+                "Alarm: {}\nUse 'alarm on' or 'alarm off' to toggle.",
                 status
             )
         }
@@ -1195,6 +1195,126 @@ fn sync_sound_output_with_timer(
 }
 
 // ============================================================================
+// SESSION CYCLE
+// ============================================================================
+
+/// How long the next focus run is: the override if one is set, else the
+/// profile's.
+fn effective_focus_seconds(app_state: &AppState) -> u32 {
+    app_state
+        .session_override
+        .as_ref()
+        .and_then(|o| o.focus_duration)
+        .unwrap_or(app_state.active_profile.focus_duration)
+}
+
+/// How long the next break is. A break override applies to either kind — it is
+/// one field, and someone who asks for three-minute breaks means all of them.
+fn effective_break_seconds(app_state: &AppState, long: bool) -> u32 {
+    app_state
+        .session_override
+        .as_ref()
+        .and_then(|o| o.break_duration)
+        .unwrap_or(if long {
+            app_state.active_profile.long_break_duration
+        } else {
+            app_state.active_profile.short_break_duration
+        })
+}
+
+/// How many focus runs this cycle: the loop override if one is set, else the
+/// profile's. The `loop` command has always accepted a count and printed it
+/// back in the override message; nothing ever applied it to the timer.
+fn effective_total_sessions(app_state: &AppState) -> u32 {
+    app_state
+        .session_override
+        .as_ref()
+        .and_then(|o| o.loop_count)
+        .unwrap_or(app_state.active_profile.sessions_per_cycle)
+        .max(1)
+}
+
+/// What just finished, for the frontend to sound.
+///
+/// Three distinct moments, because they mean different things: one run of work
+/// is done, a break is over and the desk wants you back, or the whole cycle is
+/// finished and nothing is waiting.
+const ALARM_SESSION_END: &str = "session";
+const ALARM_BREAK_END: &str = "break";
+const ALARM_CYCLE_END: &str = "cycle";
+
+/// Move the cycle on from a finished timer.
+///
+/// The cycle did not exist before this. `current_session` was assigned 1 in
+/// nine places and incremented in none, no break was ever started, and
+/// `loop_count` was collected and displayed but never read — so the engine ran
+/// exactly one focus session, stopped, and left "Session 1/4" on screen for
+/// ever.
+///
+/// A finished focus run rolls straight into its break, because you are getting
+/// up anyway. A finished break stops and waits, because coming back to the desk
+/// should be a decision rather than a clock that started without you.
+fn advance_cycle(app_state: &mut AppState, app_handle: &AppHandle) {
+    let finished = app_state.timer.session_type.clone();
+    let current = app_state.timer.current_session;
+    let total = app_state.timer.total_sessions.max(1);
+
+    match finished {
+        SessionType::Focus => {
+            let is_final = current >= total;
+            let seconds = effective_break_seconds(app_state, is_final);
+
+            app_state.timer = TimerState {
+                remaining_seconds: seconds,
+                total_seconds: seconds,
+                status: TimerStatus::Running,
+                session_type: if is_final {
+                    SessionType::LongBreak
+                } else {
+                    SessionType::ShortBreak
+                },
+                current_session: current,
+                total_sessions: total,
+            };
+
+            let _ = app_handle.emit("session-alarm", ALARM_SESSION_END);
+        }
+        SessionType::ShortBreak => {
+            let seconds = effective_focus_seconds(app_state);
+
+            app_state.timer = TimerState {
+                remaining_seconds: seconds,
+                total_seconds: seconds,
+                status: TimerStatus::Idle,
+                session_type: SessionType::Focus,
+                current_session: current + 1,
+                total_sessions: total,
+            };
+
+            let _ = app_handle.emit("session-alarm", ALARM_BREAK_END);
+        }
+        SessionType::LongBreak => {
+            // The long break only follows the last focus run, so reaching the
+            // end of one is the end of the cycle. Back to session one, and the
+            // override retires with the cycle it belonged to.
+            app_state.session_override = None;
+            let seconds = effective_focus_seconds(app_state);
+
+            app_state.timer = TimerState {
+                remaining_seconds: seconds,
+                total_seconds: seconds,
+                status: TimerStatus::Idle,
+                session_type: SessionType::Focus,
+                current_session: 1,
+                total_sessions: app_state.active_profile.sessions_per_cycle.max(1),
+            };
+
+            let _ = app_handle.emit("session-alarm", ALARM_CYCLE_END);
+        }
+    }
+}
+
+// ============================================================================
 // TIMER AND STATS COMMANDS
 // ============================================================================
 
@@ -1208,36 +1328,41 @@ pub fn tick_timer(state: State<EngineState>, app_handle: AppHandle) -> Result<()
 
         if app_state.timer.remaining_seconds == 0 {
             app_state.timer.status = TimerStatus::Completed;
+
+            let finished_focus = app_state.timer.session_type == SessionType::Focus;
             let completed_seconds = app_state.timer.total_seconds;
-            app_state.record_completed_session(completed_seconds);
 
-            let strict_mode_was_active = app_state.strict_mode.is_active;
-            let strict_mode_completed_successfully = if strict_mode_was_active {
-                app_state.strict_mode = StrictModeState::default();
-                true
-            } else {
-                false
-            };
+            // Only focus counts. Every finished timer used to be folded into
+            // the statistics, so once breaks existed a five-minute break would
+            // have been filed as five minutes of focus and bumped the streak.
+            if finished_focus {
+                app_state.record_completed_session(completed_seconds);
 
-            let total_focus = app_state.timer.total_seconds;
-            let focus_mins = total_focus / 60;
-            let focus_secs = total_focus % 60;
+                let strict_mode_completed_successfully = if app_state.strict_mode.is_active {
+                    app_state.strict_mode = StrictModeState::default();
+                    true
+                } else {
+                    false
+                };
 
-            let mut completion_msg = format!(
-                "Session Complete!\n  Focus Time: {}m {}s\n  Profile: {}\n  Sessions Today: {}",
-                focus_mins,
-                focus_secs,
-                app_state.active_profile.name,
-                app_state.stats.sessions_today
-            );
+                let mut completion_msg = format!(
+                    "Session Complete!\n  Focus Time: {}m {}s\n  Profile: {}\n  Session: {}/{}\n  Sessions Today: {}",
+                    completed_seconds / 60,
+                    completed_seconds % 60,
+                    app_state.active_profile.name,
+                    app_state.timer.current_session,
+                    app_state.timer.total_sessions,
+                    app_state.stats.sessions_today
+                );
 
-            if strict_mode_completed_successfully {
-                completion_msg.push_str("\n  Strict Mode: COMPLETED ✓");
+                if strict_mode_completed_successfully {
+                    completion_msg.push_str("\n  Strict Mode: COMPLETED ✓");
+                }
+
+                let _ = app_handle.emit("session-complete", completion_msg);
             }
 
-            let _ = app_handle.emit("session-complete", completion_msg);
-
-            app_state.session_override = None;
+            advance_cycle(&mut app_state, &app_handle);
         }
 
         sync_sound_output_with_timer(&mut app_state, &mut sound_manager);

@@ -40,7 +40,7 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
 			{ key: 'Ctrl+M', description: 'Mute or unmute' },
 			{ key: 'Ctrl+=', description: 'Volume up' },
 			{ key: 'Ctrl+-', description: 'Volume down' },
-			{ key: 'Ctrl+V', description: 'Toggle voice cues' }
+			{ key: 'Ctrl+V', description: 'Toggle the session alarms' }
 		]
 	}
 ];

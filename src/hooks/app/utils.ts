@@ -147,15 +147,15 @@ export const appUtils = ({
 		setProfileModalOpen(true);
 	}, []);
 
-	const handleVoiceToggle = useCallback(async () => {
+	const handleAlarmToggle = useCallback(async () => {
 		if (!appState) return;
-		const cmd = appState.voice_enabled ? 'voice off' : 'voice on';
+		const cmd = appState.alarm_enabled ? 'alarm off' : 'alarm on';
 		try {
 			await invoke('execute_command', { command: cmd });
 		} catch (error) {
 			console.error(error);
 		}
-	}, [appState?.voice_enabled]);
+	}, [appState?.alarm_enabled]);
 
 	return {
 		processCommand,
@@ -172,6 +172,6 @@ export const appUtils = ({
 		openCreateProfile,
 		openEditProfile,
 		openDuplicateProfile,
-		handleVoiceToggle
+		handleAlarmToggle
 	};
 };

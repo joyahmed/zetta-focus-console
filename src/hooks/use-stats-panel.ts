@@ -27,7 +27,7 @@ export const useStatsPanel = (appState: AppState): DiagnosticField[] => {
 		strict_mode: strict,
 		current_task: task,
 		ambience_enabled: ambience,
-		voice_enabled: voice,
+		alarm_enabled: alarm,
 		app_start_time: appStartTime
 	} = appState;
 
@@ -71,7 +71,7 @@ export const useStatsPanel = (appState: AppState): DiagnosticField[] => {
 			value: `${ambience ? 'ON' : 'OFF'} · ${profile.season.toUpperCase()}`
 		},
 		{ label: 'SOUND', value: soundValue() },
-		{ label: 'VOICE', value: voice ? 'ON' : 'OFF' },
+		{ label: 'ALARM', value: alarm ? 'ON' : 'OFF' },
 		{
 			label: 'DEV MODE',
 			value: devMode ? 'ACTIVE' : 'STANDBY',

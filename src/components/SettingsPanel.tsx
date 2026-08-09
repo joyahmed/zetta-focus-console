@@ -5,7 +5,7 @@ import DevModeSection from './settings-panel/DevModeSection';
 import StrictModeSection from './settings-panel/StrictModeSection';
 import ResetSection from './settings-panel/ResetSection';
 import SettingsFooter from './settings-panel/SettingsFooter';
-import VoiceSection from './settings-panel/VoiceSection';
+import AlarmSection from './settings-panel/AlarmSection';
 import StartupSection from './settings-panel/StartupSection';
 
 const SettingsPanel = ({
@@ -26,8 +26,8 @@ const SettingsPanel = ({
 	theme,
 	strictModeActive,
 	onStrictModeToggle,
-	voiceEnabled,
-	onVoiceToggle
+	alarmEnabled,
+	onAlarmToggle
 }: SettingsPanelProps) => {
 	const isLight = theme === 'light';
 
@@ -51,10 +51,10 @@ const SettingsPanel = ({
 					}}
 				/>
 
-				<VoiceSection
+				<AlarmSection
 					{...{
-						voiceEnabled: voiceEnabled || false,
-						onVoiceToggle: onVoiceToggle || (() => {}),
+						alarmEnabled: alarmEnabled || false,
+						onAlarmToggle: onAlarmToggle || (() => {}),
 						isLight
 					}}
 				/>

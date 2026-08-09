@@ -48,7 +48,7 @@ export const useApp = () => {
 		openCreateProfile,
 		openEditProfile,
 		openDuplicateProfile,
-		handleVoiceToggle
+		handleAlarmToggle
 	} = appUtils({
 		appState,
 		setTerminalKey,
@@ -90,6 +90,6 @@ export const useApp = () => {
 		openCreateProfile,
 		openEditProfile,
 		openDuplicateProfile,
-		handleVoiceToggle
+		handleAlarmToggle
 	};
 };
