@@ -253,7 +253,7 @@ export default function StatsPanel({ appState }: StatsPanelProps) {
 						</span>
 					</div>
 
-					<dl className='grid grid-cols-2 gap-x-3 gap-y-2 text-[10px] content-start flex-1 overflow-y-auto custom-scrollbar'>
+					<dl className='grid grid-cols-2 lg:grid-cols-3 gap-x-3 gap-y-2 text-[10px] content-start flex-1 min-h-0 overflow-y-auto custom-scrollbar'>
 						{fields.map(field => (
 							<div key={field.label} className='flex flex-col gap-0.5 min-w-0'>
 								<dt className='text-zetta-text-muted font-medium'>

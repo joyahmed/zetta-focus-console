@@ -46,7 +46,7 @@ export default function ProfilePanel({
 				</div>
 			</div>
 
-			<div className='overflow-auto -mr-2 pr-2'>
+			<div className='flex-1 min-h-0 overflow-y-auto custom-scrollbar -mr-2 pr-2'>
 				<div className='flex items-center gap-2 md:gap-3 mb-2 md:mb-4'>
 					<div
 						className='w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center text-base md:text-xl'
@@ -214,10 +214,11 @@ export default function ProfilePanel({
 						</div>
 					</div>
 				)}
+			</div>
 
 				{/* Actions Area — pinned to the bottom so the panel does not
 				    trail off into empty space when the profile list is short. */}
-				<div className='mt-auto pt-2 md:pt-4 border-t border-zetta-border'>
+				<div className='shrink-0 pt-2 md:pt-4 border-t border-zetta-border'>
 					{/* Error Message - Cyber Minimalist */}
 					{errorMessage && (
 						<div className='mb-3 relative group overflow-hidden rounded-md bg-red-500/5 border border-red-500/20'>
@@ -294,8 +295,6 @@ export default function ProfilePanel({
 						)}
 					</div>
 				</div>
-			</div>
 		</div>
-
 	);
 }
