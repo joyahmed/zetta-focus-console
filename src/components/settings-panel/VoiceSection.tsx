@@ -1,10 +1,5 @@
 import Toggle from './Toggle';
 
-interface VoiceSectionProps {
-	voiceEnabled: boolean;
-	onVoiceToggle: () => void;
-	isLight: boolean;
-}
 
 const VoiceIcon = () => (
 	<svg

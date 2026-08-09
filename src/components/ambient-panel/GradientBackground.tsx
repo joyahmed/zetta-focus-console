@@ -1,9 +1,3 @@
-interface GradientBackgroundProps {
-	glowColor: string;
-	isLight: boolean;
-	timer: TimerState;
-}
-
 const GradientBackground = ({
 	glowColor,
 	isLight,

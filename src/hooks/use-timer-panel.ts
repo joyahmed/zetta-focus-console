@@ -1,8 +1,3 @@
-interface UseTimerPanelProps {
-	timer: TimerState;
-	sessionOverride: SessionOverride | null | undefined;
-}
-
 export const useTimerPanel = ({
 	timer,
 	sessionOverride

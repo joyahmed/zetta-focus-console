@@ -1,10 +1,3 @@
-interface SeasonIndicatorProps {
-	season: AmbientPanelProps['season'];
-	motionIntensity: AmbientPanelProps['motionIntensity'];
-	backgroundType: AmbientPanelProps['backgroundType'];
-	isLight: boolean;
-}
-
 const SeasonIndicator = ({
 	season,
 	motionIntensity,

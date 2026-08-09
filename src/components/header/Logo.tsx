@@ -1,8 +1,5 @@
 import Logo from '../../assets/icon.png';
 
-interface LogoBrandProps {
-	devMode?: boolean;
-}
 
 const LogoBrand = ({ devMode: _devMode }: LogoBrandProps) => (
 	<div className='flex items-center gap-4 w-1/4'>

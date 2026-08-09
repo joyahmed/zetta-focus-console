@@ -2,9 +2,6 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from 'react';
 import Toggle from './Toggle';
 
-interface StartupSectionProps {
-	isLight: boolean;
-}
 
 const StartupSection = ({ isLight }: StartupSectionProps) => {
 	const [autostartEnabled, setAutostartEnabled] = useState(false);

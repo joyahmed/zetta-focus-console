@@ -1,8 +1,3 @@
-interface SummerSceneProps {
-	glowColor: string;
-	isLight: boolean;
-}
-
 const SummerScene = ({ glowColor, isLight }: SummerSceneProps) => {
 	const baseOpacity = isLight ? '25' : '08';
 	const midOpacity = isLight ? '10' : '03';

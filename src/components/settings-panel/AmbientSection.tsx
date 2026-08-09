@@ -1,10 +1,5 @@
 import Toggle from './Toggle';
 
-interface AmbientSectionProps {
-	ambienceEnabled: boolean;
-	onAmbienceToggle: () => void;
-	isLight: boolean;
-}
 
 const AmbientSection = ({
 	ambienceEnabled,

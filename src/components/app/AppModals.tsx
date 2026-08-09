@@ -30,7 +30,7 @@ const AppModals = ({
 	setProfileError,
 	voiceEnabled,
 	onVoiceToggle
-}: AppModelsProps) => {
+}: AppModalsProps) => {
 
 	return (
 		<>

@@ -1,8 +1,5 @@
 import { SettingsIcon } from './icons';
 
-interface SettingsButtonProps {
-	onClick: () => void;
-}
 
 const SettingsButton = ({ onClick }: SettingsButtonProps) => (
 	<button

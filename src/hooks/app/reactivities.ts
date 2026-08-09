@@ -1,7 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useEffect, useRef } from 'react';
-import { AppReactivitiesProps } from './types';
 
 export const appReactivities = ({
 	appState,

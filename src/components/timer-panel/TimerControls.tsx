@@ -1,15 +1,5 @@
 import { PauseIcon, PlayIcon, RefreshIcon, StopIcon } from './icons';
 
-type TimerStatus = TimerState['status'];
-
-interface ControlButtonProps {
-	onClick: () => void;
-	title: string;
-	variant: 'primary' | 'secondary' | 'danger';
-	children: React.ReactNode;
-	disabled?: boolean;
-}
-
 const ControlButton = ({
 	onClick,
 	title,
@@ -44,14 +34,6 @@ const ControlButton = ({
 	);
 };
 
-interface TimerControlsProps {
-	status: TimerStatus;
-	onStart: () => void;
-	onPause: () => void;
-	onResume: () => void;
-	onStop: () => void;
-	isStrictModeBlocking?: boolean;
-}
 
 const TimerControls = ({
 	status,

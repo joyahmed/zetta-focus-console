@@ -1,8 +1,5 @@
 import { TerminalIcon } from './icons';
 
-interface CommandSpotlightProps {
-	onClick: () => void;
-}
 
 const CommandSpotlight = ({ onClick }: CommandSpotlightProps) => (
 	<button

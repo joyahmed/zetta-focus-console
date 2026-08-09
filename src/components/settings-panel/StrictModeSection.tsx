@@ -1,11 +1,6 @@
 import SectionHeader from './SectionHeader';
 import Toggle from './Toggle';
 
-interface StrictModeSectionProps {
-	strictModeActive: boolean;
-	onStrictModeToggle: () => void;
-	isLight: boolean;
-}
 
 const StrictModeSection = ({
 	strictModeActive,

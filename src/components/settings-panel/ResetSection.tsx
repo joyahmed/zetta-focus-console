@@ -1,8 +1,5 @@
 import { RefreshIcon } from '../timer-panel/icons';
 
-interface ResetSectionProps {
-	onResetSettings: () => void;
-}
 
 const ResetSection = ({ onResetSettings }: ResetSectionProps) => (
 	<section>

@@ -1,11 +1,3 @@
-interface SnowflakeProps {
-	particle: Particle;
-	glowColor: string;
-	isPaused: boolean;
-	isLight: boolean;
-	speedMultiplier: number;
-}
-
 const Snowflake = ({
 	particle,
 	glowColor,

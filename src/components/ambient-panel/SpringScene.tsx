@@ -1,12 +1,5 @@
 import SpringParticle from './SpringParticle';
 
-interface SpringSceneProps {
-	springParticles: Particle[];
-	glowColor: string;
-	isPaused: boolean;
-	isLight: boolean;
-	speedMultiplier: number;
-}
 
 const SpringScene = ({
 	springParticles,

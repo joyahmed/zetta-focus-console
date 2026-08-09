@@ -1,10 +1,5 @@
 // import Toggle from './Toggle';
 
-interface DevModeSectionProps {
-	devMode: boolean;
-	onDevModeToggle: () => void;
-	isLight: boolean;
-}
 
 // NOTE: Developer Mode toggle is now hidden in settings.
 // The functionality is still available and controlled via backend.

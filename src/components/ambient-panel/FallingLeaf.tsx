@@ -1,11 +1,3 @@
-interface FallingLeafProps {
-	leaf: Leaf;
-	glowColor: string;
-	isPaused: boolean;
-	isLight: boolean;
-	speedMultiplier: number;
-}
-
 const FallingLeaf = ({
 	leaf,
 	glowColor,

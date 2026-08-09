@@ -1,6 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useCallback } from 'react';
-import { AppUtilsProps } from './types';
 
 export const appUtils = ({
 	appState,

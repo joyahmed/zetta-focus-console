@@ -1,15 +1,3 @@
-interface CircleProps {
-	radius: number;
-	stroke: string;
-	strokeWidth?: number;
-	strokeDasharray?: number;
-	strokeDashoffset?: number;
-	strokeLinecap?: 'round' | 'butt' | 'square';
-	className?: string;
-	style?: React.CSSProperties;
-	gradientId?: string;
-}
-
 const Circle = ({
 	radius,
 	stroke,
@@ -57,14 +45,6 @@ const Circle = ({
 	);
 };
 
-interface TimerRingProps {
-	radius: number;
-	circumference: number;
-	strokeDashoffset: number;
-	isRunning: boolean;
-	glowColor: string;
-	isStrictMode?: boolean;
-}
 
 const TimerRing = ({
 	radius,

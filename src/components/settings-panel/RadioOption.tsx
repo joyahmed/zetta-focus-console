@@ -1,12 +1,3 @@
-interface RadioOptionProps {
-	name: string;
-	value: string;
-	checked: boolean;
-	onChange: () => void;
-	label: string;
-	className?: string;
-}
-
 const RadioOption = ({
 	name,
 	value: _value,

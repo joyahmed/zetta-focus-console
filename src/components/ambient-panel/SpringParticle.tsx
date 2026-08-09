@@ -1,11 +1,3 @@
-interface SpringParticleProps {
-	particle: Particle;
-	glowColor: string;
-	isPaused: boolean;
-	isLight: boolean;
-	speedMultiplier: number;
-}
-
 const SpringParticle = ({
 	particle,
 	glowColor,

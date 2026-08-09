@@ -1,7 +1,3 @@
-interface IconProps {
-	className?: string;
-}
-
 const PlayIcon = ({ className = 'h-8 w-8' }: IconProps) => (
 	<svg
 		xmlns='http://www.w3.org/2000/svg'

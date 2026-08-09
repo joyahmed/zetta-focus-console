@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from 'react';
+import { useEffect } from 'react';
 
 /**
  * The single modal shell.
@@ -10,23 +10,11 @@ import { ReactNode, useEffect } from 'react';
  * moves together.
  */
 
-const SIZES = {
+const SIZES: Record<ModalSize, string> = {
 	sm: 'max-w-md',
 	md: 'max-w-2xl',
 	lg: 'max-w-5xl'
-} as const;
-
-export type ModalSize = keyof typeof SIZES;
-
-interface ModalProps {
-	isOpen: boolean;
-	onClose: () => void;
-	title?: ReactNode;
-	size?: ModalSize;
-	/** Fills the available height rather than hugging its content. */
-	fillHeight?: boolean;
-	children: ReactNode;
-}
+};
 
 const Modal = ({
 	isOpen,

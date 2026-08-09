@@ -1,14 +1,5 @@
 import { KeyboardEvent, useEffect, useRef, useState } from 'react';
 
-interface UseTerminalModalProps {
-	isOpen: boolean;
-	onClose: () => void;
-	onCommand: (command: string) => Promise<string>;
-	onHelp: () => void;
-	sessionSummary?: string | null;
-	onSummaryRead?: () => void;
-	isLight: boolean;
-}
 
 // Available commands for tab completion
 const COMMANDS = [

@@ -1,10 +1,3 @@
-interface ToggleProps {
-	enabled: boolean;
-	onChange: () => void;
-	disabled?: boolean;
-	isLight: boolean;
-}
-
 const Toggle = ({ enabled, onChange, disabled = false, isLight }: ToggleProps) => {
 	const baseBg = isLight ? 'bg-gray-300' : 'bg-gray-600';
 	const activeBg = enabled ? (isLight ? 'bg-blue-500' : 'bg-blue-500') : baseBg;

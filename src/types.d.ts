@@ -1,4 +1,21 @@
-/** Shared */
+/**
+ * Every type in the app.
+ *
+ * This is an ambient declaration file, so nothing here is imported — the names
+ * are simply in scope everywhere. React's own types are reached through the
+ * `React.` namespace, which @types/react exposes globally; the bare
+ * `SetStateAction` this file used to write resolved to nothing at all, and only
+ * went unnoticed because `skipLibCheck` was on and declaration files were never
+ * checked. It is off now.
+ *
+ * Organised by area, and each name is declared exactly once. Interfaces merge
+ * silently when they are not, which is how `Profile` came to be declared three
+ * times with three different ideas of what `season` is.
+ */
+
+/* ==========================================================================
+   Shared
+   ========================================================================== */
 
 interface IconProps {
 	className?: string;
@@ -8,58 +25,14 @@ interface StrokeIconProps extends IconProps {
 	children: React.ReactNode;
 }
 
-interface AppPanelProps {
-	appState: AppState;
-	processCommand: (command: string) => Promise<string>;
-	handleProfileSwitch: (profileId: string) => Promise<void>;
-	openCreateProfile: () => void;
-	openEditProfile: () => void;
-	profileError: string | null;
-	setProfileError: (value: SetStateAction<string | null>) => void;
+interface SelectOption {
+	value: string;
+	label: string;
 }
 
-interface AppModelsProps {
-	appState: AppState;
-	terminalKey: number;
-	terminalOpen: boolean;
-	setTerminalOpen: (value: SetStateAction<boolean>) => void;
-	processCommand: (command: string) => Promise<string>;
-	setHelpOpen: (value: SetStateAction<boolean>) => void;
-	sessionSummary: string | null;
-	setSessionSummary: (value: SetStateAction<string | null>) => void;
-	settingsOpen: boolean;
-	setSettingsOpen: (value: SetStateAction<boolean>) => void;
-	handleDevModeToggle: () => Promise<void>;
-	handleVolumeChange: (volume: number) => Promise<void>;
-	handleMuteToggle: () => Promise<void>;
-	handleAmbienceToggle: () => Promise<void>;
-	handleMuteToggle: () => Promise<void>;
-	handleSoundPlay: () => Promise<void>;
-	handleSoundStop: () => Promise<void>;
-	handleBackgroundTypeChange: (
-		type: 'gradient' | 'particles'
-	) => Promise<void>;
-	handleResetSettings: () => Promise<void>;
-	helpOpen: boolean;
-
-	profileModalOpen: boolean;
-	setProfileModalOpen: (value: SetStateAction<boolean>) => void;
-	profileModalMode: 'create' | 'edit';
-	handleCreateProfile: (profileData: {
-		id?: string | undefined;
-		name: string;
-		focus_min: number;
-		short_break_min: number;
-		long_break_min: number;
-		sessions_per_cycle: number;
-		season: string;
-		intensity: string;
-		sound: string;
-	}) => Promise<string>;
-	setProfileError: (value: SetStateAction<string | null>) => void;
-	voiceEnabled?: boolean;
-	onVoiceToggle?: () => void;
-}
+/* ==========================================================================
+   Engine state — mirrors src-tauri/src/types.rs
+   ========================================================================== */
 
 interface TimerState {
 	remaining_seconds: number;
@@ -72,6 +45,8 @@ interface TimerState {
 	total_sessions: number;
 }
 
+/** The Rust enums behind season, motion_intensity and background_type all
+    serialise lowercase, so they arrive as these exact strings. */
 interface Profile {
 	id: string;
 	name: string;
@@ -142,7 +117,136 @@ interface StateEvent {
 	state: AppState;
 }
 
-/**Ambient Panel */
+/* ==========================================================================
+   App shell
+   ========================================================================== */
+
+interface AppPanelProps {
+	appState: AppState;
+	processCommand: (command: string) => Promise<string>;
+	handleProfileSwitch: (profileId: string) => Promise<void>;
+	openCreateProfile: () => void;
+	openEditProfile: () => void;
+	profileError: string | null;
+	setProfileError: (value: React.SetStateAction<string | null>) => void;
+}
+
+interface AppModalsProps {
+	appState: AppState;
+	terminalKey: number;
+	terminalOpen: boolean;
+	setTerminalOpen: (value: React.SetStateAction<boolean>) => void;
+	processCommand: (command: string) => Promise<string>;
+	setHelpOpen: (value: React.SetStateAction<boolean>) => void;
+	sessionSummary: string | null;
+	setSessionSummary: (value: React.SetStateAction<string | null>) => void;
+	settingsOpen: boolean;
+	setSettingsOpen: (value: React.SetStateAction<boolean>) => void;
+	handleDevModeToggle: () => Promise<void>;
+	handleVolumeChange: (volume: number) => Promise<void>;
+	handleMuteToggle: () => Promise<void>;
+	handleAmbienceToggle: () => Promise<void>;
+	handleSoundPlay: () => Promise<void>;
+	handleSoundStop: () => Promise<void>;
+	handleBackgroundTypeChange: (
+		type: 'gradient' | 'particles'
+	) => Promise<void>;
+	handleResetSettings: () => Promise<void>;
+	helpOpen: boolean;
+
+	profileModalOpen: boolean;
+	setProfileModalOpen: (value: React.SetStateAction<boolean>) => void;
+	profileModalMode: 'create' | 'edit';
+	handleCreateProfile: (profileData: ProfileFormData) => Promise<string>;
+	setProfileError: (value: React.SetStateAction<string | null>) => void;
+	voiceEnabled?: boolean;
+	onVoiceToggle?: () => void;
+}
+
+/* ==========================================================================
+   Shells — Modal and Drawer
+   ========================================================================== */
+
+type ModalSize = 'sm' | 'md' | 'lg';
+
+interface ModalProps {
+	isOpen: boolean;
+	onClose: () => void;
+	title?: React.ReactNode;
+	size?: ModalSize;
+	/** Fills the available height rather than hugging its content. */
+	fillHeight?: boolean;
+	children: React.ReactNode;
+}
+
+interface DrawerProps {
+	isOpen: boolean;
+	onClose: () => void;
+	title: React.ReactNode;
+	children: React.ReactNode;
+}
+
+/* ==========================================================================
+   Header
+   ========================================================================== */
+
+interface HeaderProps {
+	activeProfileName: string;
+	devMode: boolean;
+	onSettingsClick: () => void;
+	onTerminalClick: () => void;
+	volume: number;
+	isMuted: boolean;
+	onVolumeChange: (volume: number) => void;
+	onMuteToggle: () => void;
+	theme: string;
+	onThemeChange: (theme: string) => void;
+}
+
+interface LogoBrandProps {
+	devMode?: boolean;
+}
+
+interface ProfilePillProps {
+	activeProfileName: string;
+}
+
+interface CommandSpotlightProps {
+	onClick: () => void;
+}
+
+interface SettingsButtonProps {
+	onClick: () => void;
+}
+
+interface ThemeToggleProps {
+	theme: string;
+	onThemeChange: (theme: string) => void;
+}
+
+interface VolumeControlProps {
+	volume: number;
+	isMuted: boolean;
+	onVolumeChange: (volume: number) => void;
+	onMuteToggle: () => void;
+}
+
+interface Shortcut {
+	key: string;
+	description: string;
+	/** Works even when the app is not focused. */
+	global?: boolean;
+}
+
+interface ShortcutGroup {
+	title: string;
+	shortcuts: Shortcut[];
+}
+
+/* ==========================================================================
+   Ambient panel
+   ========================================================================== */
+
 interface AmbientPanelProps {
 	season: 'spring' | 'summer' | 'autumn' | 'winter';
 	motionIntensity: 'low' | 'medium' | 'high';
@@ -167,97 +271,167 @@ interface Leaf extends Particle {
 	rotationDuration: number;
 }
 
-interface HeaderProps {
-	activeProfileName: string;
-	devMode: boolean;
-	onSettingsClick: () => void;
-	onTerminalClick: () => void;
-	volume: number;
-	isMuted: boolean;
-	onVolumeChange: (volume: number) => void;
-	onMuteToggle: () => void;
-	theme: string;
-	onThemeChange: (theme: string) => void;
+/** Every scene animates against the same four knobs. */
+interface SceneProps {
+	glowColor: string;
+	isPaused: boolean;
+	isLight: boolean;
+	speedMultiplier: number;
 }
 
-interface HelpModalProps {
-	isOpen: boolean;
-	onClose: () => void;
+interface WinterSceneProps extends SceneProps {
+	snowParticles: Particle[];
 }
 
-interface CommandGroup {
+interface SpringSceneProps extends SceneProps {
+	springParticles: Particle[];
+}
+
+interface AutumnSceneProps extends SceneProps {
+	leaves: Leaf[];
+}
+
+interface SummerSceneProps {
+	glowColor: string;
+	isLight: boolean;
+}
+
+interface SnowflakeProps extends SceneProps {
+	particle: Particle;
+}
+
+interface SpringParticleProps extends SceneProps {
+	particle: Particle;
+}
+
+interface FallingLeafProps extends SceneProps {
+	leaf: Leaf;
+}
+
+interface GradientBackgroundProps {
+	glowColor: string;
+	isLight: boolean;
+	timer: TimerState;
+}
+
+interface SeasonIndicatorProps {
+	season: AmbientPanelProps['season'];
+	motionIntensity: AmbientPanelProps['motionIntensity'];
+	backgroundType: AmbientPanelProps['backgroundType'];
+	isLight: boolean;
+}
+
+/* ==========================================================================
+   Timer panel
+   ========================================================================== */
+
+type TimerStatus = TimerState['status'];
+
+interface TimerPanelProps {
+	timer: TimerState;
+	glowColor: string;
+	sessionOverride?: SessionOverride | null;
+	strictMode?: StrictModeState | null;
+	currentTask?: CurrentTask | null;
+	onStart: () => void;
+	onPause: () => void;
+	onResume: () => void;
+	onStop: () => void;
+	/** Set a duration override and start, in one press. */
+	onQuickStart?: (minutes: number) => void;
+	theme?: string;
+}
+
+interface TimerBackgroundProps {
+	isRunning: boolean;
+	glowColor: string;
+}
+
+interface TimerDisplayProps {
+	formattedTime: string;
+	isRunning: boolean;
+	glowColor: string;
+}
+
+interface TimerControlsProps {
+	status: TimerStatus;
+	onStart: () => void;
+	onPause: () => void;
+	onResume: () => void;
+	onStop: () => void;
+	isStrictModeBlocking?: boolean;
+}
+
+interface ControlButtonProps {
+	onClick: () => void;
 	title: string;
-	commands: {
-		cmd: string;
-		description: string;
-	}[];
+	variant: 'primary' | 'secondary' | 'danger';
+	children: React.ReactNode;
+	disabled?: boolean;
 }
 
-/** Profile  */
-interface Profile {
-	id: string;
-	name: string;
-	focus_duration: number;
-	short_break_duration: number;
-	long_break_duration: number;
-	season: string;
-	motion_intensity: string;
-	sound_file: string;
+interface CircleProps {
+	radius: number;
+	stroke: string;
+	strokeWidth?: number;
+	strokeDasharray?: number;
+	strokeDashoffset?: number;
+	strokeLinecap?: 'round' | 'butt' | 'square';
+	className?: string;
+	style?: React.CSSProperties;
+	gradientId?: string;
 }
 
-interface SelectOption {
+interface TimerRingProps {
+	radius: number;
+	circumference: number;
+	strokeDashoffset: number;
+	isRunning: boolean;
+	glowColor: string;
+	isStrictMode?: boolean;
+}
+
+/* ==========================================================================
+   Stats panel
+   ========================================================================== */
+
+interface StatsPanelProps {
+	/** The whole engine state — this panel is a state inspector, and threading
+	    a dozen individual props through for it was noise. */
+	appState: AppState;
+}
+
+/** One of the four headline cards. `read` picks the field so the card is pure
+    data — nothing about it is written twice. */
+interface StatCard {
+	label: string;
+	unit: string;
+	/** Tailwind text colour for the watermark icon. */
+	tone: string;
+	Icon: (props: IconProps) => React.JSX.Element;
+	read: (stats: Stats) => number;
+}
+
+/** A row of the engine diagnostics list. */
+interface DiagnosticField {
+	label: string;
 	value: string;
-	label: string;
+	accent?: 'good' | 'warn';
 }
 
-interface LabelledSelectProps {
-	label: string;
-	value: string;
-	options: SelectOption[];
-	onChange: (value: string) => void;
-}
+/* ==========================================================================
+   Profile panel
+   ========================================================================== */
 
-interface NumberInputProps {
-	value: number;
-	onChange: (value: number) => void;
-	min: number;
-	max: number;
-	label: string;
-	step?: number;
-	precision?: number;
-}
-
-interface ProfileModalProps {
-	isOpen: boolean;
-	onClose: () => void;
-	mode: 'create' | 'edit';
-	profile?: Profile | undefined; // Required for edit mode
-	onSubmit: (profileData: {
-		id?: string; // Only for edit mode
-		name: string;
-		focus_min: number;
-		short_break_min: number;
-		long_break_min: number;
-		sessions_per_cycle: number;
-		season: string;
-		intensity: string;
-		sound: string;
-	}) => Promise<string>;
-}
-
-/** Profile Panel */
-
-interface Profile {
-	id: string;
-	name: string;
-	season: 'spring' | 'summer' | 'autumn' | 'winter';
-	motion_intensity: 'low' | 'medium' | 'high';
-	background_type: 'gradient' | 'particles' | 'custom';
-	focus_duration: number;
-	short_break_duration: number;
-	long_break_duration: number;
-	glow_color: string;
-	is_preset: boolean;
+interface ProfilePanelProps {
+	profile: Profile;
+	profiles: Profile[];
+	onProfileSwitch: (profileId: string) => void;
+	onCreateProfile?: () => void;
+	onEditProfile?: () => void;
+	errorMessage?: string | null;
+	onErrorDismiss?: () => void;
+	stats?: Stats;
 }
 
 interface DetailRowProps {
@@ -280,18 +454,54 @@ interface ProfileAction {
 	text: string;
 }
 
-interface ProfilePanelProps {
-	profile: Profile;
-	profiles: Profile[];
-	onProfileSwitch: (profileId: string) => void;
-	onCreateProfile?: () => void;
-	onEditProfile?: () => void;
-	errorMessage?: string | null;
-	onErrorDismiss?: () => void;
-	stats?: Stats;
+/* ==========================================================================
+   Profile modal
+   ========================================================================== */
+
+/** What the modal submits. Minutes, not seconds — the engine converts. */
+interface ProfileFormData {
+	/** Only for edit mode. */
+	id?: string | undefined;
+	name: string;
+	focus_min: number;
+	short_break_min: number;
+	long_break_min: number;
+	sessions_per_cycle: number;
+	season: string;
+	intensity: string;
+	sound: string;
 }
 
-/** Settings Panel */
+interface ProfileModalProps {
+	isOpen: boolean;
+	onClose: () => void;
+	mode: 'create' | 'edit';
+	/** Required for edit mode. */
+	profile?: Profile | undefined;
+	onSubmit: (profileData: ProfileFormData) => Promise<string>;
+}
+
+interface LabelledSelectProps {
+	label: string;
+	value: string;
+	options: SelectOption[];
+	onChange: (value: string) => void;
+}
+
+interface NumberInputProps {
+	value: number;
+	onChange: (value: number) => void;
+	min: number;
+	max: number;
+	label: string;
+	step?: number;
+	precision?: number;
+}
+
+/* ==========================================================================
+   Settings panel
+   ========================================================================== */
+
 interface SettingsPanelProps {
 	isOpen: boolean;
 	onClose: () => void;
@@ -316,32 +526,77 @@ interface SettingsPanelProps {
 	onVoiceToggle?: () => void;
 }
 
-/** StatsPanelProps  */
-interface Stats {
-	sessions_today: number;
-	total_focus_minutes: number;
-	current_streak: number;
-	last_session_duration: number;
+interface SectionHeaderProps {
+	title: string;
 }
 
-/** One of the four headline cards at the top of the stats panel. `read` picks
-    the field so the card is pure data — nothing about it is written twice. */
-interface StatCard {
+interface ToggleProps {
+	enabled: boolean;
+	onChange: () => void;
+	disabled?: boolean;
+	isLight: boolean;
+}
+
+interface RadioOptionProps {
+	name: string;
+	value: string;
+	checked: boolean;
+	onChange: () => void;
 	label: string;
-	unit: string;
-	/** Tailwind text colour for the watermark icon. */
-	tone: string;
-	Icon: (props: IconProps) => React.JSX.Element;
-	read: (stats: Stats) => number;
+	className?: string;
 }
 
-interface StatsPanelProps {
-	/** The whole engine state — this panel is a state inspector, and threading
-	    a dozen individual props through for it was noise. */
-	appState: AppState;
+interface AmbientSectionProps {
+	ambienceEnabled: boolean;
+	onAmbienceToggle: () => void;
+	isLight: boolean;
 }
 
-/**Terminal Modal  */
+interface BackgroundSectionProps {
+	backgroundType: 'gradient' | 'particles' | 'custom';
+	onBackgroundTypeChange: (type: 'gradient' | 'particles') => void;
+}
+
+interface DevModeSectionProps {
+	devMode: boolean;
+	onDevModeToggle: () => void;
+	isLight: boolean;
+}
+
+interface ResetSectionProps {
+	onResetSettings: () => void;
+}
+
+interface SoundSectionProps {
+	soundVolume: number;
+	onVolumeChange: (volume: number) => void;
+	isMuted: boolean;
+	onMuteToggle: () => void;
+	playAmbientSound: boolean;
+	onSoundPlay: () => void;
+	onSoundStop: () => void;
+	isLight: boolean;
+}
+
+interface StartupSectionProps {
+	isLight: boolean;
+}
+
+interface StrictModeSectionProps {
+	strictModeActive: boolean;
+	onStrictModeToggle: () => void;
+	isLight: boolean;
+}
+
+interface VoiceSectionProps {
+	voiceEnabled: boolean;
+	onVoiceToggle: () => void;
+	isLight: boolean;
+}
+
+/* ==========================================================================
+   Terminal and help modals
+   ========================================================================== */
 
 interface TerminalLine {
 	type: 'input' | 'output' | 'error' | 'success';
@@ -358,36 +613,65 @@ interface TerminalModalProps {
 	theme: string;
 }
 
-/** Timer Panel */
-
-interface TimerState {
-	remaining_seconds: number;
-	total_seconds: number;
-	status: 'idle' | 'running' | 'paused' | 'completed';
-	session_type: 'focus' | 'short_break' | 'long_break';
-	/** Current session number in the cycle (1-indexed) */
-	current_session: number;
-	/** Total number of sessions in the cycle */
-	total_sessions: number;
+interface HelpModalProps {
+	isOpen: boolean;
+	onClose: () => void;
 }
 
-interface SessionOverride {
-	focus_duration: number | null;
-	break_duration: number | null;
-	loop_count: number | null;
+interface CommandGroup {
+	title: string;
+	commands: {
+		cmd: string;
+		description: string;
+	}[];
 }
 
-interface TimerPanelProps {
+/* ==========================================================================
+   Hooks
+   ========================================================================== */
+
+interface CommonStatesProps {
+	appState: AppState | null;
+}
+
+interface AppReactivitiesProps extends CommonStatesProps {
+	setTerminalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+	settingsOpen: boolean;
+	setSettingsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+	setAppState: React.Dispatch<React.SetStateAction<AppState | null>>;
+	setSessionSummary: React.Dispatch<React.SetStateAction<string | null>>;
+}
+
+interface AppUtilsProps extends CommonStatesProps {
+	setTerminalKey: React.Dispatch<React.SetStateAction<number>>;
+	setProfileError: React.Dispatch<React.SetStateAction<string | null>>;
+	setProfileModalMode: React.Dispatch<React.SetStateAction<'create' | 'edit'>>;
+	setProfileModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+interface UseAmbientPanelProps {
+	season: AmbientPanelProps['season'];
+	motionIntensity: AmbientPanelProps['motionIntensity'];
+	isRunning: boolean;
+}
+
+interface UseTimerPanelProps {
 	timer: TimerState;
-	glowColor: string;
-	sessionOverride?: SessionOverride | null;
-	strictMode?: StrictModeState | null;
-	currentTask?: CurrentTask | null;
-	onStart: () => void;
-	onPause: () => void;
-	onResume: () => void;
-	onStop: () => void;
-	/** Set a duration override and start, in one press. */
-	onQuickStart?: (minutes: number) => void;
-	theme?: string;
+	sessionOverride: SessionOverride | null | undefined;
+}
+
+interface UseTerminalModalProps {
+	isOpen: boolean;
+	onClose: () => void;
+	onCommand: (command: string) => Promise<string>;
+	onHelp: () => void;
+	sessionSummary?: string | null;
+	onSummaryRead?: () => void;
+	isLight: boolean;
+}
+
+interface UseProfilePanelReturn {
+	getSeasonEmoji: (season: string) => string;
+	getMotionLabel: (intensity: string) => string;
+	getMotionBar: (intensity: string) => number;
 }

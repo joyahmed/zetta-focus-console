@@ -1,12 +1,5 @@
 import Snowflake from './Snowflake';
 
-interface WinterSceneProps {
-	snowParticles: Particle[];
-	glowColor: string;
-	isPaused: boolean;
-	isLight: boolean;
-	speedMultiplier: number;
-}
 
 const WinterScene = ({
 	snowParticles,

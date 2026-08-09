@@ -1,8 +1,3 @@
-interface TimerBackgroundProps {
-	isRunning: boolean;
-	glowColor: string;
-}
-
 /**
  * The glow behind the ring.
  *

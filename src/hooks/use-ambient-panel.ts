@@ -1,10 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 
-interface UseAmbientPanelProps {
-	season: AmbientPanelProps['season'];
-	motionIntensity: AmbientPanelProps['motionIntensity'];
-	isRunning: boolean;
-}
 
 export const useAmbientPanel = ({
 	season,

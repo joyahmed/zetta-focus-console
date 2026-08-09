@@ -1,10 +1,6 @@
 import { useEffect, useState } from 'react';
 import { SunIcon, MoonIcon } from './icons';
 
-interface ThemeToggleProps {
-	theme: string;
-	onThemeChange: (theme: string) => void;
-}
 
 /**
  * Two states, not three.

@@ -1,12 +1,5 @@
 import FallingLeaf from './FallingLeaf';
 
-interface AutumnSceneProps {
-	leaves: Leaf[];
-	glowColor: string;
-	isPaused: boolean;
-	isLight: boolean;
-	speedMultiplier: number;
-}
 
 const AutumnScene = ({
 	leaves,

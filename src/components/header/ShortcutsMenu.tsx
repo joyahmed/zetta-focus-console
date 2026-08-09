@@ -2,14 +2,8 @@ import { useState } from 'react';
 import Drawer from '../Drawer';
 import { KeyboardIcon } from './icons';
 
-interface Shortcut {
-	key: string;
-	description: string;
-	/** Works even when the app is not focused. */
-	global?: boolean;
-}
 
-const SHORTCUT_GROUPS: { title: string; shortcuts: Shortcut[] }[] = [
+const SHORTCUT_GROUPS: ShortcutGroup[] = [
 	{
 		title: 'Session',
 		shortcuts: [

@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from 'react';
+import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 /**
@@ -11,12 +11,6 @@ import { createPortal } from 'react-dom';
  * component rather than because someone kept them in sync.
  */
 
-interface DrawerProps {
-	isOpen: boolean;
-	onClose: () => void;
-	title: ReactNode;
-	children: ReactNode;
-}
 
 const Drawer = ({ isOpen, onClose, title, children }: DrawerProps) => {
 	useEffect(() => {

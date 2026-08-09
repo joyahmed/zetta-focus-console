@@ -1,9 +1,3 @@
-interface TimerDisplayProps {
-	formattedTime: string;
-	isRunning: boolean;
-	glowColor: string;
-}
-
 /**
  * Just the clock.
  *

@@ -46,16 +46,6 @@ const StopIcon = () => (
 	</svg>
 );
 
-interface SoundSectionProps {
-	soundVolume: number;
-	onVolumeChange: (volume: number) => void;
-	isMuted: boolean;
-	onMuteToggle: () => void;
-	playAmbientSound: boolean;
-	onSoundPlay: () => void;
-	onSoundStop: () => void;
-	isLight: boolean;
-}
 
 const SoundSection = ({
 	soundVolume,

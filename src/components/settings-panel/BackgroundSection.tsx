@@ -1,9 +1,5 @@
 import RadioOption from './RadioOption';
 
-interface BackgroundSectionProps {
-	backgroundType: 'gradient' | 'particles' | 'custom';
-	onBackgroundTypeChange: (type: 'gradient' | 'particles') => void;
-}
 
 const BackgroundSection = ({
 	backgroundType,
