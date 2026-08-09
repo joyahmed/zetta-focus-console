@@ -19,7 +19,7 @@ function TimerDisplay({
 	return (
 		<div className='z-10 flex flex-col items-center gap-2'>
 			<div
-				className='font-mono text-[3dvw] xl:text-6xl font-medium tracking-wide tabular-nums transition-colors duration-300'
+				className='font-mono text-[clamp(2rem,3.2dvw,3.75rem)] font-medium tracking-wide tabular-nums transition-colors duration-300'
 				style={{
 					color: 'var(--text-primary)',
 					opacity,

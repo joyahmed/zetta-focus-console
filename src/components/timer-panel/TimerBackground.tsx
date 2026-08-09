@@ -13,7 +13,7 @@ function TimerBackground({
 
 	return (
 		<div
-			className='absolute inset-0 opacity-20 transition-opacity duration-1000'
+			className='absolute inset-0 opacity-20 transition-opacity duration-1000 pointer-events-none'
 			style={{ background }}
 		/>
 	);

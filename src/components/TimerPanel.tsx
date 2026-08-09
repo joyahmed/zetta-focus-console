@@ -84,7 +84,7 @@ export default function TimerPanel({
 				/>
 			</Suspense>
 
-			<div className='relative w-52 xl:w-64 aspect-square shrink-0 flex items-center justify-center my-4'>
+			<div className='relative w-[min(16rem,45%)] min-w-[11rem] aspect-square shrink-0 flex items-center justify-center my-4'>
 				<Suspense fallback={null}>
 					<TimerRing
 						{...{
@@ -149,8 +149,8 @@ export default function TimerPanel({
 			    25 minutes was `timer 5m` in the terminal, or building a whole
 			    custom profile for it. A five-minute session is not a profile. */}
 			{onQuickStart && timer.status === 'idle' && (
-				<div className='mt-4 flex items-center gap-1.5'>
-					<span className='text-[10px] uppercase tracking-wider text-zetta-text-muted mr-1'>
+				<div className='relative z-10 mt-4 flex items-center gap-2'>
+					<span className='text-[10px] uppercase tracking-wider text-zetta-text-muted mr-0.5'>
 						Quick
 					</span>
 					{QUICK_DURATIONS.map(minutes => (
@@ -158,7 +158,16 @@ export default function TimerPanel({
 							key={minutes}
 							onClick={() => onQuickStart(minutes)}
 							title={`Start a ${minutes} minute session`}
-							className='px-2.5 py-1 text-xs font-mono rounded-lg border border-zetta-border bg-zetta-bg/60 text-zetta-text-secondary hover:text-zetta-text hover:border-zetta-neon/50 hover:bg-zetta-bg transition-colors'
+							style={{ ['--chip-glow' as string]: effectiveGlowColor }}
+							className='px-3 py-1.5 text-xs font-mono rounded-lg border transition-all duration-200
+								border-[color-mix(in_srgb,var(--chip-glow)_35%,transparent)]
+								bg-[color-mix(in_srgb,var(--chip-glow)_10%,transparent)]
+								text-zetta-text
+								shadow-[0_0_10px_-2px_color-mix(in_srgb,var(--chip-glow)_45%,transparent)]
+								hover:bg-[color-mix(in_srgb,var(--chip-glow)_22%,transparent)]
+								hover:border-[color-mix(in_srgb,var(--chip-glow)_70%,transparent)]
+								hover:shadow-[0_0_16px_-1px_color-mix(in_srgb,var(--chip-glow)_65%,transparent)]
+								active:scale-95'
 						>
 							{minutes}m
 						</button>

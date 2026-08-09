@@ -61,15 +61,14 @@ const Header = ({
 					<Suspense fallback={null}>
 						<ThemeToggle {...{ theme, onThemeChange }} />
 					</Suspense>
-
-					<Suspense fallback={null}>
-						<SettingsButton onClick={onSettingsClick} />
-					</Suspense>
-
+					
 					<Suspense fallback={null}>
 						<ShortcutsMenu />
 					</Suspense>
 
+					<Suspense fallback={null}>
+						<SettingsButton onClick={onSettingsClick} />
+					</Suspense>
 				</div>
 			</div>
 		</header>
