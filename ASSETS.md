@@ -27,6 +27,32 @@ time by `sound.rs`.
 > Redistributing audio inside an MIT-licensed binary is redistribution, so
 > whatever each file requires applies here.
 
+## Fonts
+
+`src/assets/fonts/` — bundled with the frontend, so the app renders in its own
+typefaces offline. Both are SIL Open Font License 1.1, which permits
+redistribution inside this binary; the full licence text ships beside the files.
+
+| File | Source | Licence | Attribution required |
+|---|---|---|---|
+| `Inter-latin.woff2`, `Inter-latin-ext.woff2` | [rsms/inter](https://github.com/rsms/inter) v4, latin subsets as served by Google Fonts | SIL OFL 1.1 (`Inter-OFL.txt`) | No, but the licence must ship — it does |
+| `JetBrainsMono-{Regular,Medium,Bold}.woff2` | [JetBrains/JetBrainsMono](https://github.com/JetBrains/JetBrainsMono) v2.304 | SIL OFL 1.1 (`JetBrainsMono-OFL.txt`) | No, but the licence must ship — it does |
+
+The OFL's one hard condition for a bundle like this is that the fonts are not
+sold on their own and that the licence travels with them. Neither may be
+renamed while still called "Inter" or "JetBrains Mono" — they are not modified
+here, only subset by Google's own service in Inter's case.
+
+Inter is a variable font, so a single file per unicode subset covers weights
+300–700. JetBrains Mono ships as three static weights because only three are
+used: 400 for body monospace, 500 for the clock and numeric inputs, 700 for the
+dev-mode badge. 414 KB of fonts in total.
+
+Before this, `index.css` imported both from `fonts.googleapis.com`. A desktop
+app that reaches the network to draw its own interface fails at exactly the
+moment a focus timer is most useful — offline — and it sent a request to Google
+on every launch from an app that otherwise talks to nothing.
+
 ## Processing
 
 The originals were 256 kbps stereo MP3 running 1–10½ minutes. They are played

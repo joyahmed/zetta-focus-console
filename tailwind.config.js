@@ -22,8 +22,10 @@ export default {
 				'zetta-neon-secondary': 'var(--accent-neon-secondary)',
 			},
 			fontFamily: {
-				mono: ['JetBrains Mono', 'monospace'],
-				sans: ['Inter', 'sans-serif'],
+				// Both families are bundled, so the fallbacks only matter if a
+				// glyph is missing from the subset — not if the font fails to load.
+				mono: ['JetBrains Mono', 'ui-monospace', 'Consolas', 'monospace'],
+				sans: ['Inter', 'system-ui', 'sans-serif'],
 			},
 			boxShadow: {
 				'neon': '0 0 10px rgba(139, 92, 246, 0.5), 0 0 20px rgba(139, 92, 246, 0.3)',
