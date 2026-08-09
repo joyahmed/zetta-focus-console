@@ -3,7 +3,6 @@ import { useApp } from './hooks/app/use-app';
 import AppLoading from './components/app/AppLoading';
 import AppModals from './components/app/AppModals';
 import AppPanels from './components/app/AppPanels';
-import MeshBackground from './components/app/MeshBackground';
 import Header from './components/Header';
 
 const App = () => {
@@ -52,7 +51,6 @@ const App = () => {
 
 	return (
 		<div className='h-screen w-screen flex flex-col overflow-hidden relative'>
-			<MeshBackground />
 
 			<div className='relative z-10 flex flex-col h-full'>
 				<Header

@@ -1,55 +1,40 @@
 export const AMBIENT_ANIMATIONS = `
-	@keyframes snowfall {
-		0% {
-			transform: translate3d(0, -10px, 0);
-			opacity: 0;
-		}
-		10% {
-			opacity: var(--particle-opacity, 1);
-		}
-		90% {
-			opacity: var(--particle-opacity, 1);
-		}
-		100% {
-			transform: translate3d(20px, var(--fall-distance, 220px), 0);
-			opacity: 0;
-		}
-	}
+	/* One fall, one rise, and everything that differs between particles comes
+	   in as a custom property: how far it wanders sideways, how far it turns,
+	   and how opaque it gets at its brightest. Four sets of keyframes that
+	   differed only in those numbers are one pair now.
 
-	/* Fall and spin in one animation.
-	   These were two — leafFall and leafRotate — declared on the same element,
-	   and both animated the transform property. Only the last one in the list
-	   wins that property outright, so the leaves spun on the spot at the top of
-	   the panel and never fell at all. The keyframes also mixed transform
-	   function lists (translateY/translateX in one step, translate3d in the
-	   next), which a browser can only interpolate as matrices; every step here
-	   uses the same list. */
-	@keyframes leafFall {
+	   Every step uses the same transform function list. Mixing them — a
+	   translateY here, a translate3d there — leaves the browser interpolating
+	   matrices, which is not what the numbers say. */
+	@keyframes particleFall {
 		0% {
-			transform: translate3d(0, -12px, 0) rotate(0deg);
+			transform: translate3d(0, -14px, 0) rotate(0deg);
 			opacity: 0;
 		}
 		10% { opacity: var(--particle-opacity, 1); }
 		50% {
-			transform: translate3d(38px, calc(var(--fall-distance, 220px) * 0.5), 0) rotate(var(--leaf-spin-half, 240deg));
+			transform: translate3d(var(--drift-mid, 28px), calc(var(--fall-distance, 220px) * 0.5), 0) rotate(var(--spin-half, 180deg));
 		}
-		90% { opacity: var(--particle-opacity, 1); }
+		88% { opacity: var(--particle-opacity, 1); }
 		100% {
-			transform: translate3d(-26px, var(--fall-distance, 220px), 0) rotate(var(--leaf-spin, 480deg));
+			transform: translate3d(var(--drift-end, -18px), var(--fall-distance, 220px), 0) rotate(var(--spin, 360deg));
 			opacity: 0;
 		}
 	}
 
-	/* Embers rise, wander, and burn out before the top. */
-	@keyframes emberRise {
+	@keyframes particleRise {
 		0% {
-			transform: translate3d(0, 0, 0) scale(0.6);
+			transform: translate3d(0, 14px, 0) rotate(0deg) scale(0.7);
 			opacity: 0;
 		}
 		12% { opacity: var(--particle-opacity, 1); }
-		70% { opacity: calc(var(--particle-opacity, 1) * 0.8); }
+		50% {
+			transform: translate3d(var(--drift-mid, 28px), calc(var(--fall-distance, 220px) * -0.5), 0) rotate(var(--spin-half, 180deg)) scale(1);
+		}
+		82% { opacity: calc(var(--particle-opacity, 1) * 0.8); }
 		100% {
-			transform: translate3d(var(--ember-drift, 24px), calc(var(--fall-distance, 220px) * -1), 0) scale(0.2);
+			transform: translate3d(var(--drift-end, -18px), calc(var(--fall-distance, 220px) * -1), 0) rotate(var(--spin, 360deg)) scale(0.55);
 			opacity: 0;
 		}
 	}
@@ -64,19 +49,4 @@ export const AMBIENT_ANIMATIONS = `
 		5%            { opacity: 0; }
 	}
 
-	@keyframes petalFall {
-		0% {
-			transform: translate3d(0, -12px, 0) rotate(0deg);
-			opacity: 0;
-		}
-		10% { opacity: var(--particle-opacity, 1); }
-		50% {
-			transform: translate3d(28px, calc(var(--fall-distance, 220px) * 0.5), 0) rotate(180deg);
-		}
-		90% { opacity: var(--particle-opacity, 1); }
-		100% {
-			transform: translate3d(-16px, var(--fall-distance, 220px), 0) rotate(400deg);
-			opacity: 0;
-		}
-	}
 `;

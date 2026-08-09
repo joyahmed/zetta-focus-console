@@ -257,26 +257,29 @@ interface AmbientPanelProps {
 	theme?: string;
 }
 
-interface Particle {
+/**
+ * One drifting instance of the profile's icon.
+ *
+ * Snow, blossom, embers and leaves were four interfaces and four generators
+ * that differed in a handful of constants. This is all of them.
+ */
+interface AmbientParticle {
 	id: number;
+	/** Percent across the panel. */
 	x: number;
+	/** Font size in px — these are glyphs, not shapes. */
 	size: number;
 	delay: number;
 	duration: number;
+	/** Peak opacity, read by the keyframes as --particle-opacity. */
 	opacity: number;
-}
-
-interface Leaf extends Particle {
-	/** Degrees of extra turn on top of one full rotation during the fall. */
-	rotation: number;
-}
-
-/** A spark. `drift` is how far sideways it wanders on the way up. */
-interface Ember extends Particle {
+	/** Sideways wander at the halfway point, in px; may be negative. */
 	drift: number;
+	/** Degrees of turn over the whole journey. */
+	spin: number;
 }
 
-/** Every scene animates against the same four knobs. */
+/** What every scene and particle animates against. */
 interface SceneProps {
 	glowColor: string;
 	isPaused: boolean;
@@ -284,32 +287,17 @@ interface SceneProps {
 	speedMultiplier: number;
 }
 
-interface WinterSceneProps extends SceneProps {
-	snowParticles: Particle[];
+interface SeasonSceneProps extends SceneProps {
+	season: Profile['season'];
+	particles: AmbientParticle[];
 }
 
-interface SpringSceneProps extends SceneProps {
-	springParticles: Particle[];
-}
-
-interface AutumnSceneProps extends SceneProps {
-	leaves: Leaf[];
-}
-
-interface SummerSceneProps extends SceneProps {
-	embers: Ember[];
-}
-
-interface SnowflakeProps extends SceneProps {
-	particle: Particle;
-}
-
-interface PetalProps extends SceneProps {
-	particle: Particle;
-}
-
-interface EmberProps extends SceneProps {
-	particle: Ember;
+interface SeasonParticleProps extends Omit<SceneProps, 'glowColor'> {
+	/** The profile's own icon, one glyph. */
+	icon: string;
+	particle: AmbientParticle;
+	/** Summer's heat rises; everything else falls. */
+	rises: boolean;
 }
 
 interface LightningFlashProps {
@@ -318,10 +306,6 @@ interface LightningFlashProps {
 	/** Seconds for one strike-strike-wait cycle. */
 	period: number;
 	delay: number;
-}
-
-interface FallingLeafProps extends SceneProps {
-	leaf: Leaf;
 }
 
 interface SeasonIndicatorProps {

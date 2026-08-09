@@ -5,10 +5,7 @@ import { AMBIENT_ANIMATIONS } from './ambient-panel';
 import AmbientHeader from './ambient-panel/AmbientHeader';
 import SeasonIndicator from './ambient-panel/SeasonIndicator';
 import LightModePlaceholder from './ambient-panel/LightModePlaceholder';
-import WinterScene from './ambient-panel/WinterScene';
-import SummerScene from './ambient-panel/SummerScene';
-import SpringScene from './ambient-panel/SpringScene';
-import AutumnScene from './ambient-panel/AutumnScene';
+import SeasonScene from './ambient-panel/SeasonScene';
 
 const AmbientPanel = ({
 	season,
@@ -43,19 +40,11 @@ const AmbientPanel = ({
 		return () => observer.disconnect();
 	}, []);
 
-	const {
-		isPaused,
-		speedMultiplier,
-		snowParticles,
-		leaves,
-		springParticles,
-		embers
-	} =
-		useAmbientPanel({
-			season,
-			motionIntensity,
-			isRunning
-		});
+	const { isPaused, speedMultiplier, particles } = useAmbientPanel({
+		season,
+		motionIntensity,
+		isRunning
+	});
 
 	if (!isEnabled) {
 		return null;
@@ -73,24 +62,21 @@ const AmbientPanel = ({
 	 * handful of tiny layers by comparison, and they were always the part worth
 	 * looking at.
 	 */
-	const renderSeasonContent = () => {
-		if (isLight) {
-			return <LightModePlaceholder />;
-		}
-
-		const sceneProps = { glowColor, isPaused, isLight, speedMultiplier };
-
-		switch (season) {
-			case 'winter':
-				return <WinterScene {...{ ...sceneProps, snowParticles }} />;
-			case 'summer':
-				return <SummerScene {...{ ...sceneProps, embers }} />;
-			case 'spring':
-				return <SpringScene {...{ ...sceneProps, springParticles }} />;
-			case 'autumn':
-				return <AutumnScene {...{ ...sceneProps, leaves }} />;
-		}
-	};
+	const renderSeasonContent = () =>
+		isLight ? (
+			<LightModePlaceholder />
+		) : (
+			<SeasonScene
+				{...{
+					season,
+					particles,
+					glowColor,
+					isPaused,
+					isLight,
+					speedMultiplier
+				}}
+			/>
+		);
 
 	return (
 		<div className='panel h-full relative overflow-hidden flex flex-col'>

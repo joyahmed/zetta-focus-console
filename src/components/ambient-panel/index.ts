@@ -1,11 +1,7 @@
 export { default as AmbientHeader } from './AmbientHeader';
 export { default as SeasonIndicator } from './SeasonIndicator';
 export { default as LightModePlaceholder } from './LightModePlaceholder';
-export { default as Ember } from './Ember';
 export { default as LightningFlash } from './LightningFlash';
-export { default as Petal } from './Petal';
-export { default as WinterScene } from './WinterScene';
-export { default as SummerScene } from './SummerScene';
-export { default as SpringScene } from './SpringScene';
-export { default as AutumnScene } from './AutumnScene';
+export { default as SeasonParticle } from './SeasonParticle';
+export { default as SeasonScene } from './SeasonScene';
 export { AMBIENT_ANIMATIONS } from './animations';

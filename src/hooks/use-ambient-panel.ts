@@ -10,18 +10,29 @@ import { useEffect, useMemo, useState } from 'react';
  * handled by making the fall distance follow the container instead.
  *
  * Autumn used to be 2, 3 and 4. Two leaves, each waiting up to fifteen seconds
- * before its first fall, is a panel with nothing in it. Leaves are much larger
- * than snowflakes so they still want the lowest count — just not that low.
+ * before its first fall, is a panel with nothing in it.
  */
 const PARTICLE_COUNTS: Record<
 	Profile['motion_intensity'],
 	Record<Profile['season'], number>
 > = {
-	low: { winter: 10, spring: 8, summer: 7, autumn: 6 },
-	medium: { winter: 15, spring: 12, summer: 11, autumn: 9 },
-	high: { winter: 20, spring: 16, summer: 15, autumn: 12 }
+	low: { winter: 9, spring: 8, summer: 7, autumn: 6 },
+	medium: { winter: 13, spring: 12, summer: 11, autumn: 9 },
+	high: { winter: 18, spring: 16, summer: 15, autumn: 12 }
 };
 
+/** Per-season character: how large the icon runs and how long it takes to
+    cross. A leaf is a slow, large, wandering thing; a spark is small, quick
+    and nearly straight. */
+const PARTICLE_SHAPE: Record<
+	Profile['season'],
+	{ size: [number, number]; duration: [number, number]; drift: number }
+> = {
+	winter: { size: [9, 9], duration: [11, 11], drift: 34 },
+	spring: { size: [10, 10], duration: [10, 10], drift: 46 },
+	summer: { size: [8, 8], duration: [9, 8], drift: 30 },
+	autumn: { size: [12, 12], duration: [12, 12], drift: 52 }
+};
 
 export const useAmbientPanel = ({
 	season,
@@ -34,11 +45,6 @@ export const useAmbientPanel = ({
 		setIsPaused(!isRunning);
 	}, [isRunning]);
 
-	// Counts stay fixed regardless of display size. Each particle is an
-	// independently animated compositor layer, and scaling them with the
-	// viewport is exactly the wrong trade on a 4K panel — the cost of the scene
-	// is the number of moving layers, not their size. Visibility at large sizes
-	// is handled by making the fall distance follow the container instead.
 	const particleCount = useMemo(
 		() => PARTICLE_COUNTS[motionIntensity][season],
 		[motionIntensity, season]
@@ -49,66 +55,29 @@ export const useAmbientPanel = ({
 		return speeds[motionIntensity];
 	}, [motionIntensity]);
 
-	const snowParticles = useMemo<Particle[]>(() => {
+	/**
+	 * One set of particles, not four.
+	 *
+	 * Snow, blossom, embers and leaves were four arrays built by four
+	 * near-identical `useMemo`s that differed in a handful of constants. The
+	 * constants are in PARTICLE_SHAPE and this is the one array.
+	 */
+	const particles = useMemo<AmbientParticle[]>(() => {
+		const shape = PARTICLE_SHAPE[season];
+
 		return Array.from({ length: particleCount }, (_, i) => ({
 			id: i,
-			x: Math.random() * 100,
-			size: 2 + Math.random() * 3,
-			delay: Math.random() * 10,
-			duration: 8 + Math.random() * 12,
-			opacity: 0.3 + Math.random() * 0.4
+			x: 4 + Math.random() * 92,
+			size: shape.size[0] + Math.random() * shape.size[1],
+			// Short delays: at up to fifteen seconds the scene took the better
+			// part of a minute to fill and never looked continuous.
+			delay: Math.random() * 7,
+			duration: shape.duration[0] + Math.random() * shape.duration[1],
+			opacity: 0.5 + Math.random() * 0.45,
+			drift: (Math.random() - 0.5) * 2 * shape.drift,
+			spin: Math.round((Math.random() - 0.3) * 540)
 		}));
-	}, [particleCount]);
+	}, [particleCount, season]);
 
-	const leaves = useMemo<Leaf[]>(() => {
-		return Array.from({ length: particleCount }, (_, i) => ({
-			id: i,
-			x: 6 + Math.random() * 88,
-			size: 10 + Math.random() * 10,
-			// Was up to 15s of delay on a 15-35s fall, so the scene took the
-			// better part of a minute to fill and never looked continuous.
-			delay: Math.random() * 8,
-			duration: 12 + Math.random() * 12,
-			opacity: 0.55 + Math.random() * 0.35,
-			rotation: Math.random() * 360
-		}));
-	}, [particleCount]);
-
-	// Bigger and more opaque than the 1-3px specks these were, because they are
-	// petals now rather than pollen and a 2px oval is indistinguishable from
-	// the snow.
-	const springParticles = useMemo<Particle[]>(() => {
-		return Array.from({ length: particleCount }, (_, i) => ({
-			id: i,
-			x: Math.random() * 100,
-			size: 3 + Math.random() * 4,
-			delay: Math.random() * 8,
-			duration: 9 + Math.random() * 9,
-			opacity: 0.5 + Math.random() * 0.4
-		}));
-	}, [particleCount]);
-
-	/** Sparks off a fire: fewer and slower than snow, and each carries its own
-	    sideways drift so they do not rise in parallel lines. */
-	const embers = useMemo<Ember[]>(() => {
-		return Array.from({ length: particleCount }, (_, i) => ({
-			id: i,
-			x: 8 + Math.random() * 84,
-			size: 2 + Math.random() * 3,
-			delay: Math.random() * 12,
-			duration: 9 + Math.random() * 10,
-			opacity: 0.45 + Math.random() * 0.45,
-			drift: -40 + Math.random() * 80
-		}));
-	}, [particleCount]);
-
-	return {
-		isPaused,
-		particleCount,
-		speedMultiplier,
-		snowParticles,
-		leaves,
-		springParticles,
-		embers
-	};
+	return { isPaused, particleCount, speedMultiplier, particles };
 };
