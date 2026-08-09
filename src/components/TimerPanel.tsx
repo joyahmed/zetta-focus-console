@@ -84,7 +84,7 @@ export default function TimerPanel({
 				/>
 			</Suspense>
 
-			<div className='relative w-[12dvw] xl:w-64 aspect-square flex items-center justify-center my-6'>
+			<div className='relative w-52 xl:w-64 aspect-square shrink-0 flex items-center justify-center my-4'>
 				<Suspense fallback={null}>
 					<TimerRing
 						{...{
