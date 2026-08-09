@@ -1,3 +1,13 @@
+/** Shared */
+
+interface IconProps {
+	className?: string;
+}
+
+interface StrokeIconProps extends IconProps {
+	children: React.ReactNode;
+}
+
 interface AppPanelProps {
 	appState: AppState;
 	processCommand: (command: string) => Promise<string>;
@@ -195,6 +205,28 @@ interface Profile {
 	sound_file: string;
 }
 
+interface SelectOption {
+	value: string;
+	label: string;
+}
+
+interface LabelledSelectProps {
+	label: string;
+	value: string;
+	options: SelectOption[];
+	onChange: (value: string) => void;
+}
+
+interface NumberInputProps {
+	value: number;
+	onChange: (value: number) => void;
+	min: number;
+	max: number;
+	label: string;
+	step?: number;
+	precision?: number;
+}
+
 interface ProfileModalProps {
 	isOpen: boolean;
 	onClose: () => void;
@@ -226,6 +258,26 @@ interface Profile {
 	long_break_duration: number;
 	glow_color: string;
 	is_preset: boolean;
+}
+
+interface DetailRowProps {
+	label: string;
+	value: string;
+	capitalize?: boolean;
+}
+
+/** One of the panel's footer buttons. The Tailwind classes are held whole
+    rather than composed from a colour name, because the JIT scanner only sees
+    class names it can read literally in the source. */
+interface ProfileAction {
+	key: 'create' | 'edit';
+	label: string;
+	Icon: (props: IconProps) => React.JSX.Element;
+	/** Border and background, including hover. */
+	frame: string;
+	/** Gradient origin for the wash that rises on hover. */
+	wash: string;
+	text: string;
 }
 
 interface ProfilePanelProps {
@@ -264,20 +316,23 @@ interface SettingsPanelProps {
 	onVoiceToggle?: () => void;
 }
 
-/** Sound Control */
-interface SoundControlProps {
-	isPlaying: boolean;
-	isMuted: boolean;
-	volume: number;
-	currentSound: string | null;
-}
-
 /** StatsPanelProps  */
 interface Stats {
 	sessions_today: number;
 	total_focus_minutes: number;
 	current_streak: number;
 	last_session_duration: number;
+}
+
+/** One of the four headline cards at the top of the stats panel. `read` picks
+    the field so the card is pure data — nothing about it is written twice. */
+interface StatCard {
+	label: string;
+	unit: string;
+	/** Tailwind text colour for the watermark icon. */
+	tone: string;
+	Icon: (props: IconProps) => React.JSX.Element;
+	read: (stats: Stats) => number;
 }
 
 interface StatsPanelProps {

@@ -1,6 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { commandGroups } from '../configs/modal-config';
 
+/** The little bordered key. Written once for the four places this modal shows
+    one — ESC in the header, UP and DOWN in the footer. */
+const KeyCap = ({ children }: { children: React.ReactNode }) => (
+	<span className='help-modal-white px-1.5 py-0.5 bg-zetta-bg rounded border border-zetta-border text-zetta-text-muted'>
+		{children}
+	</span>
+);
+
 const HelpModal = ({ isOpen, onClose }: HelpModalProps) => {
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const listRef = useRef<HTMLDivElement>(null);
@@ -79,9 +87,7 @@ const HelpModal = ({ isOpen, onClose }: HelpModalProps) => {
 						Commands
 					</h2>
 					<div className='flex items-center gap-2 text-xs text-zetta-text-secondary'>
-						<span className='help-modal-white px-1.5 py-0.5 bg-zetta-bg rounded border border-zetta-border text-zetta-text-muted'>
-							ESC
-						</span>
+						<KeyCap>ESC</KeyCap>
 						<span>to close</span>
 					</div>
 				</div>
@@ -143,12 +149,9 @@ const HelpModal = ({ isOpen, onClose }: HelpModalProps) => {
 				<div className='px-4 py-3 border-t border-zetta-border flex items-center justify-between text-xs text-zetta-text-secondary'>
 					<div className='flex items-center gap-4'>
 						<span className='flex items-center gap-1'>
-							<span className='help-modal-white px-1.5 py-0.5 bg-zetta-bg rounded border border-zetta-border text-zetta-text-muted'>
-								UP
-							</span>
-							<span className='help-modal-white px-1.5 py-0.5 bg-zetta-bg rounded border border-zetta-border text-zetta-text-muted'>
-								DOWN
-							</span>
+							{['UP', 'DOWN'].map(key => (
+								<KeyCap key={key}>{key}</KeyCap>
+							))}
 							<span>navigate</span>
 						</span>
 					</div>

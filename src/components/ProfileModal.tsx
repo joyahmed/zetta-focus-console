@@ -1,105 +1,29 @@
 import { useEffect, useState } from 'react';
+import LabelledSelect from './profile-modal/LabelledSelect';
+import NumberInput from './profile-modal/NumberInput';
 
-// Number input with increment/decrement buttons
-const NumberInput = ({
-	value,
-	onChange,
-	min,
-	max,
-	label,
-	step = 1,
-	precision = 0
-}: {
-	value: number;
-	onChange: (value: number) => void;
-	min: number;
-	max: number;
-	label: string;
-	step?: number;
-	precision?: number;
-}) => {
-	const clampValue = (nextValue: number) => {
-		const clamped = Math.min(max, Math.max(min, nextValue));
-		return Number(clamped.toFixed(precision));
-	};
+/** Everything the three dropdowns offer. They were twelve hand-written
+    <option> tags across three <select>s; adding a soundscape meant finding the
+    right block rather than adding a line. */
+const SEASONS: SelectOption[] = [
+	{ value: 'winter', label: '❄️ Winter' },
+	{ value: 'spring', label: '🌸 Spring' },
+	{ value: 'summer', label: '☀️ Summer' },
+	{ value: 'autumn', label: '🍂 Autumn' }
+];
 
-	const handleDecrement = () => {
-		if (value > min) onChange(clampValue(value - step));
-	};
+const INTENSITIES: SelectOption[] = [
+	{ value: 'low', label: 'Low' },
+	{ value: 'medium', label: 'Medium' },
+	{ value: 'high', label: 'High' }
+];
 
-	const handleIncrement = () => {
-		if (value < max) onChange(clampValue(value + step));
-	};
-
-	const handleManualChange = (
-		e: React.ChangeEvent<HTMLInputElement>
-	) => {
-		const raw = e.target.value;
-		if (raw === '') return;
-
-		const parsed = Number(raw);
-		if (Number.isNaN(parsed)) return;
-
-		onChange(clampValue(parsed));
-	};
-
-	return (
-		<div className='flex flex-col gap-1.5'>
-			<label className='text-xs text-zetta-text-secondary font-medium'>
-				{label}
-			</label>
-			<div className='flex items-center gap-1'>
-				<button
-					type='button'
-					onClick={handleDecrement}
-					disabled={value <= min}
-					className='profile-modal-white w-8 h-8 flex items-center justify-center bg-zetta-bg border border-zetta-border rounded-l text-zetta-text-secondary hover:text-zetta-text hover:bg-zetta-panel transition-all disabled:opacity-40 disabled:cursor-not-allowed'
-				>
-					<svg
-						xmlns='http://www.w3.org/2000/svg'
-						className='h-3.5 w-3.5'
-						viewBox='0 0 20 20'
-						fill='currentColor'
-					>
-						<path
-							fillRule='evenodd'
-							d='M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z'
-							clipRule='evenodd'
-						/>
-					</svg>
-				</button>
-				<input
-					type='number'
-					min={min}
-					max={max}
-					step={step}
-					value={value}
-					onChange={handleManualChange}
-					className='profile-modal-white flex-1 h-8 bg-zetta-bg border-t border-b border-zetta-border text-sm text-zetta-text font-mono font-medium text-center focus:outline-none focus:border-zetta-neon focus:ring-1 focus:ring-zetta-neon/30'
-				/>
-				<button
-					type='button'
-					onClick={handleIncrement}
-					disabled={value >= max}
-					className='profile-modal-white w-8 h-8 flex items-center justify-center bg-zetta-bg border border-zetta-border rounded-r text-zetta-text-secondary hover:text-zetta-text hover:bg-zetta-panel transition-all disabled:opacity-40 disabled:cursor-not-allowed'
-				>
-					<svg
-						xmlns='http://www.w3.org/2000/svg'
-						className='h-3.5 w-3.5'
-						viewBox='0 0 20 20'
-						fill='currentColor'
-					>
-						<path
-							fillRule='evenodd'
-							d='M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z'
-							clipRule='evenodd'
-						/>
-					</svg>
-				</button>
-			</div>
-		</div>
-	);
-};
+const SOUNDS: SelectOption[] = [
+	{ value: 'fireplace', label: '🔥 Fireplace Crackling' },
+	{ value: 'soft_rain', label: '🌧️ Soft Rain' },
+	{ value: 'light_wind', label: '💨 Light Wind' },
+	{ value: 'rain_window', label: '☔ Rain on Window' }
+];
 
 const ProfileModal = ({
 	isOpen,
@@ -121,6 +45,47 @@ const ProfileModal = ({
 
 	const secondsToMinutes = (seconds: number) =>
 		Number((seconds / 60).toFixed(2));
+
+	/** The four steppers, as data. Three of them are minute durations with
+	    identical bounds; only the label, the value and its setter differ. */
+	const intervals: NumberInputProps[] = [
+		{
+			label: 'Focus',
+			value: focusMin,
+			onChange: setFocusMin,
+			min: 0.5,
+			max: 180,
+			step: 0.5,
+			precision: 2
+		},
+		{
+			label: 'Short',
+			value: shortBreakMin,
+			onChange: setShortBreakMin,
+			min: 0.5,
+			max: 60,
+			step: 0.5,
+			precision: 2
+		},
+		{
+			label: 'Long',
+			value: longBreakMin,
+			onChange: setLongBreakMin,
+			min: 0.5,
+			max: 60,
+			step: 0.5,
+			precision: 2
+		},
+		{
+			label: 'Sessions',
+			value: sessionsPerCycle,
+			onChange: setSessionsPerCycle,
+			min: 1,
+			max: 20,
+			step: 1,
+			precision: 0
+		}
+	];
 
 	// Populate form when editing
 	useEffect(() => {
@@ -304,42 +269,9 @@ const ProfileModal = ({
 							Time Intervals
 						</h3>
 						<div className='profile-modal-white grid grid-cols-4 gap-2 bg-zetta-panel rounded-lg p-3 border border-zetta-border'>
-							<NumberInput
-								label='Focus'
-								value={focusMin}
-								onChange={setFocusMin}
-								min={0.5}
-								max={180}
-								step={0.5}
-								precision={2}
-							/>
-							<NumberInput
-								label='Short'
-								value={shortBreakMin}
-								onChange={setShortBreakMin}
-								min={0.5}
-								max={60}
-								step={0.5}
-								precision={2}
-							/>
-							<NumberInput
-								label='Long'
-								value={longBreakMin}
-								onChange={setLongBreakMin}
-								min={0.5}
-								max={60}
-								step={0.5}
-								precision={2}
-							/>
-							<NumberInput
-								label='Sessions'
-								value={sessionsPerCycle}
-								onChange={setSessionsPerCycle}
-								min={1}
-								max={20}
-								step={1}
-								precision={0}
-							/>
+							{intervals.map(interval => (
+								<NumberInput key={interval.label} {...interval} />
+							))}
 						</div>
 					</div>
 
@@ -352,57 +284,33 @@ const ProfileModal = ({
 						<div className='profile-modal-white bg-zetta-panel rounded-lg p-3 space-y-3 border border-zetta-border'>
 							{/* Season & Intensity */}
 							<div className='grid grid-cols-2 gap-3'>
-								<div>
-									<label className='block text-xs text-zetta-text-secondary mb-1.5 font-medium'>
-										Seasonal Theme
-									</label>
-									<select
-										value={season}
-										onChange={e => setSeason(e.target.value)}
-										className='profile-modal-white w-full px-3 py-2 bg-zetta-bg border border-zetta-border rounded text-sm text-zetta-text focus:outline-none focus:border-zetta-neon focus:ring-1 focus:ring-zetta-neon/30 transition-all'
-									>
-										<option value='winter'>❄️ Winter</option>
-										<option value='spring'>🌸 Spring</option>
-										<option value='summer'>☀️ Summer</option>
-										<option value='autumn'>🍂 Autumn</option>
-									</select>
-								</div>
-								<div>
-									<label className='block text-xs text-zetta-text-secondary mb-1.5 font-medium'>
-										Motion Intensity
-									</label>
-									<select
-										value={intensity}
-										onChange={e => setIntensity(e.target.value)}
-										className='profile-modal-white w-full px-3 py-2 bg-zetta-bg border border-zetta-border rounded text-sm text-zetta-text focus:outline-none focus:border-zetta-neon focus:ring-1 focus:ring-zetta-neon/30 transition-all'
-									>
-										<option value='low'>Low</option>
-										<option value='medium'>Medium</option>
-										<option value='high'>High</option>
-									</select>
-								</div>
+								<LabelledSelect
+									{...{
+										label: 'Seasonal Theme',
+										value: season,
+										options: SEASONS,
+										onChange: setSeason
+									}}
+								/>
+								<LabelledSelect
+									{...{
+										label: 'Motion Intensity',
+										value: intensity,
+										options: INTENSITIES,
+										onChange: setIntensity
+									}}
+								/>
 							</div>
 
 							{/* Sound */}
-							<div>
-								<label className='block text-xs text-zetta-text-secondary mb-1.5 font-medium'>
-									Ambient Soundscape
-								</label>
-								<select
-									value={sound}
-									onChange={e => setSound(e.target.value)}
-									className='profile-modal-white w-full px-3 py-2 bg-zetta-bg border border-zetta-border rounded text-sm text-zetta-text focus:outline-none focus:border-zetta-neon focus:ring-1 focus:ring-zetta-neon/30 transition-all'
-								>
-									<option value='fireplace'>
-										🔥 Fireplace Crackling
-									</option>
-									<option value='soft_rain'>🌧️ Soft Rain</option>
-									<option value='light_wind'>💨 Light Wind</option>
-									<option value='rain_window'>
-										☔ Rain on Window
-									</option>
-								</select>
-							</div>
+							<LabelledSelect
+								{...{
+									label: 'Ambient Soundscape',
+									value: sound,
+									options: SOUNDS,
+									onChange: setSound
+								}}
+							/>
 						</div>
 					</div>
 

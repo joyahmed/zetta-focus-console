@@ -1,3 +1,45 @@
+import {
+	BarsIcon,
+	BoltIcon,
+	ChartIcon,
+	ClockIcon,
+	FlameIcon
+} from './icons';
+
+/** The four headline numbers. Written once as data because the card around
+    them was previously copied out four times — a hundred lines in which the
+    only differences were a label, a unit, an icon and which field of `stats`
+    was read. Adding a fifth statistic is now a line here. */
+const STAT_CARDS: StatCard[] = [
+	{
+		label: 'TODAY',
+		unit: 'sess',
+		tone: 'text-blue-400',
+		Icon: ClockIcon,
+		read: stats => stats.sessions_today
+	},
+	{
+		label: 'FOCUS TIME',
+		unit: 'min',
+		tone: 'text-purple-400',
+		Icon: BoltIcon,
+		read: stats => stats.total_focus_minutes
+	},
+	{
+		label: 'STREAK',
+		unit: 'days',
+		tone: 'text-orange-400',
+		Icon: FlameIcon,
+		read: stats => stats.current_streak
+	},
+	{
+		label: 'LAST',
+		unit: 'min',
+		tone: 'text-emerald-400',
+		Icon: BarsIcon,
+		read: stats => stats.last_session_duration
+	}
+];
 
 /** Unix seconds -> "2h 14m". The engine records when it started, not how long
     it has run, so the elapsed time is derived here rather than ticked. */
@@ -104,19 +146,7 @@ const StatsPanel = ({ appState }: StatsPanelProps) => {
 				<div className='flex items-center justify-between w-full shrink-0'>
 					<div className='flex items-center gap-2'>
 						<div className='p-1.5 rounded-lg bg-zetta-bg border border-zetta-border'>
-							<svg
-								xmlns='http://www.w3.org/2000/svg'
-								className='h-4 w-4 text-zetta-neon'
-								viewBox='0 0 24 24'
-								fill='none'
-								stroke='currentColor'
-								strokeWidth='2'
-								strokeLinecap='round'
-								strokeLinejoin='round'
-							>
-								<path d='M3 3v18h18' />
-								<path d='M18.7 8l-5.1 5.2-2.8-2.7L7 14.3' />
-							</svg>
+							<ChartIcon className='h-4 w-4 text-zetta-neon' />
 						</div>
 						<h2 className='text-sm font-semibold tracking-wide text-zetta-text'>
 							STATISTICS
@@ -126,115 +156,25 @@ const StatsPanel = ({ appState }: StatsPanelProps) => {
 
 				{/* Main Grid - Responsive */}
 				<div className='flex flex-wrap gap-2 w-full shrink-0'>
-					{/* Sessions Card */}
-					<div className='flex-1 basis-28 min-w-0 p-3 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
-						<div className='absolute right-1.5 top-1.5 opacity-15 group-hover:opacity-25 transition-opacity'>
-							<svg
-								xmlns='http://www.w3.org/2000/svg'
-								className='h-5 w-5 text-blue-400'
-								viewBox='0 0 24 24'
-								fill='none'
-								stroke='currentColor'
-								strokeWidth='2'
-								strokeLinecap='round'
-								strokeLinejoin='round'
-							>
-								<circle cx='12' cy='12' r='10' />
-								<polyline points='12 6 12 12 16 14' />
-							</svg>
+					{STAT_CARDS.map(({ label, unit, tone, Icon, read }) => (
+						<div
+							key={label}
+							className='flex-1 basis-28 min-w-0 p-3 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'
+						>
+							<div className='absolute right-1.5 top-1.5 opacity-15 group-hover:opacity-25 transition-opacity'>
+								<Icon className={`h-5 w-5 ${tone}`} />
+							</div>
+							<div className='text-xs text-zetta-text-muted mb-1 font-medium tracking-wide'>
+								{label}
+							</div>
+							<div className='text-2xl font-bold text-zetta-text tracking-tight flex items-baseline gap-1.5'>
+								{read(stats)}
+								<span className='text-xs font-normal text-zetta-text-muted'>
+									{unit}
+								</span>
+							</div>
 						</div>
-						<div className='text-xs text-zetta-text-muted mb-1 font-medium tracking-wide'>
-							TODAY
-						</div>
-						<div className='text-2xl font-bold text-zetta-text tracking-tight flex items-baseline gap-1.5'>
-							{stats.sessions_today}
-							<span className='text-xs font-normal text-zetta-text-muted'>
-								sess
-							</span>
-						</div>
-					</div>
-
-					{/* Focus Time Card */}
-					<div className='flex-1 basis-28 min-w-0 p-3 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
-						<div className='absolute right-1.5 top-1.5 opacity-15 group-hover:opacity-25 transition-opacity'>
-							<svg
-								xmlns='http://www.w3.org/2000/svg'
-								className='h-5 w-5 text-purple-400'
-								viewBox='0 0 24 24'
-								fill='none'
-								stroke='currentColor'
-								strokeWidth='2'
-								strokeLinecap='round'
-								strokeLinejoin='round'
-							>
-								<path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z' />
-							</svg>
-						</div>
-						<div className='text-xs text-zetta-text-muted mb-1 font-medium tracking-wide'>
-							FOCUS TIME
-						</div>
-						<div className='text-2xl font-bold text-zetta-text tracking-tight flex items-baseline gap-1.5'>
-							{stats.total_focus_minutes}
-							<span className='text-xs font-normal text-zetta-text-muted'>
-								min
-							</span>
-						</div>
-					</div>
-
-					{/* Streak Card */}
-					<div className='flex-1 basis-28 min-w-0 p-3 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
-						<div className='absolute right-1.5 top-1.5 opacity-15 group-hover:opacity-25 transition-opacity'>
-							<svg
-								xmlns='http://www.w3.org/2000/svg'
-								className='h-5 w-5 text-orange-400'
-								viewBox='0 0 24 24'
-								fill='none'
-								stroke='currentColor'
-								strokeWidth='2'
-								strokeLinecap='round'
-								strokeLinejoin='round'
-							>
-								<path d='M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' />
-								<path d='M15 11a3 3 0 11-6 0 3 3 0 016 0z' />
-							</svg>
-						</div>
-						<div className='text-xs text-zetta-text-muted mb-1 font-medium tracking-wide'>
-							STREAK
-						</div>
-						<div className='text-2xl font-bold text-zetta-text tracking-tight flex items-baseline gap-1.5'>
-							{stats.current_streak}
-							<span className='text-xs font-normal text-zetta-text-muted'>
-								days
-							</span>
-						</div>
-					</div>
-
-					{/* Last Session Card */}
-					<div className='flex-1 basis-28 min-w-0 p-3 rounded-xl border border-zetta-border bg-zetta-bg/50 hover:bg-zetta-bg transition-colors group relative overflow-hidden'>
-						<div className='absolute right-1.5 top-1.5 opacity-15 group-hover:opacity-25 transition-opacity'>
-							<svg
-								xmlns='http://www.w3.org/2000/svg'
-								className='h-5 w-5 text-emerald-400'
-								viewBox='0 0 24 24'
-								fill='none'
-								stroke='currentColor'
-								strokeWidth='2'
-								strokeLinecap='round'
-								strokeLinejoin='round'
-							>
-								<path d='M12 20v-6M6 20V10M18 20V4' />
-							</svg>
-						</div>
-						<div className='text-xs text-zetta-text-muted mb-1 font-medium tracking-wide'>
-							LAST
-						</div>
-						<div className='text-2xl font-bold text-zetta-text tracking-tight flex items-baseline gap-1.5'>
-							{stats.last_session_duration}
-							<span className='text-xs font-normal text-zetta-text-muted'>
-								min
-							</span>
-						</div>
-					</div>
+					))}
 				</div>
 
 				{/* Engine diagnostics.
