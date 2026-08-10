@@ -108,16 +108,12 @@ export const appReactivities = ({
 			})
 			.catch(console.error);
 
-			const unlisten = listen<StateEvent>('state-updated', event => {
+		// Nothing here touches the tray. This listener used to read the timer
+		// back out of the event and post it to Rust, which is the one thing
+		// the app is built not to do — Rust paints the tray from the same
+		// state it is broadcasting. See src-tauri/src/tray.rs.
+		const unlisten = listen<StateEvent>('state-updated', event => {
 			setAppState(event.payload.state);
-			// Update tray state based on timer status
-			const timer = event.payload.state.timer;
-			const strictMode = event.payload.state.strict_mode;
-			invoke('update_tray_state', {
-				status: timer.status,
-				sessionType: timer.session_type,
-				strictModeActive: strictMode?.is_active || false
-			}).catch(() => {});
 		});
 
 		// Listen for session completion events

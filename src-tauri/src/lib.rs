@@ -3,6 +3,7 @@ mod engine;
 mod sound;
 mod state;
 mod storage;
+mod tray;
 mod types;
 
 use engine::{
@@ -76,11 +77,23 @@ fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         ],
     )?;
 
+    // The tray is born wearing the session rather than the bare app icon. It
+    // has to be built with them rather than told afterwards: `set_icon` blocks
+    // on the main-thread event loop, which is not running yet. See tray.rs.
+    let (icon, tooltip) = {
+        let engine_state = app.state::<EngineState>();
+        let app_state = engine_state
+            .app_state
+            .lock()
+            .map_err(|e| format!("engine state was poisoned before startup: {e}"))?;
+        tray::initial(&app_state)
+    };
+
     let app_handle = app.clone();
     let _tray = TrayIconBuilder::with_id("main")
-        .icon(app.default_window_icon().unwrap().clone())
+        .icon(icon)
         .menu(&menu)
-        .tooltip("Zetta Focus Console - Idle")
+        .tooltip(tooltip)
         .on_menu_event(move |app, event| match event.id.as_ref() {
             "start" => {
                 let _ = app.emit("tray-action", "start");
@@ -117,37 +130,6 @@ fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
             }
         })
         .build(&app_handle)?;
-    Ok(())
-}
-
-/// Update tray icon based on timer state
-#[tauri::command]
-fn update_tray_state(
-    app_handle: AppHandle,
-    status: String,
-    session_type: String,
-    strict_mode_active: Option<bool>,
-) -> Result<(), String> {
-    let is_strict = strict_mode_active.unwrap_or(false);
-
-    let tooltip = match (status.as_str(), session_type.as_str(), is_strict) {
-        ("running", "focus", true) => "Zetta Focus Console - Strict Mode",
-        ("running", "focus", false) => "Zetta Focus Console - Focus",
-        ("running", "short_break", _) | ("running", "long_break", _) => {
-            "Zetta Focus Console - Break"
-        }
-        ("paused", _, _) => "Zetta Focus Console - Paused",
-        ("completed", _, _) => "Zetta Focus Console - Completed",
-        _ => "Zetta Focus Console - Idle",
-    };
-
-    if let Some(tray) = app_handle.tray_by_id("main") {
-        let _ = tray.set_tooltip(Some(tooltip));
-
-        // Note: Changing the actual tray icon color would require different icon assets
-        // For now, we just update the tooltip to reflect strict mode
-    }
-
     Ok(())
 }
 
@@ -213,8 +195,6 @@ pub fn run() {
             set_total_sessions,
             execute_command,
             tick_timer,
-            // Tray commands
-            update_tray_state,
             // Terminal history commands
             get_terminal_history,
             push_terminal_history,

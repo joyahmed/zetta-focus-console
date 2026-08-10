@@ -15,6 +15,22 @@ use tauri::{AppHandle, Emitter, State};
 // TAURI COMMANDS
 // ============================================================================
 
+/// Hand the new state to everything that renders it.
+///
+/// The tray used to be told about the session by the frontend, which read the
+/// state out of an event and posted it back to Rust — the one thing the app is
+/// built not to do. It reads the same state directly now, and the two surfaces
+/// cannot disagree because there is one call site for both.
+fn publish(app_handle: &AppHandle, app_state: &AppState) {
+    let _ = app_handle.emit(
+        "state-updated",
+        StateEvent {
+            state: app_state.clone(),
+        },
+    );
+    crate::tray::apply(app_handle, app_state);
+}
+
 #[tauri::command]
 pub fn get_state(state: State<EngineState>) -> Result<AppState, String> {
     let app_state = state.app_state.lock().map_err(|e| e.to_string())?;
@@ -42,12 +58,7 @@ pub fn set_theme(
     app_state.theme = theme.clone();
     let _ = app_state.save_preferences();
 
-    let _ = app_handle.emit(
-        "state-updated",
-        StateEvent {
-            state: app_state.clone(),
-        },
-    );
+    publish(&app_handle, &app_state);
 
     Ok(format!("Theme set to {}", theme))
 }
@@ -69,12 +80,7 @@ pub fn set_total_sessions(
         app_state.timer.current_session = 1;
     }
 
-    let _ = app_handle.emit(
-        "state-updated",
-        StateEvent {
-            state: app_state.clone(),
-        },
-    );
+    publish(&app_handle, &app_state);
 
     Ok(format!("Total sessions set to {}", total_sessions))
 }
@@ -112,12 +118,7 @@ pub fn execute_command(
         let _ = app_state.save_preferences();
     }
 
-    let _ = app_handle.emit(
-        "state-updated",
-        StateEvent {
-            state: app_state.clone(),
-        },
-    );
+    publish(&app_handle, &app_state);
 
     Ok(result)
 }
@@ -1633,12 +1634,7 @@ pub fn tick_timer(state: State<EngineState>, app_handle: AppHandle) -> Result<()
 
         sync_sound_output_with_timer(&mut app_state, &mut sound_manager);
 
-        let _ = app_handle.emit(
-            "state-updated",
-            StateEvent {
-                state: app_state.clone(),
-            },
-        );
+        publish(&app_handle, &app_state);
     }
 
     Ok(())
