@@ -105,6 +105,11 @@ free and open source.
   different backdrop opacities, one without a blur, and three unrelated widths.
 - Application memory is reported with a fraction — 18.6 MB was being rounded
   and displayed as "18 MB" — and system memory switches to GB above 1024 MB.
+- **Windows ships the NSIS installer only.** The build also produced an `.msi`,
+  and Windows draws every `.msi` with a fixed icon out of `msiexec.exe` — the
+  file type has no way to carry one of its own, so that download was always
+  going to look unbranded next to the `.exe`. macOS and Linux are unchanged;
+  the narrowing is a `tauri.windows.conf.json` beside the main config.
 
 ### Removed
 
@@ -165,3 +170,8 @@ free and open source.
 - `override` and `status` reported the session override in seconds — a
   `timer 50m` came back as "Focus: 3000s" — after every other place that prints
   it had switched to minutes.
+- **The Windows installer carries the app's icon.** `bundle` set `icon`, which
+  is what gets embedded in the `.exe`, but there was no `windows.nsis` block —
+  so the installer itself fell back to the stock NSIS graphic, and the first
+  thing anyone saw of the app was a generic setup icon. `installerIcon` and
+  `uninstallerIcon` now point at the same `icon.ico` as everything else.

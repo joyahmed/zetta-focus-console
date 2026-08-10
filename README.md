@@ -11,7 +11,7 @@ Type <code>timer 50m break 10m loop 3</code>, press enter, and get back to work.
   <a href="https://github.com/joyahmed/zetta-focus-console/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/joyahmed/zetta-focus-console/actions/workflows/ci.yml/badge.svg"></a>
   <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-8b5cf6"></a>
   <img alt="Windows, macOS and Linux" src="https://img.shields.io/badge/Windows%20%7C%20macOS%20%7C%20Linux-334155">
-  <img alt="4.9 MB installer" src="https://img.shields.io/badge/installer-4.9%20MB-06b6d4">
+  <img alt="5.0 MB installer" src="https://img.shields.io/badge/installer-5.0%20MB-06b6d4">
   <img alt="No network" src="https://img.shields.io/badge/network-none-22c55e">
 </p>
 
@@ -33,7 +33,7 @@ settings screen, the timer state lives in Rust rather than in the browser, and
 the window behind it drifts with the season — snow in winter, blossom in
 spring, falling leaves in autumn — with an ambient loop underneath it.
 
-Free, MIT, no account, no telemetry, nothing leaves your machine. A 4.9 MB
+Free, MIT, no account, no telemetry, nothing leaves your machine. A 5.0 MB
 installer.
 
 ---

@@ -24,7 +24,7 @@ The engine is done and the app is usable every day.
 - A tray icon that carries the session — a ring that fills as the run goes on,
   coloured for focus, break, strict and idle
 - A week of history in the statistics panel, and in `stats`
-- 4.9 MB installer, one JSON file of state, no network
+- 5.0 MB installer, one JSON file of state, no network
 
 ---
 

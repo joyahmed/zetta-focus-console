@@ -246,7 +246,7 @@ handing over. The first build can go out by hand.
 - [x] **No Intel macOS job.** The plan said universal-on-arm64; the workflow
       ships Apple silicon only, which is a change worth writing down. Both
       avoid the retired image. Universal doubles the download for every Mac
-      user to serve the shrinking half, in an app whose pitch includes a 4.9 MB
+      user to serve the shrinking half, in an app whose pitch includes a 5.0 MB
       installer — so it is the documented escape hatch rather than the default.
       One line in `release.yml` switches it back.
 - [x] Linux job installs `libasound2-dev` alongside `webkit2gtk`, plus
@@ -338,5 +338,5 @@ Verification, all currently clean:
 ```bash
 cd src-tauri && cargo check && cargo fmt --check && cargo test
 bun run build          # tsc --noEmit, then vite build
-bun run tauri build    # 4.9 MB NSIS installer
+bun run tauri build    # 5.0 MB NSIS installer
 ```
