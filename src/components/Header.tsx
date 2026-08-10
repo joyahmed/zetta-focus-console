@@ -1,10 +1,10 @@
-import LogoBrand from './header/Logo';
 import CommandSpotlight from './header/CommandSpotlight';
+import LogoBrand from './header/Logo';
 import ProfilePill from './header/ProfilePill';
-import VolumeControl from './header/VolumeControl';
-import ThemeToggle from './header/ThemeToggle';
 import SettingsButton from './header/SettingsButton';
 import ShortcutsMenu from './header/ShortcutsMenu';
+import ThemeToggle from './header/ThemeToggle';
+import VolumeControl from './header/VolumeControl';
 
 const Header = ({
 	activeProfileName,
