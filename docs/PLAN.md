@@ -1,10 +1,13 @@
 # Working plan
 
-The tracked checklist for getting to a first public release and what follows.
-[ROADMAP.md](../ROADMAP.md) says *what* the app should become; this says what is
-actually being worked on, in order.
+What I am working on, in the order I mean to do it, and what is left before the
+first public release. [ROADMAP.md](../ROADMAP.md) is the outward-facing version
+— what the app should become; this is the list I keep for myself, so it is
+blunter about what is unfinished and why.
 
-Tick things here as they land.
+The release machinery sits near the end on purpose: I would rather ship an app
+I am happy with by hand once than spend the run-up to it maintaining a build
+pipeline for a release that has not been cut yet.
 
 ---
 
@@ -63,17 +66,18 @@ other timer.
 - [ ] `shortcuts.png` — the shortcuts drawer. Cheap to take while the drawer
       code is already on screen, and it answers "what can I press".
 
-**Rules, so the set looks like a set.**
+**What keeps the set looking like a set:**
 
-- One window size for every shot — 1440×900, and do not resize between them.
+- One window size across all of them — 1440×900, with no resizing in between.
 - The same profile and season throughout, so the colours do not jump.
 - A plausible clock. Not `25:00` on every shot, and not `00:07`.
-- Dark first: it is the default theme and the one the app was designed in.
-- No personal profile names, no dev mode badge, and no diagnostics showing a
-  path from this machine.
-- PNG, and keep the whole directory under about 2 MB. Repository objects are
-  permanent — this project has already squashed its history once over 42 MB of
-  audio nobody could delete afterwards. Resize before committing, not after.
+- Dark first: it is the default theme and the one I designed the app in.
+- No personal profile names, no dev mode badge, and nothing in the diagnostics
+  showing a path off this machine.
+- PNG, with the whole directory under about 2 MB — resized before they are
+  committed rather than after. Repository objects are permanent, and this
+  project has already squashed its history once over 42 MB of audio that could
+  not be deleted any other way.
 
 **Then the README.** Once the images exist:
 
@@ -88,28 +92,7 @@ other timer.
 
 ---
 
-## Phase 1 — releases and CI
-
-- [ ] Add `.github/workflows/release.yml` — build on tag, three platforms,
-      attach installers to a draft release.
-- [ ] **Do not add an Intel macOS job.** GitHub is retiring the `macos-13`
-      image; a job asking for it is not scheduled at all, sits queued
-      indefinitely, and holds the whole release open because a draft cannot be
-      published until every platform lands. Build
-      `--target universal-apple-darwin` on the arm64 runner if Intel is needed.
-- [ ] Linux runners need `webkit2gtk` and `libasound2-dev`. The second is what
-      `rodio` builds against for ALSA — without it the build fails as a Rust
-      error rather than an obviously missing package.
-- [ ] Tag `v1.0.0` and cut the first release.
-- [ ] Install the built artifact on a machine that has never had the app, and
-      check the tray, the global shortcuts, and first-run defaults.
-- [ ] Add a pull-request workflow: `cargo check`, `cargo fmt --check`,
-      `tsc --noEmit`, `vite build`. All four pass today; this keeps them
-      passing.
-
----
-
-## Phase 2 — the gaps in v1
+## Phase 1 — the gaps in v1
 
 Real unfinished work, verified rather than remembered.
 
@@ -124,7 +107,7 @@ Real unfinished work, verified rather than remembered.
 
 ---
 
-## Phase 3 — tidying
+## Phase 2 — tidying
 
 Not urgent. Worth doing when touching the surrounding code anyway.
 
@@ -138,6 +121,31 @@ Not urgent. Worth doing when touching the surrounding code anyway.
       (the debug command name mismatch, the `System::new_all()` cost in
       `tick_system_stats`), the rest were never rechecked.
 - [ ] Decide whether the four ambient tracks want a fifth.
+
+---
+
+## Phase 3 — releases and CI
+
+Last, and deliberately so. Everything above is the app; this is the machinery
+for handing it over, and it is worth nothing until there is something worth
+handing over. The first build can go out by hand.
+
+- [ ] Add `.github/workflows/release.yml` — build on tag, three platforms,
+      attach installers to a draft release.
+- [ ] **No Intel macOS job.** GitHub is retiring the `macos-13` image; a job
+      asking for it is not scheduled at all, sits queued indefinitely, and
+      holds the whole release open because a draft cannot be published until
+      every platform lands. `--target universal-apple-darwin` on the arm64
+      runner covers Intel if it is ever needed.
+- [ ] Linux runners need `webkit2gtk` and `libasound2-dev`. The second is what
+      `rodio` builds against for ALSA — without it the build fails as a Rust
+      error rather than an obviously missing package.
+- [ ] Tag `v1.0.0` and cut the first release.
+- [ ] Install the built artifact on a machine that has never had the app, and
+      check the tray, the global shortcuts, and first-run defaults.
+- [ ] Add a pull-request workflow: `cargo check`, `cargo fmt --check`,
+      `tsc --noEmit`, `vite build`. All four pass today; this keeps them
+      passing once other people start sending changes.
 
 ---
 
