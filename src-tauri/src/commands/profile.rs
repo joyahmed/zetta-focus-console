@@ -1,7 +1,7 @@
 //! Profile module - Profile-related commands
 
 use crate::sound::{get_sound_data, SoundManager};
-use crate::types::{AppState, BackgroundType, MotionIntensity, Profile, Season, TimerStatus};
+use crate::types::{AppState, MotionIntensity, Profile, Season, TimerStatus};
 
 fn parse_minutes_to_seconds(raw: &str, min: f64, max: f64, label: &str) -> Result<u32, String> {
     let minutes = raw
@@ -165,7 +165,6 @@ fn create_profile(
         name: name.clone(),
         season,
         motion_intensity: intensity,
-        background_type: BackgroundType::Gradient,
         focus_duration: focus_min,
         short_break_duration: short_break_min,
         long_break_duration: long_break_min,

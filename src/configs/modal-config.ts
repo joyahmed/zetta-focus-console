@@ -109,7 +109,14 @@ export const commandGroups: CommandGroup[] = [
 		title: 'Configuration',
 		commands: [
 			{ cmd: 'config show', description: 'Show current configuration' },
-			{ cmd: 'stats', description: 'Show detailed statistics' }
+			{
+				cmd: 'stats',
+				description: 'Statistics, and how the last seven days went'
+			},
+			{
+				cmd: 'reset',
+				description: 'Restore defaults and clear the statistics'
+			}
 		]
 	},
 	{
@@ -122,6 +129,7 @@ export const commandGroups: CommandGroup[] = [
 				cmd: 'usage',
 				description: 'App usage stats (CPU, memory, uptime)'
 			},
+			{ cmd: 'app usage', description: 'Engine process memory' },
 			{ cmd: 'engine state', description: 'Engine state inspection' },
 			{ cmd: 'engine reset', description: 'Reset the engine' },
 			{ cmd: 'devmode on/off', description: 'Developer diagnostics' }

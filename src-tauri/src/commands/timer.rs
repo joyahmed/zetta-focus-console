@@ -8,7 +8,7 @@ use crate::types::{
     TimerState, TimerStatus,
 };
 use crate::EngineState;
-use sysinfo::System;
+use sysinfo::{CpuRefreshKind, MemoryRefreshKind, RefreshKind, System};
 use tauri::{AppHandle, Emitter, State};
 
 // ============================================================================
@@ -104,15 +104,7 @@ pub fn execute_command(
     // Save preferences after command execution (only for preference-modifying commands)
     let should_save = matches!(
         cmd.as_str(),
-        "devmode"
-            | "ambience"
-            | "sound"
-            | "profile"
-            | "background"
-            | "reset"
-            | "theme"
-            | "alarm"
-            | "history"
+        "devmode" | "ambience" | "sound" | "profile" | "reset" | "theme" | "alarm" | "history"
     );
     if should_save {
         let _ = app_state.save_preferences();
@@ -249,7 +241,14 @@ pub fn process_command(
     let result = match cmd {
         "help" => help_command(advanced_commands),
 
-        "focus" => focus_command(args, app_state),
+        // `focus` used to be its own start/stop/pause/resume, written before
+        // those existed as commands and never updated: `focus start` hardcoded
+        // four sessions, ignored any override, and never entered the cycle, so
+        // it ran one session and stopped. It was in no help text and nothing in
+        // the interface called it. `OverrideField::from_keyword` already reads
+        // `focus` as a synonym for `timer` inside a compound command, so it is
+        // one here too — `focus 50m` and `timer 50m` are the same thing.
+        "focus" => timer_override_command(args, app_state),
 
         "strict" => strict_command(args, app_state),
 
@@ -286,9 +285,6 @@ pub fn process_command(
         "devmode" => devmode_command(args, app_state),
 
         "ambience" => ambience_command(args, app_state),
-
-        "background" => background_command(args, app_state),
-
         "reset" => reset_command(app_state, sound_manager),
 
         "theme" => theme_command(args, app_state),
@@ -361,57 +357,6 @@ fn help_command(advanced_commands: &str) -> String {
    help                  - Show this help message{}",
         advanced_commands
     )
-}
-
-fn focus_command(args: &[&str], app_state: &mut AppState) -> String {
-    match args.first() {
-        Some(&"start") => {
-            let minutes = args
-                .get(1)
-                .and_then(|m| m.parse::<f64>().ok())
-                .unwrap_or(25.0);
-            if !minutes.is_finite() || minutes <= 0.0 {
-                return "Error: Invalid duration. Usage: focus start [minutes]".to_string();
-            }
-            let total_seconds = (minutes * 60.0).round() as u32;
-            app_state.timer = TimerState {
-                remaining_seconds: total_seconds,
-                total_seconds,
-                status: TimerStatus::Running,
-                session_type: SessionType::Focus,
-                current_session: 1,
-                total_sessions: 4,
-            };
-            format!("Starting focus session for {} minutes...", minutes)
-        }
-        Some(&"stop") => {
-            if app_state.timer.status == TimerStatus::Idle {
-                return "Error: No active session to stop.".to_string();
-            }
-            // Both halves, for the same reason as `stop`: a stale
-            // `total_seconds` makes the ring's progress nonsense.
-            app_state.timer.status = TimerStatus::Idle;
-            app_state.timer.remaining_seconds = app_state.active_profile.focus_duration;
-            app_state.timer.total_seconds = app_state.active_profile.focus_duration;
-            "Focus session stopped.".to_string()
-        }
-        Some(&"pause") => {
-            if app_state.timer.status != TimerStatus::Running {
-                return "Error: No running session to pause.".to_string();
-            }
-            app_state.timer.status = TimerStatus::Paused;
-            "Focus session paused.".to_string()
-        }
-        Some(&"resume") => {
-            if app_state.timer.status != TimerStatus::Paused {
-                return "Error: No paused session to resume.".to_string();
-            }
-            app_state.timer.status = TimerStatus::Running;
-            "Focus session resumed.".to_string()
-        }
-        _ => "Error: Unknown focus command. Usage: focus start [minutes] | stop | pause | resume"
-            .to_string(),
-    }
 }
 
 fn strict_command(args: &[&str], app_state: &mut AppState) -> String {
@@ -984,11 +929,10 @@ fn season_command(args: &[&str], app_state: &mut AppState) -> String {
 fn config_command(args: &[&str], app_state: &mut AppState) -> String {
     match args.first() {
         Some(&"show") => format!(
-            "Current Configuration:\n  Profile: {}\n  Season: {:?}\n  Motion: {:?}\n  Background: {:?}\n  Focus: {} min\n  Short Break: {} min\n  Long Break: {} min",
+            "Current Configuration:\n  Profile: {}\n  Season: {:?}\n  Motion: {:?}\n  Focus: {} min\n  Short Break: {} min\n  Long Break: {} min",
             app_state.active_profile.name,
             app_state.active_profile.season,
             app_state.active_profile.motion_intensity,
-            app_state.active_profile.background_type,
             app_state.active_profile.focus_duration / 60,
             app_state.active_profile.short_break_duration / 60,
             app_state.active_profile.long_break_duration / 60
@@ -1070,20 +1014,6 @@ fn ambience_command(args: &[&str], app_state: &mut AppState) -> String {
                 "disabled"
             }
         ),
-    }
-}
-
-fn background_command(args: &[&str], app_state: &mut AppState) -> String {
-    match args.first() {
-        Some(&"gradient") => {
-            app_state.active_profile.background_type = crate::types::BackgroundType::Gradient;
-            "Background set to: gradient".to_string()
-        }
-        Some(&"particles") => {
-            app_state.active_profile.background_type = crate::types::BackgroundType::Particles;
-            "Background set to: particles".to_string()
-        }
-        _ => format!("Background: {:?}", app_state.active_profile.background_type),
     }
 }
 
@@ -1185,9 +1115,21 @@ fn app_command(args: &[&str]) -> String {
     }
 }
 
+/// The three probes below ask `sysinfo` for exactly what they print.
+///
+/// They each built a `System::new_all()` first — the same mistake the engine
+/// was already fixed for once, where a five-second poll was snapshotting every
+/// process on the machine to read two numbers. These are on demand rather than
+/// on a timer, so it cost less, but `new_all` still walks every process, disk,
+/// network interface and temperature sensor before `refresh_memory` throws all
+/// of it away.
 fn system_command() -> String {
-    let mut sys = System::new_all();
-    sys.refresh_all();
+    let mut sys = System::new_with_specifics(
+        RefreshKind::new()
+            .with_memory(MemoryRefreshKind::everything())
+            .with_cpu(CpuRefreshKind::new()),
+    );
+    sys.refresh_memory();
     format!(
         "System Information:\n  OS: {}\n  Kernel: {}\n  Hostname: {}\n  CPU Cores: {}\n  Total Memory: {} MB\n  Used Memory: {} MB",
         System::name().unwrap_or_else(|| "Unknown".to_string()),
@@ -1200,7 +1142,8 @@ fn system_command() -> String {
 }
 
 fn memory_command() -> String {
-    let mut sys = System::new_all();
+    let mut sys =
+        System::new_with_specifics(RefreshKind::new().with_memory(MemoryRefreshKind::everything()));
     sys.refresh_memory();
     format!(
         "Memory Usage:\n  Total: {} MB\n  Used: {} MB\n  Available: {} MB\n  Usage: {:.1}%",
@@ -1212,7 +1155,13 @@ fn memory_command() -> String {
 }
 
 fn cpu_command() -> String {
-    let mut sys = System::new_all();
+    let mut sys =
+        System::new_with_specifics(RefreshKind::new().with_cpu(CpuRefreshKind::everything()));
+    // CPU usage is a delta between two refreshes, so a single snapshot reads
+    // zero on every core. This is the same trap that had the engine's own
+    // meters reporting nothing before they were given a long-lived probe.
+    sys.refresh_cpu_all();
+    std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
     sys.refresh_cpu_all();
     let cpus = sys.cpus();
     let avg_usage: f32 = cpus.iter().map(|c| c.cpu_usage()).sum::<f32>() / cpus.len() as f32;
@@ -2175,6 +2124,113 @@ mod tests {
         assert_eq!(
             history_command(&[], &mut app_state),
             "No command history yet."
+        );
+    }
+    // ------------------------------------------------------------------
+    // The two lists that describe this one
+    // ------------------------------------------------------------------
+
+    /// Synonyms and aliases that the in-app help list is allowed not to name.
+    ///
+    /// `sysinfo` and `focus` are second spellings of `system` and `timer`, and
+    /// a help list that names every spelling is longer without being more
+    /// useful. Tab completion still offers them, because there it costs a line.
+    const HELP_MAY_OMIT: &[&str] = &["sysinfo", "focus"];
+
+    /// Every top-level command, read out of the engine's own dispatch.
+    ///
+    /// Read rather than restated: a hand-kept copy of this list is a third
+    /// place to forget, which is the whole problem being tested for.
+    fn engine_commands() -> Vec<String> {
+        let source = include_str!("timer.rs");
+
+        let start = source
+            .find("let result = match cmd {")
+            .expect("the dispatch match should still open this way");
+        let region = &source[start..];
+        let end = region
+            .find("_ => format!(")
+            .expect("the dispatch match should still end with the unknown-command arm");
+
+        let mut commands = Vec::new();
+        for line in region[..end].lines() {
+            let line = line.trim();
+            if !line.starts_with('"') {
+                continue;
+            }
+            let Some((left, _)) = line.split_once("=>") else {
+                continue;
+            };
+            for word in left.split('|') {
+                let word = word.trim().trim_matches('"');
+                if !word.is_empty() {
+                    commands.push(word.to_string());
+                }
+            }
+        }
+
+        assert!(
+            commands.len() > 20,
+            "only found {} commands — the parser above has stopped matching the source",
+            commands.len()
+        );
+        commands
+    }
+
+    /// Does `listing` offer `command`, either alone or as the head of a longer
+    /// entry like `profile list`?
+    fn offers(listing: &str, command: &str) -> bool {
+        listing.contains(&format!("'{command}'")) || listing.contains(&format!("'{command} "))
+    }
+
+    fn slice_between<'a>(source: &'a str, open: &str, close: &str) -> &'a str {
+        let start = source.find(open).unwrap_or_else(|| panic!("no {open:?}"));
+        let rest = &source[start..];
+        let end = rest.find(close).unwrap_or_else(|| panic!("no {close:?}"));
+        &rest[..end]
+    }
+
+    #[test]
+    fn tab_completion_offers_every_command() {
+        let listing = slice_between(
+            include_str!("../../../src/hooks/use-terminal-modal.ts"),
+            "const COMMANDS = [",
+            "];",
+        );
+
+        let missing: Vec<String> = engine_commands()
+            .into_iter()
+            .filter(|command| !offers(listing, command))
+            .collect();
+
+        // `timer`, `break` and `loop` were all missing here — the three the app
+        // is pitched on, so the one line the README leads with was the one line
+        // Tab would not finish.
+        assert!(
+            missing.is_empty(),
+            "these commands exist but Tab does not complete them: {missing:?}"
+        );
+    }
+
+    #[test]
+    fn the_help_list_names_every_command() {
+        let listing = slice_between(
+            include_str!("../../../src/configs/modal-config.ts"),
+            "export const commandGroups",
+            "\n];",
+        );
+
+        let missing: Vec<String> = engine_commands()
+            .into_iter()
+            .filter(|command| !HELP_MAY_OMIT.contains(&command.as_str()))
+            .filter(|command| !offers(listing, command))
+            .collect();
+
+        // The list's own comment says it has to be the whole command set
+        // rather than a sample of it. It had drifted back into a sample.
+        assert!(
+            missing.is_empty(),
+            "these commands exist but `help` does not list them: {missing:?}"
         );
     }
 }

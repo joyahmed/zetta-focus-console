@@ -60,21 +60,12 @@ pub enum MotionIntensity {
     High,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "lowercase")]
-pub enum BackgroundType {
-    Gradient,
-    Particles,
-    Custom,
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Profile {
     pub id: String,
     pub name: String,
     pub season: Season,
     pub motion_intensity: MotionIntensity,
-    pub background_type: BackgroundType,
     pub focus_duration: u32,
     pub short_break_duration: u32,
     pub long_break_duration: u32,

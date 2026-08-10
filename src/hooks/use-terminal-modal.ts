@@ -2,7 +2,14 @@ import { invoke } from '@tauri-apps/api/core';
 import { KeyboardEvent, useEffect, useRef, useState } from 'react';
 
 
-// Available commands for tab completion
+/**
+ * What Tab completes.
+ *
+ * This has to be the whole command set. It was missing `timer`, `break` and
+ * `loop` — the three the app is pitched on — along with `strict`, `task`,
+ * `devmode`, `engine` and `reset`, so the one line the README leads with was
+ * the one line Tab would not finish for you.
+ */
 const COMMANDS = [
 	'help',
 	'start',
@@ -10,11 +17,27 @@ const COMMANDS = [
 	'pause',
 	'resume',
 	'status',
-	'override clear',
 	'sessions',
+	// The override, which is the reason this is a terminal at all.
+	'timer',
+	'break',
+	'loop',
+	'override clear',
+	// A second spelling of `timer`, kept because the compound parser reads it
+	// too — `break 10m focus 50m` is the same as `break 10m timer 50m`.
+	'focus',
 	'profile list',
 	'profile switch',
+	'profile create',
+	'profile edit',
+	'profile duplicate',
+	'profile delete',
 	'season',
+	'strict on',
+	'strict off',
+	'task set',
+	'task show',
+	'task clear',
 	'config show',
 	'stats',
 	'ambience on',
@@ -25,13 +48,20 @@ const COMMANDS = [
 	'sound mute',
 	'alarm on',
 	'alarm off',
-	'history',
-	'history clear',
+	'theme',
 	'system',
+	'sysinfo',
 	'memory',
 	'cpu',
 	'usage',
-	'theme',
+	'app usage',
+	'engine state',
+	'engine reset',
+	'devmode on',
+	'devmode off',
+	'reset',
+	'history',
+	'history clear',
 	'clear',
 	// Aliases (for display only)
 	's',

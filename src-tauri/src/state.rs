@@ -1,8 +1,8 @@
 //! State module - application state, persistence mapping, and state events.
 
 use crate::types::{
-    BackgroundType, CurrentTask, DayRecord, MotionIntensity, Profile, Season, SessionOverride,
-    SessionType, SoundState, Stats, StrictModeState, TimerState, TimerStatus,
+    CurrentTask, DayRecord, MotionIntensity, Profile, Season, SessionOverride, SessionType,
+    SoundState, Stats, StrictModeState, TimerState, TimerStatus,
 };
 use serde::{Deserialize, Serialize};
 
@@ -123,7 +123,6 @@ impl AppState {
             name: "Winter Deep".to_string(),
             season: Season::Winter,
             motion_intensity: MotionIntensity::Low,
-            background_type: BackgroundType::Gradient,
             focus_duration: 25 * 60,
             short_break_duration: 5 * 60,
             long_break_duration: 15 * 60,
@@ -141,7 +140,6 @@ impl AppState {
                 name: "Summer Energy".to_string(),
                 season: Season::Summer,
                 motion_intensity: MotionIntensity::High,
-                background_type: BackgroundType::Particles,
                 focus_duration: 25 * 60,
                 short_break_duration: 5 * 60,
                 long_break_duration: 15 * 60,
@@ -156,7 +154,6 @@ impl AppState {
                 name: "Spring Bloom".to_string(),
                 season: Season::Spring,
                 motion_intensity: MotionIntensity::Medium,
-                background_type: BackgroundType::Gradient,
                 focus_duration: 25 * 60,
                 short_break_duration: 5 * 60,
                 long_break_duration: 15 * 60,
@@ -171,7 +168,6 @@ impl AppState {
                 name: "Autumn Calm".to_string(),
                 season: Season::Autumn,
                 motion_intensity: MotionIntensity::Low,
-                background_type: BackgroundType::Gradient,
                 focus_duration: 25 * 60,
                 short_break_duration: 5 * 60,
                 long_break_duration: 15 * 60,

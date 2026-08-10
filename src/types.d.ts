@@ -45,14 +45,13 @@ interface TimerState {
 	total_sessions: number;
 }
 
-/** The Rust enums behind season, motion_intensity and background_type all
-    serialise lowercase, so they arrive as these exact strings. */
+/** The Rust enums behind season and motion_intensity both serialise
+    lowercase, so they arrive as these exact strings. */
 interface Profile {
 	id: string;
 	name: string;
 	season: 'spring' | 'summer' | 'autumn' | 'winter';
 	motion_intensity: 'low' | 'medium' | 'high';
-	background_type: 'gradient' | 'particles' | 'custom';
 	focus_duration: number;
 	short_break_duration: number;
 	long_break_duration: number;
