@@ -14,7 +14,7 @@ Work in progress is tracked in [docs/PLAN.md](docs/PLAN.md).
 
 ---
 
-## [1.0.0] — unreleased
+## [1.0.0] — 2026-08-11
 
 First public release. The engine, the terminal and the four seasons were built
 before this point; what follows is what changed in preparing it to be released
