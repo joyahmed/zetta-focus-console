@@ -4,8 +4,8 @@ use super::parser::{format_time, parse_command_with_quotes, parse_duration};
 use crate::sound::get_sound_data;
 use crate::state::{AppState, AppStateExt, StateEvent};
 use crate::types::{
-    CurrentTask, SessionOverride, SessionType, Stats, StrictModeState, TaskCategory, TimerState,
-    TimerStatus,
+    CurrentTask, DayRecord, SessionOverride, SessionType, Stats, StrictModeState, TaskCategory,
+    TimerState, TimerStatus,
 };
 use crate::EngineState;
 use sysinfo::System;
@@ -196,6 +196,16 @@ pub fn import_terminal_history(
 
     app_state.save_preferences()?;
     Ok(app_state.terminal_history.clone())
+}
+
+// ============================================================================
+// SESSION HISTORY
+// ============================================================================
+
+#[tauri::command]
+pub fn get_session_history(state: State<EngineState>) -> Result<Vec<DayRecord>, String> {
+    let app_state = state.app_state.lock().map_err(|e| e.to_string())?;
+    Ok(app_state.session_history.clone())
 }
 
 // ============================================================================
@@ -988,13 +998,44 @@ fn config_command(args: &[&str], app_state: &mut AppState) -> String {
 }
 
 fn stats_command(app_state: &mut AppState) -> String {
-    format!(
+    let mut out = format!(
         "Statistics:\n  Sessions Today: {}\n  Total Focus: {} minutes\n  Current Streak: {} days\n  Last Session: {} minutes",
         app_state.stats.sessions_today,
         app_state.stats.total_focus_minutes,
         app_state.stats.current_streak,
         app_state.stats.last_session_duration
-    )
+    );
+
+    // The running totals cannot say anything about a week, which is the span a
+    // person actually judges their own work over.
+    let week = &app_state.session_history[app_state.session_history.len().saturating_sub(7)..];
+
+    if !week.is_empty() {
+        let sessions: u32 = week.iter().map(|day| day.sessions).sum();
+        let minutes: u32 = week.iter().map(|day| day.focus_minutes).sum();
+        let best = week.iter().max_by_key(|day| day.focus_minutes);
+
+        out.push_str(&format!(
+            "\n\nLast {} recorded {}:\n  Sessions: {}\n  Focus: {} minutes\n  Daily average: {} minutes",
+            week.len(),
+            if week.len() == 1 { "day" } else { "days" },
+            sessions,
+            minutes,
+            minutes / week.len() as u32
+        ));
+
+        if let Some(day) = best {
+            out.push_str(&format!(
+                "\n  Best day: {} ({} minutes over {} session{})",
+                day.date,
+                day.focus_minutes,
+                day.sessions,
+                if day.sessions == 1 { "" } else { "s" }
+            ));
+        }
+    }
+
+    out
 }
 
 fn devmode_command(args: &[&str], app_state: &mut AppState) -> String {
@@ -1059,12 +1100,10 @@ fn reset_command(
         total_sessions: 4,
     };
     app_state.session_override = None;
-    app_state.stats = Stats {
-        sessions_today: 0,
-        total_focus_minutes: 0,
-        current_streak: 0,
-        last_session_duration: 0,
-    };
+    app_state.stats = Stats::default();
+    // With the totals gone, a week of history left behind would be a panel
+    // reporting five sessions this week next to none today.
+    app_state.session_history.clear();
     app_state.dev_mode = false;
     app_state.ambience_enabled = true;
     app_state.sound_state.play_ambient_sound = false;
@@ -1131,12 +1170,8 @@ fn engine_command(args: &[&str], app_state: &mut AppState) -> String {
                 total_sessions: 4,
             };
             app_state.session_override = None;
-            app_state.stats = Stats {
-                sessions_today: 0,
-                total_focus_minutes: 0,
-                current_streak: 0,
-                last_session_duration: 0,
-            };
+            app_state.stats = Stats::default();
+            app_state.session_history.clear();
             "Engine reset to defaults.".to_string()
         }
         _ => "Error: Usage: engine state | reset".to_string(),

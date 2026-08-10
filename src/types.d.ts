@@ -71,6 +71,25 @@ interface Stats {
 	last_session_duration: number;
 }
 
+/** One day's totals, as the engine stores them. Only days with a completed
+    session have a record; see `useSessionHistory` for the filled week. */
+interface DayRecord {
+	/** Local date, YYYY-MM-DD. */
+	date: string;
+	sessions: number;
+	focus_minutes: number;
+}
+
+/** One column of the week strip, gaps included. */
+interface SessionDay {
+	date: string;
+	/** Single-letter weekday initial. */
+	weekday: string;
+	sessions: number;
+	focusMinutes: number;
+	isToday: boolean;
+}
+
 interface SoundState {
 	current_sound: string | null;
 	play_ambient_sound: boolean;

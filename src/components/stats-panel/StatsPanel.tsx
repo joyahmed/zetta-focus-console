@@ -6,6 +6,7 @@ import {
 	FlameIcon
 } from './icons';
 import { useStatsPanel } from '../../hooks/use-stats-panel';
+import WeekStrip from './WeekStrip';
 
 /** The four headline numbers. Written once as data because the card around
     them was previously copied out four times — a hundred lines in which the
@@ -89,6 +90,8 @@ const StatsPanel = ({ appState }: StatsPanelProps) => {
 						</div>
 					))}
 				</div>
+
+				<WeekStrip />
 
 				{/* Engine diagnostics.
 				    This used to show four fields and then stretch to fill the

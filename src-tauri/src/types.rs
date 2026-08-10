@@ -99,6 +99,20 @@ pub struct Stats {
     pub last_session_duration: u32,
 }
 
+/// What one day came to.
+///
+/// The statistics were four running totals, which can say you have done three
+/// sessions today and a hundred and forty minutes in all, and nothing whatever
+/// about the week those minutes fell in. A day is the smallest unit worth
+/// keeping: finer than that is a log, and this is not an analytics product.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct DayRecord {
+    /// Local date, YYYY-MM-DD.
+    pub date: String,
+    pub sessions: u32,
+    pub focus_minutes: u32,
+}
+
 // ============================================================================
 // SOUND/SETTINGS TYPES
 // ============================================================================

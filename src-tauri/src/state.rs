@@ -1,10 +1,18 @@
 //! State module - application state, persistence mapping, and state events.
 
 use crate::types::{
-    BackgroundType, CurrentTask, MotionIntensity, Profile, Season, SessionOverride, SessionType,
-    SoundState, Stats, StrictModeState, TimerState, TimerStatus,
+    BackgroundType, CurrentTask, DayRecord, MotionIntensity, Profile, Season, SessionOverride,
+    SessionType, SoundState, Stats, StrictModeState, TimerState, TimerStatus,
 };
 use serde::{Deserialize, Serialize};
+
+/// How many days of history to keep.
+///
+/// The panel shows a week. Ninety days is what makes the week honest — a
+/// fortnight to compare it against, and enough beyond that for a month's total
+/// to mean something — while staying a few kilobytes of a file that is already
+/// carrying every custom profile.
+const SESSION_HISTORY_DAYS: usize = 90;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Preferences {
@@ -40,6 +48,9 @@ pub struct Preferences {
     /// anything that cleared it took the history with it.
     #[serde(default)]
     pub terminal_history: Vec<String>,
+    /// One entry per day that had a completed focus session, oldest first.
+    #[serde(default)]
+    pub session_history: Vec<DayRecord>,
 }
 
 impl Default for Preferences {
@@ -58,6 +69,7 @@ impl Default for Preferences {
             stats: Stats::default(),
             last_session_date: String::new(),
             terminal_history: vec![],
+            session_history: vec![],
         }
     }
 }
@@ -88,6 +100,14 @@ pub struct AppState {
     /// once when it opens.
     #[serde(skip)]
     pub terminal_history: Vec<String>,
+    /// One entry per day that had a completed focus session, oldest first.
+    ///
+    /// Skipped for the same reason as the console history: ninety days of it
+    /// has no business being re-serialised to the webview once a second when it
+    /// changes a few times a day. The panel asks for it when it mounts and
+    /// again whenever a session completes.
+    #[serde(skip)]
+    pub session_history: Vec<DayRecord>,
 }
 
 impl Default for AppState {
@@ -185,6 +205,7 @@ impl AppState {
             alarm_enabled: false,
             last_session_date: String::new(),
             terminal_history: Vec::new(),
+            session_history: Vec::new(),
             app_start_time: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()
@@ -249,6 +270,7 @@ pub trait AppStateExt {
     fn load_preferences(&mut self);
     fn save_preferences(&self) -> Result<(), String>;
     fn record_completed_session(&mut self, total_seconds: u32);
+    fn fold_completed_session(&mut self, today: &str, minutes: u32);
 }
 
 impl AppStateExt for AppState {
@@ -264,6 +286,7 @@ impl AppStateExt for AppState {
         self.theme = prefs.theme;
         self.alarm_enabled = prefs.alarm_enabled;
         self.terminal_history = prefs.terminal_history;
+        self.session_history = prefs.session_history;
 
         // Sessions today are only "today" if the saved date is today. Coming
         // back after a break should show a clean count, not the last day used.
@@ -324,6 +347,7 @@ impl AppStateExt for AppState {
             stats: self.stats.clone(),
             last_session_date: self.last_session_date.clone(),
             terminal_history: self.terminal_history.clone(),
+            session_history: self.session_history.clone(),
         };
         save_preferences(&prefs)
     }
@@ -334,13 +358,20 @@ impl AppStateExt for AppState {
     /// to the counts but not to the streak, a session the day after continues
     /// it, and a longer gap starts over at one.
     fn record_completed_session(&mut self, total_seconds: u32) {
-        let today = local_date_today();
-        let minutes = total_seconds / 60;
+        self.fold_completed_session(&local_date_today(), total_seconds / 60);
+        let _ = self.save_preferences();
+    }
 
+    /// The bookkeeping half, with the date passed in and nothing written.
+    ///
+    /// Split out so the rollup can be tested at all: the day boundaries are
+    /// where this gets interesting, and the alternative is a test that can only
+    /// ever exercise today and writes to the real preferences file doing it.
+    fn fold_completed_session(&mut self, today: &str, minutes: u32) {
         if self.last_session_date != today {
             self.stats.sessions_today = 0;
 
-            self.stats.current_streak = match days_between(&today, &self.last_session_date) {
+            self.stats.current_streak = match days_between(today, &self.last_session_date) {
                 Some(1) => self.stats.current_streak + 1,
                 _ => 1,
             };
@@ -349,7 +380,29 @@ impl AppStateExt for AppState {
         self.stats.sessions_today += 1;
         self.stats.total_focus_minutes += minutes;
         self.stats.last_session_duration = minutes;
-        self.last_session_date = today;
+        self.last_session_date = today.to_string();
+
+        // Fold it into today's row, or start one. Entries are appended in date
+        // order because the only date ever written is today's.
+        match self.session_history.last_mut() {
+            Some(day) if day.date == today => {
+                day.sessions += 1;
+                day.focus_minutes += minutes;
+            }
+            _ => self.session_history.push(DayRecord {
+                date: today.to_string(),
+                sessions: 1,
+                focus_minutes: minutes,
+            }),
+        }
+
+        let overflow = self
+            .session_history
+            .len()
+            .saturating_sub(SESSION_HISTORY_DAYS);
+        if overflow > 0 {
+            self.session_history.drain(..overflow);
+        }
 
         let _ = self.save_preferences();
     }
@@ -369,4 +422,148 @@ impl AppState {
 #[derive(Clone, Serialize)]
 pub struct StateEvent {
     pub state: AppState,
+}
+
+// ============================================================================
+// TESTS
+// ============================================================================
+
+/// The date arithmetic and the day rollup.
+///
+/// Both are the kind of thing that looks obviously right and is wrong at a
+/// boundary — a leap day, a year end, the difference between "two sessions
+/// today" and "one session on each of two days". None of these touch disk:
+/// `record_completed_session` saves preferences, so the rollup is exercised
+/// through `fold_completed_session`, which is the part without the write.
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn civil_dates_round_trip() {
+        for date in [
+            "1970-01-01",
+            "2000-02-29",
+            "2024-02-29",
+            "2026-08-10",
+            "2026-12-31",
+            "2027-01-01",
+        ] {
+            let days = days_from_civil(date).expect("parses");
+            assert_eq!(civil_date(days), date, "{date} did not survive the trip");
+        }
+    }
+
+    #[test]
+    fn days_between_counts_forward_from_the_later_date() {
+        assert_eq!(days_between("2026-08-10", "2026-08-09"), Some(1));
+        assert_eq!(days_between("2026-08-10", "2026-08-10"), Some(0));
+        // Across a month end, a year end and a leap day.
+        assert_eq!(days_between("2026-09-01", "2026-08-31"), Some(1));
+        assert_eq!(days_between("2027-01-01", "2026-12-31"), Some(1));
+        assert_eq!(days_between("2024-03-01", "2024-02-29"), Some(1));
+    }
+
+    #[test]
+    fn days_between_is_none_when_there_is_no_earlier_date() {
+        // An empty `last_session_date` is what a fresh install has, and it must
+        // not read as "yesterday" or every new install starts on a streak.
+        assert_eq!(days_between("2026-08-10", ""), None);
+    }
+
+    #[test]
+    fn two_sessions_on_one_day_are_one_row() {
+        let mut state = AppState::new();
+
+        state.fold_completed_session("2026-08-10", 25);
+        state.fold_completed_session("2026-08-10", 50);
+
+        assert_eq!(state.session_history.len(), 1);
+        assert_eq!(state.session_history[0].sessions, 2);
+        assert_eq!(state.session_history[0].focus_minutes, 75);
+        assert_eq!(state.stats.sessions_today, 2);
+    }
+
+    #[test]
+    fn a_new_day_is_a_new_row_and_resets_the_daily_count() {
+        let mut state = AppState::new();
+
+        state.fold_completed_session("2026-08-10", 25);
+        state.fold_completed_session("2026-08-11", 30);
+
+        assert_eq!(state.session_history.len(), 2);
+        assert_eq!(state.session_history[1].date, "2026-08-11");
+        assert_eq!(
+            state.stats.sessions_today, 1,
+            "the count is today's, not the total"
+        );
+        assert_eq!(
+            state.stats.total_focus_minutes, 55,
+            "the total is every day's"
+        );
+    }
+
+    #[test]
+    fn the_streak_advances_once_a_day_and_breaks_on_a_gap() {
+        let mut state = AppState::new();
+
+        state.fold_completed_session("2026-08-10", 25);
+        assert_eq!(state.stats.current_streak, 1);
+
+        // A second session the same day is not a second day.
+        state.fold_completed_session("2026-08-10", 25);
+        assert_eq!(state.stats.current_streak, 1);
+
+        state.fold_completed_session("2026-08-11", 25);
+        assert_eq!(state.stats.current_streak, 2);
+
+        // Missing the 12th starts over rather than continuing.
+        state.fold_completed_session("2026-08-13", 25);
+        assert_eq!(state.stats.current_streak, 1);
+    }
+
+    #[test]
+    fn history_stops_at_the_cap() {
+        let mut state = AppState::new();
+
+        // One session a day for well over the window.
+        let mut day = days_from_civil("2026-01-01").unwrap();
+        for _ in 0..(SESSION_HISTORY_DAYS + 25) {
+            state.fold_completed_session(&civil_date(day), 25);
+            day += 1;
+        }
+
+        assert_eq!(state.session_history.len(), SESSION_HISTORY_DAYS);
+        assert_eq!(
+            state.session_history.last().unwrap().date,
+            civil_date(day - 1),
+            "the newest day is kept"
+        );
+        assert_eq!(
+            state.session_history.first().unwrap().date,
+            civil_date(day - SESSION_HISTORY_DAYS as i64),
+            "the oldest days are the ones dropped"
+        );
+    }
+
+    #[test]
+    fn a_day_the_clock_went_backwards_over_still_lands() {
+        let mut state = AppState::new();
+
+        state.fold_completed_session("2026-08-11", 25);
+        // Out of order rather than dropped: the week is read by date, so an
+        // earlier row after a later one is harmless, and losing the session
+        // would not be.
+        state.fold_completed_session("2026-08-10", 25);
+
+        assert_eq!(state.session_history.len(), 2);
+        assert_eq!(
+            state
+                .session_history
+                .iter()
+                .map(|d| d.sessions)
+                .sum::<u32>(),
+            2
+        );
+    }
 }
