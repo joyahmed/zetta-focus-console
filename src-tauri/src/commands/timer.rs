@@ -846,24 +846,25 @@ fn override_command(args: &[&str], app_state: &mut AppState) -> String {
             "Override cleared.".to_string()
         }
         _ => {
-            if let Some(ref override_state) = app_state.session_override {
-                if override_state.is_active() {
+            match app_state.session_override {
+                // Minutes, like everywhere else the override is printed. This
+                // and `status` were the two places the switch to minutes
+                // missed, so a `timer 50m` set in one line came back as
+                // "Focus: 3000s" when it was asked about in another.
+                Some(ref override_state) if override_state.is_active() => {
                     let mut info = vec![];
                     if let Some(f) = override_state.focus_duration {
-                        info.push(format!("Focus: {}s", f));
+                        info.push(format!("Focus: {}", humanize_seconds(f)));
                     }
                     if let Some(b) = override_state.break_duration {
-                        info.push(format!("Break: {}s", b));
+                        info.push(format!("Break: {}", humanize_seconds(b)));
                     }
                     if let Some(l) = override_state.loop_count {
-                        info.push(format!("Loops: {}", l));
+                        info.push(format!("Sessions: {}", l));
                     }
                     format!("Current override:\n  - {}", info.join("\n  - "))
-                } else {
-                    "No override active.".to_string()
                 }
-            } else {
-                "No override active.".to_string()
+                _ => "No override active.".to_string(),
             }
         }
     }
@@ -906,13 +907,13 @@ fn status_command(app_state: &mut AppState) -> String {
         if override_state.is_active() {
             let mut override_info = vec![];
             if let Some(f) = override_state.focus_duration {
-                override_info.push(format!("focus {}s", f));
+                override_info.push(format!("{} focus", humanize_seconds(f)));
             }
             if let Some(b) = override_state.break_duration {
-                override_info.push(format!("break {}s", b));
+                override_info.push(format!("{} break", humanize_seconds(b)));
             }
             if let Some(l) = override_state.loop_count {
-                override_info.push(format!("{} loops", l));
+                override_info.push(format!("{} sessions", l));
             }
             info.push(format!("Override: {}", override_info.join(", ")));
         }
@@ -1220,13 +1221,17 @@ fn usage_command(app_state: &AppState) -> String {
 
 fn alarm_command(args: &[&str], app_state: &mut AppState) -> String {
     match args.first() {
+        // "Voice announcements" is what these were before they became three
+        // synthesised tones. The preference was renamed, the help text was
+        // renamed, and this pair of strings was missed — so `alarm on` answered
+        // about a feature the app no longer has.
         Some(&"on") => {
             app_state.alarm_enabled = true;
-            "Voice announcements enabled.".to_string()
+            "Alarms enabled. A tone at the end of each session, break and cycle.".to_string()
         }
         Some(&"off") => {
             app_state.alarm_enabled = false;
-            "Voice announcements disabled.".to_string()
+            "Alarms disabled.".to_string()
         }
         _ => {
             let status = if app_state.alarm_enabled {
