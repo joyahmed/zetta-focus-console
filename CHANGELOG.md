@@ -22,6 +22,21 @@ free and open source.
 
 ### Added
 
+- **A week of history.** The engine keeps a row per day — date, sessions, focus
+  minutes, ninety of them — and the statistics panel draws the last seven as
+  bars, today picked out, scaled against the best day in the window rather than
+  a fixed target. Days with nothing in them are drawn empty rather than
+  skipped. `stats` in the terminal grew the same summary. The four running
+  totals covered today and all time, which are the two spans nobody judges
+  their own work over.
+- **`history` and `history clear`**, and tab completion that offers the whole
+  command set. `timer`, `break` and `loop` were all missing from it — the three
+  the app is pitched on.
+- **Continuous integration.** `ci.yml` runs the Rust and frontend checks on
+  every pull request; `release.yml` builds three platforms on a `v*` tag and
+  attaches the installers to a draft release. No Intel macOS job: GitHub is
+  retiring that image and a job asking for it holds the whole draft open, so
+  the arm64 runner builds a universal binary instead.
 - **A tray icon that shows the session.** The app mark inside a ring that fills
   as the run goes on — violet for focus, green for a break, amber and thicker in
   Strict Mode, a plain grey outline when idle, and dimmed while paused. It is
@@ -57,6 +72,12 @@ free and open source.
 
 ### Changed
 
+- **The settings drawer is a list.** Eight section files wrote the same row in
+  three styling idioms, two of which painted it `--bg-primary` — the page
+  colour, and the one-flat-sheet problem the light theme was rebuilt to fix.
+  One `SettingRow` knows what a row looks like now, the two clickable `div`s
+  are buttons, and `Toggle` no longer takes an `isLight` prop: it reads the
+  theme's own tokens, and gained `role="switch"` and `aria-checked` with it.
 - **The tray is painted by Rust, from the state Rust already holds.** It used to
   be a command the frontend called: the state listener read the timer back out
   of the event it had just received and posted it to Rust, which inverts the one
@@ -99,6 +120,13 @@ free and open source.
   can be asked to hold. The particles are the ambience.
 - The licensing, payment, pricing and webhook layer. Strict Mode, developer
   diagnostics, runtime overrides and custom profiles are simply available.
+- **`background gradient|particles`**, and the `background_type` field behind
+  it. Nothing has read that field since the second ambience mode was removed,
+  so the command set a value nobody looks at and reported success doing it.
+- **`focus start|stop|pause|resume`**, a second copy of the session commands
+  written before those existed and never updated — it hardcoded four sessions,
+  ignored any override and never entered the cycle. `focus` is a synonym for
+  `timer` now, which is what the compound parser always read it as.
 - All debug logging on both sides. Genuine error paths are kept.
 - Seven unreferenced files, including one whose only statement was a log
   saying it was no longer used, and the framework template's placeholder icons.

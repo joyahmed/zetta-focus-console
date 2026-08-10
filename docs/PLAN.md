@@ -177,13 +177,48 @@ Not urgent. Worth doing when touching the surrounding code anyway.
       that was parsed and never applied, the compound command that kept only
       its first clause, the counter that went back to 1/4 whenever a break was
       stopped. There is a test for each of those three now.
-- [ ] The files in `src/components/settings-panel/` share enough
-      structure to be driven by a list instead. They are also the last place
-      still threading an `isLight` prop by hand.
-- [ ] Revisit the older UI audit — a couple of its findings are fixed
-      (the debug command name mismatch, the `System::new_all()` cost in
-      `tick_system_stats`), the rest were never rechecked.
-- [ ] Decide whether the four ambient tracks want a fifth.
+- [x] **The settings drawer is a list.** Eight section files became a
+      `SettingGroup`, a `SettingRow` and a table of entries. Between them the
+      eight wrote the same row in three idioms, two of which painted it
+      `--bg-primary` — the *page* colour, which is the one-flat-sheet problem
+      the light theme was rebuilt to fix. Two clickable `div`s are buttons now,
+      so they answer the keyboard.
+
+      `Toggle` no longer takes `isLight`; it reads the theme's own tokens, and
+      so does the volume track, which had two greys in a gradient. The switch
+      also gained `role="switch"` and `aria-checked`, which it never had.
+      `DevModeSection` went too — it returned `null` behind thirty lines of
+      commented-out markup, and the `handleDevModeToggle` chain feeding it ran
+      through four files to reach a component that rendered nothing.
+
+      The one `isLight` left is `SeasonParticle`, and it stays: it computes a
+      *per-particle* opacity rather than picking between two constants, so
+      there is nothing for a token to replace. It is also derived once at the
+      top of the panel and passed down as scene data, which is not the
+      hand-threading this item was about.
+- [x] **The older UI audit, re-derived.** The document itself went in the
+      history squash, so rather than revisit it this rechecked the two classes
+      it covered — commands that do not match what the app says about them, and
+      work done that need not be. Five findings:
+
+      Tab completion was missing `timer`, `break` and `loop`, the three the app
+      is pitched on. The help list had drifted back into a sample of the
+      command set, which is exactly what its own comment forbids.
+      `background gradient|particles` set a field nothing has read since the
+      second ambience mode was removed, and reported success doing it — gone,
+      with the field and the enum. `focus` was a broken second copy of
+      start/stop/pause/resume that hardcoded four sessions and never entered
+      the cycle; it is a synonym for `timer` now, which is what the compound
+      parser always read it as. And `system`, `memory` and `cpu` each built a
+      `System::new_all()` — the same waste as `tick_system_stats`, walking
+      every process and disk to print two numbers.
+
+      Two tests now read the engine's dispatch match out of its own source and
+      assert both lists name every arm. They caught three commands I had missed
+      while fixing the others, which is the argument for them.
+- [ ] Decide whether the four ambient tracks want a fifth. **Not mine to
+      decide** — it is a taste call and a licensing one, and any new track has
+      to clear the bar in `ASSETS.md` and be re-encoded to match. Left open.
 
 ---
 
@@ -193,32 +228,50 @@ Last, and deliberately so. Everything above is the app; this is the machinery
 for handing it over, and it is worth nothing until there is something worth
 handing over. The first build can go out by hand.
 
-- [ ] Add `.github/workflows/release.yml` — build on tag, three platforms,
-      attach installers to a draft release.
-- [ ] **No Intel macOS job.** GitHub is retiring the `macos-13` image; a job
-      asking for it is not scheduled at all, sits queued indefinitely, and
-      holds the whole release open because a draft cannot be published until
-      every platform lands. `--target universal-apple-darwin` on the arm64
-      runner covers Intel if it is ever needed.
-- [ ] Linux runners need `webkit2gtk` and `libasound2-dev`. The second is what
-      `rodio` builds against for ALSA — without it the build fails as a Rust
-      error rather than an obviously missing package.
-- [ ] Tag `v1.0.0` and cut the first release.
+- [x] **`.github/workflows/release.yml`** — builds on a `v*` tag across three
+      platforms and attaches the installers to a draft release. Also runnable
+      by hand, so the matrix can be exercised without spending a tag to find
+      out that a runner image moved. `fail-fast` is off: a draft with two of
+      three installers is worth having while the third is fixed.
+- [x] **No Intel macOS job**, for the reason below. `macos-latest` is arm64 and
+      builds `--target universal-apple-darwin` with both Rust targets
+      installed, which covers Intel without asking for a retired image.
+- [x] Linux job installs `libasound2-dev` alongside `webkit2gtk`.
+- [x] **A pull-request workflow** — `ci.yml`, on every PR and on main. Split
+      into a Rust job and a frontend job so a formatting mistake fails in
+      seconds rather than after a full dependency tree, and it runs
+      `cargo test` as well as the four originally listed. Branch runs cancel
+      their predecessor; main runs do not.
+- [ ] Tag `v1.0.0` and cut the first release. **Yours to press.** The machinery
+      is in place and the tag is the trigger, but publishing is outward-facing
+      and one-way, and it should not happen before the line below.
 - [ ] Install the built artifact on a machine that has never had the app, and
-      check the tray, the global shortcuts, and first-run defaults.
-- [ ] Add a pull-request workflow: `cargo check`, `cargo fmt --check`,
-      `tsc --noEmit`, `vite build`. All four pass today; this keeps them
-      passing once other people start sending changes.
+      check the tray, the global shortcuts, and first-run defaults. Needs a
+      second machine; cannot be done from here.
 
 ---
 
 ## Phase 4 — after release
 
 - [ ] Use the app on Linux and macOS. Both build; neither has been used in
-      anger.
-- [ ] Session history worth reading — the stats panel counts sessions but says
-      nothing about a week.
-- [ ] Deeper engine instrumentation, per [ROADMAP.md](../ROADMAP.md).
+      anger. Needs those machines.
+- [x] **Session history worth reading.** The engine keeps a row per day —
+      date, sessions, focus minutes, ninety of them — and the panel draws the
+      last seven as bars under the headline cards, today picked out, scaled
+      against the best day in the window rather than a fixed target, because
+      the app has no opinion about how long you should work. Days with nothing
+      in them are drawn empty rather than skipped: a week with Tuesday missing
+      is not a six-day week. `stats` grew the same summary.
+
+      It is `#[serde(skip)]` on `AppState` for the same reason the console
+      history is — it changes a few times a day and the state event goes out
+      once a second, so the panel asks on mount and on `session-complete`.
+      `record_completed_session` is split so the rollup takes the date as a
+      parameter and writes nothing, which is what makes the day boundaries
+      testable without touching the real preferences file.
+- [ ] Deeper engine instrumentation, per [ROADMAP.md](../ROADMAP.md). Left
+      open deliberately: the roadmap files this under **Later** and asks for an
+      issue first, because the shape is not settled.
 
 ---
 

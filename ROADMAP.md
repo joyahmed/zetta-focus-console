@@ -23,23 +23,26 @@ The engine is done and the app is usable every day.
 - Custom profiles, Strict Mode, session alarms, autostart, global shortcuts
 - A tray icon that carries the session — a ring that fills as the run goes on,
   coloured for focus, break, strict and idle
+- A week of history in the statistics panel, and in `stats`
 - 4.9 MB installer, one JSON file of state, no network
 
 ---
 
 ## Next
 
+**The first release.** The workflows are in place: a tag builds three platforms
+and attaches the installers to a draft. What is left is installing one of them
+on a machine that has never had the app — the tray, the global shortcuts and
+the first-run defaults are exactly the things a development machine cannot
+tell you about — and then publishing the draft.
+
 **A recording of the terminal.** `timer 50m break 10m loop 3` is the entire
 pitch. There are screenshots of it now; a few seconds of it being typed would
 say more.
 
-**A pull-request check.** `cargo check`, `cargo fmt --check`, `cargo test`,
-`tsc --noEmit` and `vite build` are all clean today. Something should keep them
-that way.
-
-**More of the engine under test.** The session cycle is covered — start, the
-break it rolls into, the cycle it closes, and the overrides that shape it.
-Profiles, sound state and the preference round-trip are not.
+**More of the engine under test.** The session cycle and the day rollup are
+covered, and two tests keep the command lists from drifting. Profiles, sound
+state and the preference round-trip are not.
 
 ---
 
@@ -54,9 +57,6 @@ people who want to operate the timer rather than just use it.
 particles are ordinary DOM and CSS — see `src/components/ambient-panel/`, which
 is one scene component and one particle component. New audio has to clear the
 licensing bar in [ASSETS.md](ASSETS.md).
-
-**Session history worth reading.** The stats panel counts sessions. It does not
-yet tell you anything about your week.
 
 **Linux and macOS testing.** Both build. Neither has been used in anger. Bug
 reports from either are especially welcome.

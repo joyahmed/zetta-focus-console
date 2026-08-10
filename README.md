@@ -83,6 +83,9 @@ DOM and CSS: no video, no sprite sheets, no WebGL.
 
 And the rest:
 
+- **A week you can see.** The statistics panel keeps a row per day and draws
+  the last seven as bars, scaled against your own best day rather than a target
+  the app invented. Ninety days are kept; nothing leaves the machine.
 - **Profiles.** Four presets, plus as many of your own as you want — duration,
   season, motion, sound and volume per profile.
 - **Strict Mode.** Start a session that cannot be paused or stopped.
@@ -199,7 +202,8 @@ task set "name" --category coding
 ### Diagnostics
 
 ```
-stats                   Session statistics
+stats                   Statistics, and how the last seven days went
+reset                   Restore defaults and clear the statistics
 system                  Host CPU and memory
 memory | cpu            Narrower views of the same
 usage                   Engine process memory and uptime
