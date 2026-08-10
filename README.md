@@ -1,7 +1,30 @@
-# Zetta Focus Console
+<div align="center">
 
-**A focus timer you drive from a terminal.** Type `timer 50m break 10m loop 3`,
-press enter, and get back to work.
+<img src="icon.png" alt="" width="104" height="104">
+
+<h1>Zetta Focus Console</h1>
+
+<p><strong>A focus timer you drive from a terminal.</strong><br>
+Type <code>timer 50m break 10m loop 3</code>, press enter, and get back to work.</p>
+
+<p>
+  <a href="https://github.com/joyahmed/zetta-focus-console/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/joyahmed/zetta-focus-console/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-8b5cf6"></a>
+  <img alt="Windows, macOS and Linux" src="https://img.shields.io/badge/Windows%20%7C%20macOS%20%7C%20Linux-334155">
+  <img alt="4.9 MB installer" src="https://img.shields.io/badge/installer-4.9%20MB-06b6d4">
+  <img alt="No network" src="https://img.shields.io/badge/network-none-22c55e">
+</p>
+
+<p>
+  <a href="#why-a-terminal">Why a terminal</a> ·
+  <a href="#install">Install</a> ·
+  <a href="#what-it-does">What it does</a> ·
+  <a href="#commands">Commands</a> ·
+  <a href="#shortcuts">Shortcuts</a> ·
+  <a href="#how-it-is-built">How it is built</a>
+</p>
+
+</div>
 
 ![The Zetta Focus Console window in its dark theme: a countdown ring reading 49:22 with an OVERRIDE badge under it, the active Winter Deep profile and its intervals to the right, session statistics and engine diagnostics below, and snow drifting through the ambience panel.](docs/screenshots/dashboard-dark.png)
 
@@ -24,7 +47,7 @@ fifty minutes and some wants fifteen.
 
 A command line is one interaction:
 
-```
+```console
 $ timer 50m break 10m loop 3
 Override set:
   - Focus: 50m
@@ -105,19 +128,23 @@ stripped-down version of the dark one.
 
 <table>
 <tr>
-<td width="50%">
+<td width="50%" valign="top">
 <img alt="The same window in the light theme: a cool grey page with white panels, the countdown ring at 46:56, and snow still drifting through the ambience panel." src="docs/screenshots/dashboard-light.png">
+<p align="center"><sub><b>The light theme.</b> The same window, not a stripped-down one.</sub></p>
 </td>
-<td width="50%">
+<td width="50%" valign="top">
 <img alt="The profile dialog with the seasonal theme dropdown open, showing Winter checked alongside Spring, Summer and Autumn." src="docs/screenshots/profile-dialog-dark.png">
+<p align="center"><sub><b>Profiles.</b> Duration, season, motion, sound and volume.</sub></p>
 </td>
 </tr>
 <tr>
-<td width="50%">
+<td width="50%" valign="top">
 <img alt="The settings drawer: ambient animations, volume, mute, alarm tones, strict mode, reset and startup options." src="docs/screenshots/settings-dark.png">
+<p align="center"><sub><b>Settings.</b> One drawer, no preferences maze.</sub></p>
 </td>
-<td width="50%">
+<td width="50%" valign="top">
 <img alt="The keyboard shortcuts drawer, listing session, window, appearance and audio shortcuts with the two global ones marked." src="docs/screenshots/shortcuts-dark.png">
+<p align="center"><sub><b>Shortcuts.</b> Eleven of them; two work from anywhere.</sub></p>
 </td>
 </tr>
 </table>
@@ -167,7 +194,11 @@ counter, and the override retires when it finishes. Add `loop 3` and you are
 asking for a cycle instead, which you get: three focus runs with breaks between
 them.
 
-### Profiles
+The four groups below are the reference rather than the pitch, so they are
+folded away. `help` opens the same list inside the app.
+
+<details>
+<summary><b>Profiles</b> — four presets, plus your own</summary>
 
 ```
 profile list            Show all profiles
@@ -180,7 +211,10 @@ profile delete [id]     Delete a custom profile
 
 Presets are read-only — duplicate one to base your own on it.
 
-### Appearance and sound
+</details>
+
+<details>
+<summary><b>Appearance and sound</b> — season, theme, ambience, volume, alarms</summary>
 
 ```
 season [name]           spring | summer | autumn | winter
@@ -192,7 +226,10 @@ sound mute
 alarm on/off            Tones at session, break and cycle end
 ```
 
-### Discipline
+</details>
+
+<details>
+<summary><b>Discipline</b> — Strict Mode, and binding an intention to a session</summary>
 
 ```
 strict on               No pausing, no stopping, until the session completes
@@ -200,7 +237,10 @@ strict off              Only while idle
 task set "name" --category coding
 ```
 
-### Diagnostics
+</details>
+
+<details>
+<summary><b>Diagnostics and the console</b> — statistics, the engine, the history</summary>
 
 ```
 stats                   Statistics, and how the last seven days went
@@ -211,16 +251,13 @@ usage                   Engine process memory and uptime
 engine state            Full engine state dump
 engine reset            Reset the engine
 devmode on/off          Developer diagnostics
-```
-
-### The console itself
-
-```
 history                 The commands you have run
 history clear           Forget them
 clear                   Clear the terminal
 help                    Open the command list, on top of the console
 ```
+
+</details>
 
 Tab completes, `↑` and `↓` walk the history, and the history is kept next to
 your preferences on disk rather than in the window — so it is still there after
