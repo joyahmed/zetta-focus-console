@@ -14,7 +14,6 @@ const AppModals = ({
 	setSessionSummary,
 	settingsOpen,
 	setSettingsOpen,
-	handleDevModeToggle,
 	handleAmbienceToggle,
 	handleVolumeChange,
 	handleMuteToggle,
@@ -49,8 +48,6 @@ const AppModals = ({
 			<SettingsPanel
 				isOpen={settingsOpen}
 				onClose={() => setSettingsOpen(false)}
-				devMode={appState.dev_mode}
-				onDevModeToggle={handleDevModeToggle}
 				ambienceEnabled={appState.ambience_enabled}
 				onAmbienceToggle={handleAmbienceToggle}
 				soundVolume={appState.sound_state.volume}
@@ -61,7 +58,6 @@ const AppModals = ({
 				onSoundPlay={handleSoundPlay}
 				onSoundStop={handleSoundStop}
 				onResetSettings={handleResetSettings}
-				theme={appState.theme}
 				strictModeActive={appState.strict_mode.is_active}
 				onStrictModeToggle={() => {
 					const cmd = appState.strict_mode.is_active

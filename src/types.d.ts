@@ -144,7 +144,6 @@ interface AppModalsProps {
 	setSessionSummary: (value: React.SetStateAction<string | null>) => void;
 	settingsOpen: boolean;
 	setSettingsOpen: (value: React.SetStateAction<boolean>) => void;
-	handleDevModeToggle: () => Promise<void>;
 	handleVolumeChange: (volume: number) => Promise<void>;
 	handleMuteToggle: () => Promise<void>;
 	handleAmbienceToggle: () => Promise<void>;
@@ -566,8 +565,6 @@ interface ProfileModalCopy {
 interface SettingsPanelProps {
 	isOpen: boolean;
 	onClose: () => void;
-	devMode: boolean;
-	onDevModeToggle: () => void;
 	ambienceEnabled: boolean;
 	onAmbienceToggle: () => void;
 	soundVolume: number;
@@ -578,53 +575,54 @@ interface SettingsPanelProps {
 	onSoundPlay: () => void;
 	onSoundStop: () => void;
 	onResetSettings: () => void;
-	theme: string;
 	strictModeActive?: boolean;
 	onStrictModeToggle?: () => void;
 	alarmEnabled?: boolean;
 	onAlarmToggle?: () => void;
 }
 
-interface SectionHeaderProps {
-	title: string;
-}
-
 interface ToggleProps {
 	enabled: boolean;
 	onChange: () => void;
 	disabled?: boolean;
-	isLight: boolean;
 }
 
-interface AmbientSectionProps {
-	ambienceEnabled: boolean;
-	onAmbienceToggle: () => void;
-	isLight: boolean;
-}
-
-interface DevModeSectionProps {
-	devMode: boolean;
-	onDevModeToggle: () => void;
-	isLight: boolean;
-}
-
-interface ResetSectionProps {
-	onResetSettings: () => void;
-}
-
-interface SoundSectionProps {
-	soundVolume: number;
+interface VolumeSliderProps {
+	volume: number;
 	onVolumeChange: (volume: number) => void;
-	isMuted: boolean;
-	onMuteToggle: () => void;
-	playAmbientSound: boolean;
-	onSoundPlay: () => void;
-	onSoundStop: () => void;
-	isLight: boolean;
 }
 
-interface StartupSectionProps {
-	isLight: boolean;
+/** One line of the settings drawer. */
+interface SettingRowProps {
+	title: string;
+	description?: string;
+	/** Sits before the title. */
+	icon?: React.ReactNode;
+	/** Sits at the end of the line — a switch, a reading, an arrow. */
+	control?: React.ReactNode;
+	/** A wider control that needs the full width, under the line. */
+	below?: React.ReactNode;
+	/** Makes the whole row a button. */
+	onClick?: () => void;
+	/** Turns the title red on hover. Only meaningful with `onClick`. */
+	danger?: boolean;
+}
+
+/** A row, plus the key it is rendered under. */
+interface SettingSpec extends SettingRowProps {
+	key: string;
+}
+
+interface SettingGroupSpec {
+	title: string;
+	rows: SettingSpec[];
+	/** Render the rows as placeholders — their values have not arrived yet. */
+	loading?: boolean;
+}
+
+interface SettingGroupProps {
+	title: string;
+	children: React.ReactNode;
 }
 
 /** A startup preference and the two Tauri commands that read and write it. */
@@ -639,18 +637,6 @@ interface StartupSetting {
 interface StartupSettingValues {
 	autostart: boolean;
 	startMinimized: boolean;
-}
-
-interface StrictModeSectionProps {
-	strictModeActive: boolean;
-	onStrictModeToggle: () => void;
-	isLight: boolean;
-}
-
-interface AlarmSectionProps {
-	alarmEnabled: boolean;
-	onAlarmToggle: () => void;
-	isLight: boolean;
 }
 
 /* ==========================================================================

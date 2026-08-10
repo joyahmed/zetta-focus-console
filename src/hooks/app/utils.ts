@@ -61,16 +61,6 @@ export const appUtils = ({
 		[processCommand]
 	);
 
-	const handleDevModeToggle = useCallback(async () => {
-		if (!appState) return;
-		const cmd = appState.dev_mode ? 'devmode off' : 'devmode on';
-		try {
-			await invoke('execute_command', { command: cmd });
-		} catch (error) {
-			console.error(error);
-		}
-	}, [appState?.dev_mode]);
-
 	const handleAmbienceToggle = useCallback(async () => {
 		if (!appState) return;
 		const cmd = appState.ambience_enabled
@@ -182,7 +172,6 @@ export const appUtils = ({
 		processCommand,
 		handleProfileSwitch,
 		handleProfileDelete,
-		handleDevModeToggle,
 		handleAmbienceToggle,
 		handleVolumeChange,
 		handleMuteToggle,
