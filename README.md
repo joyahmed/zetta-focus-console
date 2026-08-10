@@ -11,6 +11,8 @@ spring, falling leaves in autumn — with an ambient loop underneath it.
 Free, MIT, no account, no telemetry, nothing leaves your machine. A 4.9 MB
 installer.
 
+![The Zetta Focus Console window in its dark theme: a countdown ring reading 49:22 with an OVERRIDE badge under it, the active Winter Deep profile and its intervals to the right, session statistics and engine diagnostics below, and snow drifting through the ambience panel.](docs/screenshots/dashboard-dark.png)
+
 ---
 
 ## Why a terminal
@@ -23,11 +25,18 @@ fifty minutes and some wants fifteen.
 A command line is one interaction:
 
 ```
-> timer 50m break 10m loop 3
-Override set: 50m focus, 10m break, 3 sessions.
-> s
-Starting focus session...
+$ timer 50m break 10m loop 3
+Override set:
+  - Focus: 50m
+  - Break: 10m
+  - Sessions: 3
+
+Run `start` to begin session.
+$ s
+Starting session... [Override: 50m focus, 10m break, 3 sessions]
 ```
+
+![The console open over the app, showing that exact exchange: the compound timer command, the override it set, and `s` starting the session.](docs/screenshots/terminal-dark.png)
 
 `s` starts. `p` pauses. `r` stops. The full command set is below, but those
 three and `timer` cover most days.
@@ -46,6 +55,33 @@ three and `timer` cover most days.
 | **Profiles** | Four presets, plus as many of your own as you want — duration, season, motion, sound and volume per profile. |
 | **Tray and global keys** | Runs from the tray. `Ctrl+H` hides and restores the window from anywhere. |
 | **Alarms** | Three synthesised tones, one each for the end of a session, the end of a break, and the end of the cycle. Generated in the app, so nothing is downloaded and they sound the same everywhere. |
+
+### Both themes, and the same app in each
+
+`Ctrl+D` switches. The ambience draws in either one — the light theme is not a
+stripped-down version of the dark one.
+
+<table>
+<tr>
+<td width="50%">
+<img alt="The same window in the light theme: a cool grey page with white panels, the countdown ring at 46:56, and snow still drifting through the ambience panel." src="docs/screenshots/dashboard-light.png">
+</td>
+<td width="50%">
+<img alt="The profile dialog with the seasonal theme dropdown open, showing Winter checked alongside Spring, Summer and Autumn." src="docs/screenshots/profile-dialog-dark.png">
+</td>
+</tr>
+<tr>
+<td width="50%">
+<img alt="The settings drawer: ambient animations, volume, mute, alarm tones, strict mode, reset and startup options." src="docs/screenshots/settings-dark.png">
+</td>
+<td width="50%">
+<img alt="The keyboard shortcuts drawer, listing session, window, appearance and audio shortcuts with the two global ones marked." src="docs/screenshots/shortcuts-dark.png">
+</td>
+</tr>
+</table>
+
+Every screenshot has a twin in the other theme in
+[`docs/screenshots/`](docs/screenshots).
 
 ---
 
@@ -69,7 +105,8 @@ bun run tauri dev        # or run it in development
 
 ## Commands
 
-Type `help` in the terminal for this list at any time.
+Type `help` in the terminal to open this list in the app, over the console
+rather than instead of it.
 
 ### Session
 
@@ -92,6 +129,10 @@ break 10m               Override break duration
 loop 3                  Override session count
 override clear          Drop the override, return to profile defaults
 ```
+
+The three compose into one line in any order, which is the whole argument for
+typing at it: `timer 50m break 10m loop 3`, or `break 10m loop 3` to leave the
+focus duration alone.
 
 Durations accept `25m`, `90s`, or a bare number read as minutes. You can also
 click the clock itself while it is idle and type into it.
@@ -145,6 +186,7 @@ engine state            Full engine state dump
 engine reset            Reset the engine
 devmode on/off          Developer diagnostics
 clear                   Clear the terminal
+help                    Open the command list, on top of the console
 ```
 
 ---

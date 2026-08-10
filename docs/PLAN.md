@@ -26,9 +26,8 @@ Blocking. None of the rest matters if these are not done.
 - [ ] Re-encode any *future* track to match the others — 45 s, Vorbis q3,
       44.1 kHz, 3 s crossfade tail-to-head. The exact `ffmpeg` command is in
       `ASSETS.md`.
-- [ ] **Screenshots** — see the section below. The README has none, which for
-      an app whose whole argument is how it looks and how it is driven means
-      the argument is currently made entirely in prose.
+- [x] **Screenshots** — see the section below. Ten of them, five states in both
+      themes, in `docs/screenshots/`.
 - [ ] **Read `README.md` start to finish as somebody who has never seen the
       app**, and rewrite what does not survive it. Known weak points: it opens
       with a wall of text before showing anything; "What it does" is a
@@ -49,46 +48,61 @@ than taken twice.
 
 They live in `docs/screenshots/`, named for what they show.
 
-**The set.** Every shot is the whole window, not a cropped panel: the four
-panels together are what the app *is*, and a cropped timer looks like every
-other timer.
+**The set.** Five states, each in both themes, `-dark` and `-light`. Every shot
+is the whole window rather than a cropped panel: the four panels together are
+what the app *is*, and a cropped timer looks like every other timer.
 
-- [ ] `dashboard-dark.png` — a session running, winter, ambience visible.
-      The one that goes at the top of the README.
-- [ ] `dashboard-light.png` — the same window, same profile, same season,
-      `Ctrl+D` away. Paired with the one above so the two read as one app.
-- [ ] `terminal.png` — the console open, with `timer 50m break 10m loop 3`
-      typed and answered, and `s` under it. This is the pitch; if only one
-      screenshot survives, it is this one.
-- [ ] `profile-dialog.png` — the profile form with a dropdown open, so the
-      seasons and the check against the current one are visible.
-- [ ] `settings.png` — the settings drawer over the app.
-- [ ] `shortcuts.png` — the shortcuts drawer. Cheap to take while the drawer
-      code is already on screen, and it answers "what can I press".
+- [x] `dashboard` — a session running, winter, ambience visible. The dark one
+      goes at the top of the README.
+- [x] `terminal` — the console open, with `timer 50m break 10m loop 3` typed
+      and answered, and `s` under it. This is the pitch; if only one screenshot
+      survives, it is this one.
+- [x] `profile-dialog` — the profile form with a dropdown open, so the seasons
+      and the check against the current one are visible.
+- [x] `settings` — the settings drawer over the app.
+- [x] `shortcuts` — the shortcuts drawer. Cheap to take while the drawer is
+      already on screen, and it answers "what can I press".
 
 **What keeps the set looking like a set:**
 
-- One window size across all of them — 1440×900, with no resizing in between.
+- The window at the size it opens at — 1500×1100, from `tauri.conf.json` — and
+  not resized in between. That is what a new user sees, and `maxWidth` 1600 /
+  `maxHeight` 1100 mean there is no larger capture to be had by dragging the
+  frame, so the website scales these down rather than up.
+- Every shot in both themes. The dark one is the default and the one I designed
+  the app in; the light one exists because the website will want whichever
+  suits the page it lands on.
+- Real state, not invented state. There is no way to point the app at a
+  throwaway profile directory anyway — `dirs::data_dir()` asks Windows for the
+  known folder and ignores `%APPDATA%` in the environment — so the set is shot
+  against the profiles and statistics I actually have, on a preset so that no
+  personal profile is the headline.
 - The same profile and season throughout, so the colours do not jump.
 - A plausible clock. Not `25:00` on every shot, and not `00:07`.
-- Dark first: it is the default theme and the one I designed the app in.
-- No personal profile names, no dev mode badge, and nothing in the diagnostics
-  showing a path off this machine.
-- PNG, with the whole directory under about 2 MB — resized before they are
-  committed rather than after. Repository objects are permanent, and this
-  project has already squashed its history once over 42 MB of audio that could
-  not be deleted any other way.
+- No dev mode badge, and nothing in the diagnostics showing a path off this
+  machine.
+- PNG, with the whole directory kept small — the pair of a state should cost
+  what one screenshot ought to, not double. Repository objects are permanent,
+  and this project has already squashed its history once over 42 MB of audio
+  that could not be deleted any other way.
 
-**Then the README.** Once the images exist:
+**Then the README.**
 
-- [ ] `dashboard-dark.png` immediately under the opening paragraph, before
+- [x] `dashboard-dark.png` immediately under the opening paragraph, before
       "Why a terminal".
-- [ ] `terminal.png` inside "Why a terminal", next to the command block it
-      illustrates — the block currently asks the reader to imagine it.
-- [ ] The light pair and the dialogs in one small gallery further down, near
-      "What it does", rather than scattered.
-- [ ] Every image gets alt text that says what is in it. A README is read on
+- [x] `terminal-dark.png` inside "Why a terminal", under the command block it
+      illustrates — the block used to ask the reader to imagine it, and it also
+      said something the app did not do; see the note below.
+- [x] The light dashboard and the three dialogs in one gallery under "What it
+      does", rather than scattered, with a line saying every shot has a twin.
+- [x] Every image has alt text that says what is in it. A README is read on
       phones, in feed readers and by people who cannot see the picture.
+
+Taking the pitch screenshot is what turned up that `timer 50m break 10m loop 3`
+had never worked: each override handler read `args.first()` and dropped the
+rest, so the headline command set the focus duration and silently discarded the
+break and the count. Fixed, and the override reports itself in minutes now
+rather than in seconds.
 
 ---
 
