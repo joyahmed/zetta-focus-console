@@ -38,16 +38,10 @@ serde_json = "1"
 sysinfo = { version = "0.32", default-features = false, features = ["system"] }
 rodio = "0.19"
 dirs = "5"
-ed25519-dalek = { version = "2", features = ["rand_core"] }
-rand = "0.8"
-base64 = "0.22"
-sha2 = "0.10"
-aes-gcm = "0.10"
-hex = "0.4"
-hmac = "0.12"
-dotenv = "0.15"
 
-[features]
-default = []
-signing = []
+# `ed25519-dalek`, `rand`, `base64`, `sha2`, `aes-gcm`, `hex`, `hmac` and
+# `dotenv` used to live here, along with a `signing` feature, for the licence
+# key and payment layer this app no longer has. Nothing in `src/` has referred
+# to any of them since that layer was removed; they were still being compiled
+# into every build.
 
