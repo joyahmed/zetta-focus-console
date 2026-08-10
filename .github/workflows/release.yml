@@ -1,0 +1,102 @@
+# Build on a tag and attach the installers to a draft release.
+#
+# Draft, not published: the last step before a release goes out is somebody
+# downloading one of these and installing it on a machine that has never had
+# the app. Publishing is a button once that is done.
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  # Also runnable by hand, so the matrix can be exercised without spending a
+  # tag on finding out that a runner image moved.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build and attach to (e.g. v1.0.0)'
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  release:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      # One platform failing should not cancel the other two — a draft with
+      # two of three installers is worth having while the third is fixed.
+      fail-fast: false
+      matrix:
+        include:
+          # There is deliberately no macos-13 (Intel) job. GitHub is retiring
+          # that image; a job asking for it is not scheduled at all, sits
+          # queued indefinitely, and holds the whole release open, because a
+          # draft cannot be published until every platform lands. The arm64
+          # runner covers Intel through a universal binary instead.
+          - os: macos-latest
+            name: macOS (universal)
+            args: '--target universal-apple-darwin'
+            rust-targets: 'aarch64-apple-darwin,x86_64-apple-darwin'
+          - os: ubuntu-22.04
+            name: Linux
+            args: ''
+            rust-targets: ''
+          - os: windows-latest
+            name: Windows
+            args: ''
+            rust-targets: ''
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-targets }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          key: ${{ matrix.os }}
+
+      # webkit2gtk is Tauri's webview on Linux. libasound2-dev is what rodio
+      # builds against for ALSA — without it the build fails as a Rust error
+      # rather than as an obviously missing package.
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libasound2-dev
+
+      - run: bun install --frozen-lockfile
+
+      # tauri-action runs the frontend build itself, through the
+      # beforeBuildCommand in tauri.conf.json.
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.event.inputs.tag || github.ref_name }}
+          releaseName: 'Zetta Focus Console ${{ github.event.inputs.tag || github.ref_name }}'
+          releaseBody: |
+            Installers are attached below.
+
+            See [CHANGELOG.md](https://github.com/joyahmed/zetta-focus-console/blob/main/CHANGELOG.md)
+            for what changed.
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
