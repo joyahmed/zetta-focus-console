@@ -23,7 +23,68 @@ Blocking. None of the rest matters if these are not done.
 - [ ] Re-encode any *future* track to match the others — 45 s, Vorbis q3,
       44.1 kHz, 3 s crossfade tail-to-head. The exact `ffmpeg` command is in
       `ASSETS.md`.
-- [ ] Read `README.md` start to finish as somebody who has never seen the app.
+- [ ] **Screenshots** — see the section below. The README has none, which for
+      an app whose whole argument is how it looks and how it is driven means
+      the argument is currently made entirely in prose.
+- [ ] **Read `README.md` start to finish as somebody who has never seen the
+      app**, and rewrite what does not survive it. Known weak points: it opens
+      with a wall of text before showing anything; "What it does" is a
+      feature table where the first three rows are the actual pitch and the
+      rest is a list; the commands section is longer than everything else
+      combined and sits above the parts a newcomer needs first. Order should
+      be: what it is, a picture of it, the one command that explains it, then
+      install, then the full reference.
+
+---
+
+## Screenshots
+
+Blocking the first release, and wanted in three places at once: the README, the
+GitHub release page, and the open-source page on the website — which is a
+different repository, so these are captured once, here, and copied there rather
+than taken twice.
+
+They live in `docs/screenshots/`, named for what they show.
+
+**The set.** Every shot is the whole window, not a cropped panel: the four
+panels together are what the app *is*, and a cropped timer looks like every
+other timer.
+
+- [ ] `dashboard-dark.png` — a session running, winter, ambience visible.
+      The one that goes at the top of the README.
+- [ ] `dashboard-light.png` — the same window, same profile, same season,
+      `Ctrl+D` away. Paired with the one above so the two read as one app.
+- [ ] `terminal.png` — the console open, with `timer 50m break 10m loop 3`
+      typed and answered, and `s` under it. This is the pitch; if only one
+      screenshot survives, it is this one.
+- [ ] `profile-dialog.png` — the profile form with a dropdown open, so the
+      seasons and the check against the current one are visible.
+- [ ] `settings.png` — the settings drawer over the app.
+- [ ] `shortcuts.png` — the shortcuts drawer. Cheap to take while the drawer
+      code is already on screen, and it answers "what can I press".
+
+**Rules, so the set looks like a set.**
+
+- One window size for every shot — 1440×900, and do not resize between them.
+- The same profile and season throughout, so the colours do not jump.
+- A plausible clock. Not `25:00` on every shot, and not `00:07`.
+- Dark first: it is the default theme and the one the app was designed in.
+- No personal profile names, no dev mode badge, and no diagnostics showing a
+  path from this machine.
+- PNG, and keep the whole directory under about 2 MB. Repository objects are
+  permanent — this project has already squashed its history once over 42 MB of
+  audio nobody could delete afterwards. Resize before committing, not after.
+
+**Then the README.** Once the images exist:
+
+- [ ] `dashboard-dark.png` immediately under the opening paragraph, before
+      "Why a terminal".
+- [ ] `terminal.png` inside "Why a terminal", next to the command block it
+      illustrates — the block currently asks the reader to imagine it.
+- [ ] The light pair and the dialogs in one small gallery further down, near
+      "What it does", rather than scattered.
+- [ ] Every image gets alt text that says what is in it. A README is read on
+      phones, in feed readers and by people who cannot see the picture.
 
 ---
 
@@ -58,7 +119,6 @@ Real unfinished work, verified rather than remembered.
 - [ ] **Move terminal history into Rust.** It is in `localStorage` today
       (`src/hooks/use-terminal-modal.ts`), which contradicts the rule that Rust
       owns state. It belongs next to preferences on disk.
-- [ ] Screenshots into `docs/screenshots/` and the README.
 - [ ] A short recording of the terminal. `timer 50m break 10m loop 3` is the
       whole pitch and currently you have to install the app to see it.
 
@@ -71,12 +131,9 @@ Not urgent. Worth doing when touching the surrounding code anyway.
 - [ ] **Tests for the engine.** `cargo test` runs nothing. The session cycle is
       a state machine — start, tick, advance, stop — and every bug found in it
       so far was found by using the app rather than by the repository.
-- [ ] **The light theme.** `AmbientPanel` swaps the entire panel for a static
-      placeholder when the theme is light, so the particles never render at
-      all; and the console hand-branches on `isLight` for nearly every colour
-      it draws, where the rest of the app uses tokens that switch themselves.
 - [ ] The files in `src/components/settings-panel/` share enough
-      structure to be driven by a list instead.
+      structure to be driven by a list instead. They are also the last place
+      still threading an `isLight` prop by hand.
 - [ ] Revisit the older UI audit — a couple of its findings are fixed
       (the debug command name mismatch, the `System::new_all()` cost in
       `tick_system_stats`), the rest were never rechecked.
@@ -96,6 +153,22 @@ Not urgent. Worth doing when touching the surrounding code anyway.
 
 ## Done
 
+- [x] **The light theme.** Surfaces are a stack of five — page, card, elevated,
+      panel, inset — where `--bg-primary` used to be the page, every field and
+      every row at once, which is why light mode read as one sheet of white.
+      The three `!important` "force white" overrides on the dialogs are gone,
+      the console no longer hand-branches on `isLight`, and solid colours are
+      declared as channels so Tailwind's opacity modifiers compile at all —
+      `bg-zetta-bg/50` and every focus ring in the profile form were silently
+      emitting no CSS.
+- [x] **The ambience draws in both themes.** It used to answer the light theme
+      with a pastel gradient reading "Ambience disabled in light mode", with
+      the settings switch greyed out to match.
+- [x] **A dropdown of our own.** The three native `<select>`s opened a Win32
+      popup in the system colours in the middle of a themed dialog. `Select`
+      portals its list, because the dialog body scrolls and would clip it.
+- [x] **Custom profiles can be deleted.** `profile delete` existed in the
+      engine and nothing in the interface called it.
 - [x] Ambient audio 42.0 MB → 2.16 MB. Forty-five second seamless Vorbis loops
       replacing MP3 recordings that ran up to ten and a half minutes.
 - [x] Looping without rodio's `Buffered`, which was caching ~8 MB of decoded
