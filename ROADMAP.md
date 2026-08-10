@@ -20,40 +20,35 @@ The engine is done and the app is usable every day.
   full session cycle: focus, auto-break, and a long break that closes it
 - Seasonal ambience — the profile’s own icon drifting through the panel
 - Four seamless 45-second Vorbis loops
-- Custom profiles, Strict Mode, session alarms, autostart, tray, global shortcuts
+- Custom profiles, Strict Mode, session alarms, autostart, global shortcuts
+- A tray icon that carries the session — a ring that fills as the run goes on,
+  coloured for focus, break, strict and idle
 - 4.9 MB installer, one JSON file of state, no network
 
 ---
 
 ## Next
 
-**Tray icon that shows state.** The tray currently changes its tooltip and
-nothing else — `update_tray_state` in `lib.rs` says as much in a comment. It
-should carry the session in its icon: focus, break, idle, and strict. This is
-the most visible unfinished thing in the app.
+**A recording of the terminal.** `timer 50m break 10m loop 3` is the entire
+pitch. There are screenshots of it now; a few seconds of it being typed would
+say more.
 
-**Terminal history belongs in Rust.** It is currently in `localStorage`
-(`use-terminal-modal.ts`), which contradicts the one architectural rule this
-project has — Rust owns state. It should sit next to preferences on disk.
+**A pull-request check.** `cargo check`, `cargo fmt --check`, `cargo test`,
+`tsc --noEmit` and `vite build` are all clean today. Something should keep them
+that way.
 
-**Screenshots and a recording.** `timer 50m break 10m loop 3` is the entire
-pitch, and right now you have to install the app to see it.
-
-**A pull-request check.** `cargo check`, `cargo fmt --check`, `tsc --noEmit`
-and `vite build` are all clean today. Something should keep them that way.
-
-**Tests for the engine.** `cargo test` runs nothing at all. The session cycle —
-start, tick, advance, stop — is a state machine, which is the easiest kind of
-thing to test and the easiest to break quietly.
+**More of the engine under test.** The session cycle is covered — start, the
+break it rolls into, the cycle it closes, and the overrides that shape it.
+Profiles, sound state and the preference round-trip are not.
 
 ---
 
 ## Later
 
-**Deeper engine instrumentation.** `devmode on` and `engine state` expose some
-of the engine already. There is room for a real diagnostic surface — session
-timing history, transition traces, what the engine did and when — for people
-who want to operate the timer rather than just use it.
+**Deeper engine instrumentation.** `devmode on`, `engine state` and `history`
+expose some of the engine already. There is room for a real diagnostic surface —
+session timing history, transition traces, what the engine did and when — for
+people who want to operate the timer rather than just use it.
 
 **More ambience.** Four seasons and four sounds is a floor, not a ceiling. The
 particles are ordinary DOM and CSS — see `src/components/ambient-panel/`, which

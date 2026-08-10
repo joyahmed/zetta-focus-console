@@ -28,14 +28,25 @@ Blocking. None of the rest matters if these are not done.
       `ASSETS.md`.
 - [x] **Screenshots** — see the section below. Ten of them, five states in both
       themes, in `docs/screenshots/`.
-- [ ] **Read `README.md` start to finish as somebody who has never seen the
-      app**, and rewrite what does not survive it. Known weak points: it opens
-      with a wall of text before showing anything; "What it does" is a
-      feature table where the first three rows are the actual pitch and the
-      rest is a list; the commands section is longer than everything else
-      combined and sits above the parts a newcomer needs first. Order should
-      be: what it is, a picture of it, the one command that explains it, then
-      install, then the full reference.
+- [x] **Read `README.md` start to finish as somebody who has never seen the
+      app**, and rewrite what does not survive it. Done, and the three known
+      weak points with it. The picture now sits under the first two lines
+      rather than under three paragraphs. "What it does" led with an
+      eight-row feature table whose first three rows were the entire pitch and
+      whose last five were a list; the three are prose now and the five are a
+      list, which is what they always were. Install has moved above it, so the
+      order is what it is, a picture of it, the one command that explains it,
+      install, then everything else.
+
+      The read-through also turned up, as last time, things the app was saying
+      that were not true. `alarm on` answered "Voice announcements enabled" —
+      the feature was removed and renamed to alarms in this same release and
+      this one pair of strings was missed. `override` and `status` still
+      reported the override in seconds ("Focus: 3000s") after the switch to
+      minutes, which only ever reached the message printed when it was set.
+      And the Shortcuts section listed two keys out of eleven; the shortcuts
+      drawer has had the full set the whole time, and a screenshot of it is in
+      the README, which is presumably how a two-row table went unnoticed.
 
 ---
 
@@ -110,12 +121,39 @@ rather than in seconds.
 
 Real unfinished work, verified rather than remembered.
 
-- [ ] **Tray icon should show session state.** It currently changes only its
-      tooltip — `update_tray_state` in `src-tauri/src/lib.rs` says so in a
-      comment. Needs icon variants for focus, break, idle and strict.
-- [ ] **Move terminal history into Rust.** It is in `localStorage` today
-      (`src/hooks/use-terminal-modal.ts`), which contradicts the rule that Rust
-      owns state. It belongs next to preferences on disk.
+- [x] **Tray icon shows session state.** `src-tauri/src/tray.rs`. Rather than
+      four checked-in PNGs, the icon is rasterised: the bundled app mark inside
+      a ring that fills as the run goes on, violet for focus, green for a
+      break, amber and thicker for Strict Mode, and a plain grey outline when
+      idle. A paused arc keeps its position at reduced alpha, because a stopped
+      clock should not look like a running one.
+
+      Two things this had to avoid. The arc is quantised to twenty-four
+      positions, so a fifty-minute session repaints the tray two dozen times
+      instead of three thousand; and `apply` holds the last icon it set and
+      returns before touching the OS when nothing would change.
+
+      It also fixed the wrong half of an inversion. `update_tray_state` was a
+      command the *frontend* called, reading the timer back out of a state
+      event and posting it to Rust — the one thing this app is built not to do.
+      The tray now reads the same `AppState` the event carries, from the one
+      function that publishes both, so the two cannot disagree.
+
+      One trap worth writing down, because nothing in the build catches it:
+      `set_icon` and `set_tooltip` post their work to the main-thread event
+      loop and block waiting for the reply. That is fine from a command, which
+      runs on a worker thread, and a deadlock from `setup`, which runs on the
+      main thread before that loop starts. The startup icon is passed to
+      `TrayIconBuilder` instead. `cargo check`, `cargo test` and a full release
+      build all pass on the version that hangs; only launching it finds out.
+- [x] **Terminal history moved into Rust.** It sits in `preferences.json` next
+      to everything else and is `#[serde(skip)]` on `AppState`, because the
+      state event goes out once a second and a hundred lines of history have no
+      business riding along with it — the console asks for it once when it
+      opens. History written to `localStorage` by an earlier build is adopted
+      on first launch and the key removed. There is a `history` command now
+      too, and a `history clear`; until this moved there was no way to clear it
+      at all.
 - [ ] A short recording of the terminal. `timer 50m break 10m loop 3` is the
       whole pitch and currently you have to install the app to see it.
 
@@ -125,9 +163,20 @@ Real unfinished work, verified rather than remembered.
 
 Not urgent. Worth doing when touching the surrounding code anyway.
 
-- [ ] **Tests for the engine.** `cargo test` runs nothing. The session cycle is
-      a state machine — start, tick, advance, stop — and every bug found in it
-      so far was found by using the app rather than by the repository.
+- [x] **Tests for the engine.** `cargo test` ran nothing; it runs 38 now. The
+      session cycle is covered end to end — start, the break a finished run
+      rolls into, the wait at the next session, the long break that closes the
+      cycle and retires the override — along with the compound override parser,
+      ad-hoc runs, both kinds of stop, and Strict Mode's refusals. None of it
+      goes through `tick_timer` or `process_command`, which would want a real
+      second and a real audio device; the engine's own functions take
+      `&mut AppState` and nothing else, so they are called directly and nothing
+      touches the preferences file.
+
+      Every bug the cycle has had was found by using the app: the loop count
+      that was parsed and never applied, the compound command that kept only
+      its first clause, the counter that went back to 1/4 whenever a break was
+      stopped. There is a test for each of those three now.
 - [ ] The files in `src/components/settings-panel/` share enough
       structure to be driven by a list instead. They are also the last place
       still threading an `isLight` prop by hand.
@@ -207,11 +256,16 @@ handing over. The first build can go out by hand.
 - [x] All debug logging removed from both sides; genuine error paths kept.
 - [x] App identity fixed — the crate was `zetta-app`, described as "A Tauri
       App", authored by `you`.
+- [x] Eight dependencies dropped — `ed25519-dalek`, `rand`, `base64`, `sha2`,
+      `aes-gcm`, `hex`, `hmac`, `dotenv` and a `signing` feature, all left over
+      from the licence-key and payment layer. Nothing in `src/` had referred to
+      any of them since that layer was removed; they were still being compiled
+      into every build.
 
 Verification, all currently clean:
 
 ```bash
-cd src-tauri && cargo check && cargo fmt --check
+cd src-tauri && cargo check && cargo fmt --check && cargo test
 bun run build          # tsc --noEmit, then vite build
 bun run tauri build    # 4.9 MB NSIS installer
 ```

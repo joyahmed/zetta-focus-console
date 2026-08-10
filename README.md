@@ -3,6 +3,8 @@
 **A focus timer you drive from a terminal.** Type `timer 50m break 10m loop 3`,
 press enter, and get back to work.
 
+![The Zetta Focus Console window in its dark theme: a countdown ring reading 49:22 with an OVERRIDE badge under it, the active Winter Deep profile and its intervals to the right, session statistics and engine diagnostics below, and snow drifting through the ambience panel.](docs/screenshots/dashboard-dark.png)
+
 It is a Pomodoro timer, but the interface is a command line rather than a
 settings screen, the timer state lives in Rust rather than in the browser, and
 the window behind it drifts with the season — snow in winter, blossom in
@@ -10,8 +12,6 @@ spring, falling leaves in autumn — with an ambient loop underneath it.
 
 Free, MIT, no account, no telemetry, nothing leaves your machine. A 4.9 MB
 installer.
-
-![The Zetta Focus Console window in its dark theme: a countdown ring reading 49:22 with an OVERRIDE badge under it, the active Winter Deep profile and its intervals to the right, session statistics and engine diagnostics below, and snow drifting through the ambience panel.](docs/screenshots/dashboard-dark.png)
 
 ---
 
@@ -43,18 +43,57 @@ three and `timer` cover most days.
 
 ---
 
+## Install
+
+Grab an installer from [**releases**](../../releases), or build it yourself.
+
+### Build it yourself
+
+Needs [Rust](https://rustup.rs), Node 20+, and [Bun](https://bun.sh). On Linux you will also
+need the Tauri system dependencies — webkit2gtk, and `libasound2-dev` for
+audio.
+
+```bash
+bun install
+bun run tauri build      # installers land in src-tauri/target/release/bundle
+bun run tauri dev        # or run it in development
+```
+
+---
+
 ## What it does
 
-| | |
-|---|---|
-| **Terminal control** | Set durations, switch profiles, inspect engine state, all by typing. Aliases for the commands you use constantly. |
-| **Rust owns the clock** | The timer is a state machine in Rust; the UI renders what it reports. Reload the window and the session keeps its own time. |
-| **Seasons** | The active profile’s own icon drifts through the ambience panel: snow falls in winter, blossom in spring, leaves in autumn, sun rises off summer. Ordinary DOM and CSS — no video, no sprite sheets, no WebGL. |
-| **Ambient sound** | Fireplace, soft rain, light wind, rain on a window. Seamless 45-second Vorbis loops, embedded in the binary. |
-| **Strict Mode** | Start a session that cannot be paused or stopped. Force-closing the app marks it failed. |
-| **Profiles** | Four presets, plus as many of your own as you want — duration, season, motion, sound and volume per profile. |
-| **Tray and global keys** | Runs from the tray. `Ctrl+H` hides and restores the window from anywhere. |
-| **Alarms** | Three synthesised tones, one each for the end of a session, the end of a break, and the end of the cycle. Generated in the app, so nothing is downloaded and they sound the same everywhere. |
+Three things it does that other timers do not:
+
+**The command line is the interface.** Durations, profiles, sound, strict mode
+and the engine's own state are all reachable by typing, with aliases for the
+handful you use constantly and a history that survives a restart. There is no
+settings screen you have to go and find.
+
+**Rust owns the clock.** The timer is a state machine in Rust and the interface
+renders what it reports — it keeps no clock of its own, so there is nothing to
+drift out of step. The tray icon comes from the same state: a ring around the
+app mark that fills as the session runs, coloured for focus, break, strict mode
+or idle.
+
+**The window keeps you company.** The active profile's own icon drifts through
+the ambience panel — snow falls in winter, blossom in spring, leaves in autumn,
+sun rises off summer — over one of four seamless ambient loops. It is ordinary
+DOM and CSS: no video, no sprite sheets, no WebGL.
+
+And the rest:
+
+- **Profiles.** Four presets, plus as many of your own as you want — duration,
+  season, motion, sound and volume per profile.
+- **Strict Mode.** Start a session that cannot be paused or stopped.
+  Force-closing the app marks it failed.
+- **Alarms.** Three synthesised tones — session end, break end, cycle end.
+  Generated in the app, so nothing is downloaded and they sound the same
+  everywhere.
+- **Ambient sound.** Fireplace, soft rain, light wind, rain on a window.
+  Seamless 45-second Vorbis loops, embedded in the binary.
+- **Tray and global keys.** Runs from the tray, and `Ctrl+H` hides and restores
+  the window from any application.
 
 ### Both themes, and the same app in each
 
@@ -82,24 +121,6 @@ stripped-down version of the dark one.
 
 Every screenshot has a twin in the other theme in
 [`docs/screenshots/`](docs/screenshots).
-
----
-
-## Install
-
-Grab an installer from [**releases**](../../releases), or build it yourself.
-
-### Build it yourself
-
-Needs [Rust](https://rustup.rs), Node 20+, and [Bun](https://bun.sh). On Linux you will also
-need the Tauri system dependencies — webkit2gtk, and `libasound2-dev` for
-audio.
-
-```bash
-bun install
-bun run tauri build      # installers land in src-tauri/target/release/bundle
-bun run tauri dev        # or run it in development
-```
 
 ---
 
@@ -185,20 +206,45 @@ usage                   Engine process memory and uptime
 engine state            Full engine state dump
 engine reset            Reset the engine
 devmode on/off          Developer diagnostics
+```
+
+### The console itself
+
+```
+history                 The commands you have run
+history clear           Forget them
 clear                   Clear the terminal
 help                    Open the command list, on top of the console
 ```
+
+Tab completes, `↑` and `↓` walk the history, and the history is kept next to
+your preferences on disk rather than in the window — so it is still there after
+a restart.
 
 ---
 
 ## Shortcuts
 
+The same list is in the app, under the keyboard icon in the header. The two
+marked **global** work from any application; the rest need the window focused.
+
 | Key | Action |
 |---|---|
-| `Ctrl+H` | Hide or restore the window, from any application |
-| `Ctrl+B` | Show or hide the ambience |
+| `Ctrl+S` | Start or stop the timer |
+| `Ctrl+P` | Pause or resume |
+| `Ctrl+T` | Toggle the terminal |
+| `Ctrl+,` | Open settings |
+| `Ctrl+H` | Hide or restore the window — **global** |
+| `Ctrl+D` | Toggle light and dark theme |
+| `Ctrl+B` | Show or hide the ambience — **global** |
+| `Ctrl+M` | Mute or unmute |
+| `Ctrl+=` / `Ctrl+-` | Volume up and down |
+| `Ctrl+V` | Toggle the session alarms |
 
-The tray menu carries start, stop, pause, resume, settings and quit.
+The tray menu carries start, stop, pause, resume, settings and quit, and the
+tray icon shows the session: a ring around the app mark that fills as the run
+goes on, violet for focus, green for a break, amber in Strict Mode, and a plain
+grey outline when nothing is running.
 
 ---
 
@@ -212,9 +258,9 @@ macOS     ~/Library/Application Support/ZettaFocus/preferences.json
 Linux     ~/.local/share/ZettaFocus/preferences.json
 ```
 
-It holds your profiles, theme, volume and preferences. There is no account, no
-sync, no analytics, and no network call — the app does not open a socket. To
-reset it completely, delete that file.
+It holds your profiles, theme, volume, statistics, preferences and the console's
+command history. There is no account, no sync, no analytics, and no network
+call — the app does not open a socket. To reset it completely, delete that file.
 
 ---
 
@@ -235,6 +281,7 @@ src-tauri/src/
   commands/      timer.rs (the engine + command processing), profile.rs, parser.rs
   sound.rs       Vorbis playback via rodio
   storage.rs     preferences.json
+  tray.rs        the tray icon, drawn from the same state
 src/
   components/    UI, including the ambience in ambient-panel/
   hooks/app/     the bridge to Rust — one state subscription, no local clock
@@ -257,6 +304,12 @@ Some notes on choices that are not obvious:
   reused by every particle, where an SVG is a path subtree each and a blurred
   gradient is a texture — so the cheapest thing to draw is also the one that
   ties the panel to the profile.
+- **The tray icon is drawn, not shipped.** Four PNGs would be four more files to
+  keep in step with the app mark, and the progress arc would need a file per
+  position. It is rasterised from the bundled icon at 32×32, quantised to
+  twenty-four arc positions, and only handed to the OS when it would actually
+  change — so a fifty-minute session repaints the tray two dozen times rather
+  than three thousand.
 
 ---
 

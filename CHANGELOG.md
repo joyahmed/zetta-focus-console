@@ -22,6 +22,20 @@ free and open source.
 
 ### Added
 
+- **A tray icon that shows the session.** The app mark inside a ring that fills
+  as the run goes on — violet for focus, green for a break, amber and thicker in
+  Strict Mode, a plain grey outline when idle, and dimmed while paused. It is
+  rasterised from the bundled icon rather than shipped as a set of PNGs, and
+  quantised to twenty-four arc positions so a fifty-minute session repaints the
+  tray two dozen times instead of three thousand. The tray previously changed
+  only its tooltip.
+- **`history` and `history clear`**, and the console's history now lives in
+  `preferences.json` beside everything else. It was in `localStorage`, which is
+  the webview's storage rather than the app's, and there was no way to clear it.
+  An existing history is adopted on first launch.
+- **Tests for the session cycle.** `cargo test` ran nothing; it runs 38 now,
+  covering the cycle end to end, the compound override parser, ad-hoc runs, both
+  kinds of stop, and Strict Mode's refusals.
 - **The session cycle.** A focus run now rolls into its break, the break waits
   for you when it ends, and the long break after the last run closes the cycle.
   `current_session` was previously assigned 1 in nine places and incremented in
@@ -43,6 +57,15 @@ free and open source.
 
 ### Changed
 
+- **The tray is painted by Rust, from the state Rust already holds.** It used to
+  be a command the frontend called: the state listener read the timer back out
+  of the event it had just received and posted it to Rust, which inverts the one
+  rule this app has. One function now publishes the state event and the tray
+  together, so they cannot disagree.
+- **Eight dependencies removed** — `ed25519-dalek`, `rand`, `base64`, `sha2`,
+  `aes-gcm`, `hex`, `hmac`, `dotenv` — and a `signing` feature, all left over
+  from the licence-key and payment layer. Nothing had referred to any of them
+  since that layer was removed; they were still compiled into every build.
 - **Installer is 4.5 MB, down from roughly 46 MB.** Ambient audio went from
   42.0 MB to 2.16 MB: the four tracks were 256 kbps stereo MP3 running up to
   ten and a half minutes, played on an infinite loop, so everything past the
@@ -108,3 +131,9 @@ free and open source.
   `fireplace.mp3` still finds `fireplace.ogg` instead of falling back.
 - A modal footer rendered a literal `0` before the first statistics probe
   landed, from a truthiness check on a numeric value.
+- `alarm on` and `alarm off` answered about "voice announcements", a feature
+  removed and renamed to alarms in this same release. The preference and the
+  help text were renamed; this one pair of strings was missed.
+- `override` and `status` reported the session override in seconds — a
+  `timer 50m` came back as "Focus: 3000s" — after every other place that prints
+  it had switched to minutes.
