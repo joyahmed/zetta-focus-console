@@ -140,9 +140,9 @@ pub fn process_command(
  🔵 Advanced Commands:
    strict on             - Enable Strict Mode (commitment mode)
    strict off            - Disable Strict Mode (when idle)
-   timer [duration]      - Runtime override
-   break [duration]      - Runtime override
-   loop [count]          - Runtime override
+   timer 50m             - Focus override; combines, e.g. timer 50m break 10m loop 3
+   break 10m             - Break override
+   loop 3                - Sessions in the cycle
    profile create        - Create custom profile
    profile edit [id]     - Edit custom profile
    profile duplicate     - Duplicate profile
@@ -426,111 +426,182 @@ fn task_command(args: &[&str], app_state: &mut AppState) -> String {
     }
 }
 
-fn timer_override_command(args: &[&str], app_state: &mut AppState) -> String {
+/// One field of the session override.
+#[derive(Clone, Copy, PartialEq)]
+enum OverrideField {
+    Focus,
+    Break,
+    Loop,
+}
+
+impl OverrideField {
+    fn from_keyword(word: &str) -> Option<Self> {
+        match word {
+            "timer" | "focus" => Some(Self::Focus),
+            "break" => Some(Self::Break),
+            "loop" => Some(Self::Loop),
+            _ => None,
+        }
+    }
+
+    fn noun(self) -> &'static str {
+        match self {
+            Self::Focus => "focus duration",
+            Self::Break => "break duration",
+            Self::Loop => "loop count",
+        }
+    }
+
+    fn usage(self) -> &'static str {
+        match self {
+            Self::Focus => "Usage: timer 50m | timer 90s | timer 50m break 10m loop 3",
+            Self::Break => "Usage: break 10m | break 30s",
+            Self::Loop => "Usage: loop 3",
+        }
+    }
+
+    /// Parses and range-checks one value for this field.
+    fn value(self, raw: &str) -> Result<u32, String> {
+        match self {
+            Self::Focus => {
+                let seconds = parse_duration(raw)?;
+                if !(5..=10800).contains(&seconds) {
+                    return Err(
+                        "Focus duration must be between 5 seconds and 180 minutes.".to_string()
+                    );
+                }
+                Ok(seconds)
+            }
+            Self::Break => {
+                let seconds = parse_duration(raw)?;
+                if !(1..=3600).contains(&seconds) {
+                    return Err(
+                        "Break duration must be between 1 second and 60 minutes.".to_string()
+                    );
+                }
+                Ok(seconds)
+            }
+            Self::Loop => {
+                let count: u32 = raw
+                    .parse()
+                    .map_err(|_| "Invalid loop count. Must be a number between 1 and 100.")?;
+                if !(1..=100).contains(&count) {
+                    return Err("Loop count must be between 1 and 100.".to_string());
+                }
+                Ok(count)
+            }
+        }
+    }
+}
+
+/// Reads `50m break 10m loop 3` as three clauses rather than one value.
+///
+/// This is the command the app is pitched on — a whole session shape in one
+/// line — and it never worked: each of the three handlers read `args.first()`
+/// and dropped everything after it, so `timer 50m break 10m loop 3` set the
+/// focus duration, silently discarded the break and the loop, and answered as
+/// though it had done the lot. Any of the three words can lead, and the rest
+/// follow as `<keyword> <value>` pairs, so `break 10m loop 3` reads the same
+/// way round.
+fn parse_override_clauses(
+    args: &[&str],
+    lead: OverrideField,
+) -> Result<Vec<(OverrideField, u32)>, String> {
+    let mut clauses = Vec::new();
+    let mut field = lead;
+    let mut index = 0;
+
+    loop {
+        let raw = args
+            .get(index)
+            .ok_or_else(|| format!("Error: Missing {}. {}", field.noun(), field.usage()))?;
+
+        let value = field.value(raw).map_err(|e| format!("Error: {}", e))?;
+        clauses.push((field, value));
+        index += 1;
+
+        let Some(word) = args.get(index) else { break };
+        field = OverrideField::from_keyword(&word.to_lowercase()).ok_or_else(|| {
+            format!(
+                "Error: Unexpected \"{}\". Expected break or loop. {}",
+                word,
+                lead.usage()
+            )
+        })?;
+        index += 1;
+    }
+
+    Ok(clauses)
+}
+
+fn override_command_for(args: &[&str], app_state: &mut AppState, lead: OverrideField) -> String {
     if app_state.strict_mode.is_active && app_state.timer.status == TimerStatus::Running {
-        return "Cannot modify duration while Strict Mode is active.".to_string();
+        return format!("Cannot modify {} while Strict Mode is active.", lead.noun());
     }
 
     if app_state.timer.status == TimerStatus::Running {
         return "Stop current session before applying override.".to_string();
     }
 
-    if let Some(duration_str) = args.first() {
-        match parse_duration(duration_str) {
-            Ok(seconds) => {
-                if seconds < 5 || seconds > 10800 {
-                    return "Error: Focus duration must be between 5 seconds and 180 minutes."
-                        .to_string();
-                }
-                let override_state = app_state
-                    .session_override
-                    .get_or_insert(SessionOverride::new());
-                override_state.focus_duration = Some(seconds);
-                if let Err(e) = override_state.validate() {
-                    return format!("Error: {}", e);
-                }
+    let clauses = match parse_override_clauses(args, lead) {
+        Ok(clauses) => clauses,
+        Err(message) => return message,
+    };
 
-                build_override_message(override_state)
-            }
-            Err(e) => format!("Error: {}", e),
+    let override_state = app_state
+        .session_override
+        .get_or_insert(SessionOverride::new());
+
+    for (field, value) in clauses {
+        match field {
+            OverrideField::Focus => override_state.focus_duration = Some(value),
+            OverrideField::Break => override_state.break_duration = Some(value),
+            OverrideField::Loop => override_state.loop_count = Some(value),
         }
-    } else {
-        "Error: Missing duration. Usage: timer 1m | timer 30s | timer 2m".to_string()
     }
+
+    if let Err(e) = override_state.validate() {
+        return format!("Error: {}", e);
+    }
+
+    build_override_message(override_state)
+}
+
+fn timer_override_command(args: &[&str], app_state: &mut AppState) -> String {
+    override_command_for(args, app_state, OverrideField::Focus)
 }
 
 fn break_override_command(args: &[&str], app_state: &mut AppState) -> String {
-    if app_state.strict_mode.is_active && app_state.timer.status == TimerStatus::Running {
-        return "Cannot modify duration while Strict Mode is active.".to_string();
-    }
-
-    if app_state.timer.status == TimerStatus::Running {
-        return "Stop current session before applying override.".to_string();
-    }
-
-    if let Some(duration_str) = args.first() {
-        match parse_duration(duration_str) {
-            Ok(seconds) => {
-                if seconds < 1 || seconds > 3600 {
-                    return "Error: Break duration must be between 1 second and 60 minutes."
-                        .to_string();
-                }
-                let override_state = app_state
-                    .session_override
-                    .get_or_insert(SessionOverride::new());
-                override_state.break_duration = Some(seconds);
-                if let Err(e) = override_state.validate() {
-                    return format!("Error: {}", e);
-                }
-
-                build_override_message(override_state)
-            }
-            Err(e) => format!("Error: {}", e),
-        }
-    } else {
-        "Error: Missing duration. Usage: break 30s | break 5m".to_string()
-    }
+    override_command_for(args, app_state, OverrideField::Break)
 }
 
 fn loop_override_command(args: &[&str], app_state: &mut AppState) -> String {
-    if app_state.strict_mode.is_active && app_state.timer.status == TimerStatus::Running {
-        return "Cannot modify loop count while Strict Mode is active.".to_string();
-    }
+    override_command_for(args, app_state, OverrideField::Loop)
+}
 
-    if app_state.timer.status == TimerStatus::Running {
-        return "Stop current session before applying override.".to_string();
-    }
-
-    if let Some(count_str) = args.first() {
-        match count_str.parse::<u32>() {
-            Ok(count) => {
-                if count < 1 || count > 100 {
-                    return "Error: Loop count must be between 1 and 100.".to_string();
-                }
-                let override_state = app_state
-                    .session_override
-                    .get_or_insert(SessionOverride::new());
-                override_state.loop_count = Some(count);
-
-                build_override_message(override_state)
-            }
-            Err(_) => "Error: Invalid loop count. Must be a number between 1 and 100.".to_string(),
-        }
-    } else {
-        "Error: Missing count. Usage: loop 4".to_string()
+/// Seconds as a person would say them: `50m`, `90s`, `1m 30s`.
+///
+/// The override used to report itself in raw seconds — a fifty-minute focus
+/// came back as "Focus: 3000s", which is the number the engine holds rather
+/// than the one that was typed.
+fn humanize_seconds(seconds: u32) -> String {
+    match (seconds / 60, seconds % 60) {
+        (0, s) => format!("{}s", s),
+        (m, 0) => format!("{}m", m),
+        (m, s) => format!("{}m {}s", m, s),
     }
 }
 
 fn build_override_message(override_state: &SessionOverride) -> String {
     let mut info = vec![];
     if let Some(f) = override_state.focus_duration {
-        info.push(format!("Focus: {}s", f));
+        info.push(format!("Focus: {}", humanize_seconds(f)));
     }
     if let Some(b) = override_state.break_duration {
-        info.push(format!("Break: {}s", b));
+        info.push(format!("Break: {}", humanize_seconds(b)));
     }
     if let Some(l) = override_state.loop_count {
-        info.push(format!("Loops: {}", l));
+        info.push(format!("Sessions: {}", l));
     }
 
     format!(
@@ -605,13 +676,13 @@ fn start_command(app_state: &mut AppState) -> String {
         if override_state.is_active() {
             let mut info = vec![];
             if let Some(f) = override_state.focus_duration {
-                info.push(format!("focus: {}s", f));
+                info.push(format!("{} focus", humanize_seconds(f)));
             }
             if let Some(b) = override_state.break_duration {
-                info.push(format!("break: {}s", b));
+                info.push(format!("{} break", humanize_seconds(b)));
             }
             if let Some(l) = override_state.loop_count {
-                info.push(format!("loops: {}", l));
+                info.push(format!("{} sessions", l));
             }
             format!(" [Override: {}]", info.join(", "))
         } else {
