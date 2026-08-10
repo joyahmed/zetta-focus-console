@@ -130,6 +130,8 @@ export const commandGroups: CommandGroup[] = [
 	{
 		title: 'Terminal',
 		commands: [
+			{ cmd: 'history', description: 'Show the commands you have run' },
+			{ cmd: 'history clear', description: 'Forget them' },
 			{ cmd: 'clear', description: 'Clear the terminal' },
 			{ cmd: 'help', description: 'Open this list' }
 		]

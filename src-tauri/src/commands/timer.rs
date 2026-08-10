@@ -98,7 +98,15 @@ pub fn execute_command(
     // Save preferences after command execution (only for preference-modifying commands)
     let should_save = matches!(
         cmd.as_str(),
-        "devmode" | "ambience" | "sound" | "profile" | "background" | "reset" | "theme" | "alarm"
+        "devmode"
+            | "ambience"
+            | "sound"
+            | "profile"
+            | "background"
+            | "reset"
+            | "theme"
+            | "alarm"
+            | "history"
     );
     if should_save {
         let _ = app_state.save_preferences();
@@ -112,6 +120,81 @@ pub fn execute_command(
     );
 
     Ok(result)
+}
+
+// ============================================================================
+// TERMINAL HISTORY
+// ============================================================================
+
+/// How many commands the console remembers. Matches what the localStorage
+/// version kept, and is a hundred lines rather than a hundred kilobytes.
+const TERMINAL_HISTORY_LIMIT: usize = 100;
+
+#[tauri::command]
+pub fn get_terminal_history(state: State<EngineState>) -> Result<Vec<String>, String> {
+    let app_state = state.app_state.lock().map_err(|e| e.to_string())?;
+    Ok(app_state.terminal_history.clone())
+}
+
+/// Record a command the console actually ran.
+///
+/// Deliberately separate from `execute_command`: most calls to that come from
+/// buttons and keyboard shortcuts rather than from typing, and a history full
+/// of `sound mute` from the volume control would be useless to arrow back
+/// through. The console decides what counts as a line it typed.
+#[tauri::command]
+pub fn push_terminal_history(command: String, state: State<EngineState>) -> Result<(), String> {
+    let command = command.trim().to_string();
+    if command.is_empty() {
+        return Ok(());
+    }
+
+    let mut app_state = state.app_state.lock().map_err(|e| e.to_string())?;
+
+    // Running the same command twice in a row should not cost two entries;
+    // every shell collapses that, and it is what makes arrowing back usable.
+    if app_state.terminal_history.last() == Some(&command) {
+        return Ok(());
+    }
+
+    app_state.terminal_history.push(command);
+    let overflow = app_state
+        .terminal_history
+        .len()
+        .saturating_sub(TERMINAL_HISTORY_LIMIT);
+    if overflow > 0 {
+        app_state.terminal_history.drain(..overflow);
+    }
+
+    app_state.save_preferences()
+}
+
+/// Adopt a history the console is holding from somewhere else.
+///
+/// This exists for one upgrade: history written to `localStorage` by an earlier
+/// build, which the console hands over the first time it opens. It refuses to
+/// overwrite a history that already has something in it, so a stale copy in the
+/// webview cannot clobber the real one on disk.
+#[tauri::command]
+pub fn import_terminal_history(
+    history: Vec<String>,
+    state: State<EngineState>,
+) -> Result<Vec<String>, String> {
+    let mut app_state = state.app_state.lock().map_err(|e| e.to_string())?;
+
+    if !app_state.terminal_history.is_empty() {
+        return Ok(app_state.terminal_history.clone());
+    }
+
+    let start = history.len().saturating_sub(TERMINAL_HISTORY_LIMIT);
+    app_state.terminal_history = history[start..]
+        .iter()
+        .map(|entry| entry.trim().to_string())
+        .filter(|entry| !entry.is_empty())
+        .collect();
+
+    app_state.save_preferences()?;
+    Ok(app_state.terminal_history.clone())
 }
 
 // ============================================================================
@@ -215,6 +298,8 @@ pub fn process_command(
 
         "sound" => sound_command(args, app_state, sound_manager),
 
+        "history" => history_command(args, app_state),
+
         "clear" => "__CLEAR__".to_string(),
 
         "" => String::new(),
@@ -254,6 +339,8 @@ fn help_command(advanced_commands: &str) -> String {
    sound volume [0-100]  - Set volume level
    sound mute            - Toggle mute
    alarm on/off          - Toggle the end-of-session alarms
+   history               - Show the commands you have run
+   history clear         - Forget them
    system                - Show system information
    memory                - Show memory usage
    cpu                   - Show CPU usage
@@ -1151,6 +1238,45 @@ fn alarm_command(args: &[&str], app_state: &mut AppState) -> String {
                 status
             )
         }
+    }
+}
+
+/// The console's own history, which is engine state like everything else.
+///
+/// Worth having as a command rather than only as arrow keys: a hundred entries
+/// is more than you can arrow through, and until it moved out of the webview
+/// there was no way to clear it at all.
+fn history_command(args: &[&str], app_state: &mut AppState) -> String {
+    /// Enough to see what you have been doing without burying the console.
+    const SHOWN: usize = 20;
+
+    match args.first() {
+        Some(&"clear") => {
+            app_state.terminal_history.clear();
+            "Command history cleared.".to_string()
+        }
+        None => {
+            let total = app_state.terminal_history.len();
+            if total == 0 {
+                return "No command history yet.".to_string();
+            }
+
+            let start = total.saturating_sub(SHOWN);
+            let lines: Vec<String> = app_state.terminal_history[start..]
+                .iter()
+                .enumerate()
+                .map(|(i, command)| format!("  {:>3}  {}", start + i + 1, command))
+                .collect();
+
+            let heading = if start > 0 {
+                format!("Command history (last {} of {}):", lines.len(), total)
+            } else {
+                format!("Command history ({}):", total)
+            };
+
+            format!("{}\n{}", heading, lines.join("\n"))
+        }
+        _ => "Error: Unknown history command. Usage: history | history clear".to_string(),
     }
 }
 

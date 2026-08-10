@@ -1,3 +1,4 @@
+import { invoke } from '@tauri-apps/api/core';
 import { KeyboardEvent, useEffect, useRef, useState } from 'react';
 
 
@@ -24,6 +25,8 @@ const COMMANDS = [
 	'sound mute',
 	'alarm on',
 	'alarm off',
+	'history',
+	'history clear',
 	'system',
 	'memory',
 	'cpu',
@@ -37,9 +40,15 @@ const COMMANDS = [
 	'p'
 ];
 
-// Storage key for persistent history
-const HISTORY_STORAGE_KEY = 'zetta_terminal_history';
-const MAX_HISTORY_SIZE = 100;
+/**
+ * Where the history used to live.
+ *
+ * It is engine state now, next to preferences on disk, because Rust owns state
+ * and `localStorage` belongs to the webview rather than to the app. The key is
+ * still read once so that an existing history survives the move, and removed
+ * as soon as the engine has taken it.
+ */
+const LEGACY_HISTORY_KEY = 'zetta_terminal_history';
 
 /** One colour per kind of line, in tokens that already follow the theme. */
 const LINE_COLORS: Record<TerminalLine['type'], string> = {
@@ -56,31 +65,18 @@ export const useTerminalModal = ({
 	sessionSummary,
 	onSummaryRead
 }: UseTerminalModalProps) => {
-	// Load persisted history from localStorage
-	const loadPersistedHistory = (): string[] => {
+	/** Whatever the previous build left in the webview, if anything. */
+	const readLegacyHistory = (): string[] => {
 		try {
-			const saved = localStorage.getItem(HISTORY_STORAGE_KEY);
-			if (saved) {
-				const parsed = JSON.parse(saved);
-				if (Array.isArray(parsed)) {
-					return parsed.slice(-MAX_HISTORY_SIZE);
-				}
-			}
-		} catch (e) {
-			console.error('Failed to load terminal history:', e);
-		}
-		return [];
-	};
-
-	// Save history to localStorage
-	const saveHistory = (history: string[]) => {
-		try {
-			localStorage.setItem(
-				HISTORY_STORAGE_KEY,
-				JSON.stringify(history.slice(-MAX_HISTORY_SIZE))
-			);
-		} catch (e) {
-			console.error('Failed to save terminal history:', e);
+			const saved = localStorage.getItem(LEGACY_HISTORY_KEY);
+			if (!saved) return [];
+			const parsed = JSON.parse(saved);
+			return Array.isArray(parsed)
+				? parsed.filter((entry): entry is string => typeof entry === 'string')
+				: [];
+		} catch {
+			// A history nobody can parse is not worth an error in the console.
+			return [];
 		}
 	};
 
@@ -99,20 +95,47 @@ export const useTerminalModal = ({
 		}
 	]);
 	const [input, setInput] = useState('');
-	const [commandHistory, setCommandHistory] = useState<string[]>(
-		loadPersistedHistory
-	);
+	const [commandHistory, setCommandHistory] = useState<string[]>([]);
 	const [historyIndex, setHistoryIndex] = useState(-1);
 	const [isExecuting, setIsExecuting] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const outputRef = useRef<HTMLDivElement>(null);
 
-	// Save history when it changes
+	/**
+	 * Take the history from the engine.
+	 *
+	 * Asked for once on mount rather than carried on the state event: the
+	 * engine broadcasts the whole of its state every second, and a hundred
+	 * lines of history have no business riding along with it.
+	 */
 	useEffect(() => {
-		if (commandHistory.length > 0) {
-			saveHistory(commandHistory);
-		}
-	}, [commandHistory]);
+		let cancelled = false;
+
+		const load = async () => {
+			try {
+				const legacy = readLegacyHistory();
+				const stored = legacy.length
+					? await invoke<string[]>('import_terminal_history', {
+							history: legacy
+						})
+					: await invoke<string[]>('get_terminal_history');
+
+				// Only once the engine has it, so a failed handover can be
+				// retried on the next launch rather than losing the history.
+				if (legacy.length) {
+					localStorage.removeItem(LEGACY_HISTORY_KEY);
+				}
+				if (!cancelled) setCommandHistory(stored);
+			} catch (e) {
+				console.error('Failed to load terminal history:', e);
+			}
+		};
+
+		load();
+		return () => {
+			cancelled = true;
+		};
+	}, []);
 
 	// Handle session summary from backend
 	useEffect(() => {
@@ -209,7 +232,12 @@ export const useTerminalModal = ({
 		const command = input.trim();
 
 		setHistory(prev => [...prev, { type: 'input', content: `$ ${command}` }]);
-		setCommandHistory(prev => [...prev, command]);
+		// Optimistic, so the arrow keys work before the round trip lands. The
+		// engine collapses a repeat of the last command; so does this.
+		setCommandHistory(prev =>
+			prev[prev.length - 1] === command ? prev : [...prev, command]
+		);
+		invoke('push_terminal_history', { command }).catch(console.error);
 		setHistoryIndex(-1);
 		setInput('');
 
@@ -253,6 +281,16 @@ export const useTerminalModal = ({
 						content: result
 					}
 				]);
+			}
+
+			// `history clear` changes the list these arrow keys walk, so take
+			// the engine's copy back rather than leaving a cleared history
+			// still scrolling here.
+			if (command.split(/\s+/)[0].toLowerCase() === 'history') {
+				setCommandHistory(
+					await invoke<string[]>('get_terminal_history')
+				);
+				setHistoryIndex(-1);
 			}
 		} catch (error) {
 			setHistory(prev => [

@@ -32,6 +32,14 @@ pub struct Preferences {
     /// the daily count are both derived by comparing this against today.
     #[serde(default)]
     pub last_session_date: String,
+    /// The console's command history, oldest first.
+    ///
+    /// This lived in `localStorage` — the one piece of state the frontend
+    /// owned, which is the single rule this project has. It also meant the
+    /// history was tied to the webview's storage rather than to the app, so
+    /// anything that cleared it took the history with it.
+    #[serde(default)]
+    pub terminal_history: Vec<String>,
 }
 
 impl Default for Preferences {
@@ -49,6 +57,7 @@ impl Default for Preferences {
             start_minimized: false,
             stats: Stats::default(),
             last_session_date: String::new(),
+            terminal_history: vec![],
         }
     }
 }
@@ -71,6 +80,14 @@ pub struct AppState {
     /// Local date of the last completed session, YYYY-MM-DD. Empty until one
     /// finishes. Drives both the streak and the daily reset.
     pub last_session_date: String,
+    /// The console's command history, oldest first.
+    ///
+    /// Deliberately not part of the state event: every tick broadcasts the
+    /// whole of `AppState` to the webview, and a hundred lines of shell history
+    /// have no business riding along once a second. The console asks for it
+    /// once when it opens.
+    #[serde(skip)]
+    pub terminal_history: Vec<String>,
 }
 
 impl Default for AppState {
@@ -167,6 +184,7 @@ impl AppState {
             current_task: CurrentTask::default(),
             alarm_enabled: false,
             last_session_date: String::new(),
+            terminal_history: Vec::new(),
             app_start_time: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()
@@ -245,6 +263,7 @@ impl AppStateExt for AppState {
         self.sound_state.is_muted = prefs.is_muted;
         self.theme = prefs.theme;
         self.alarm_enabled = prefs.alarm_enabled;
+        self.terminal_history = prefs.terminal_history;
 
         // Sessions today are only "today" if the saved date is today. Coming
         // back after a break should show a clean count, not the last day used.
@@ -304,6 +323,7 @@ impl AppStateExt for AppState {
             start_minimized: false,
             stats: self.stats.clone(),
             last_session_date: self.last_session_date.clone(),
+            terminal_history: self.terminal_history.clone(),
         };
         save_preferences(&prefs)
     }
