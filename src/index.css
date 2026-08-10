@@ -458,6 +458,23 @@ body {
 	[role='combobox']:focus-visible {
 		outline: none;
 	}
+
+	/*
+	 * A field is dark in the dark theme before anyone says so.
+	 *
+	 * Preflight leaves text and number inputs with the browser's own `field`
+	 * background, which is white in every theme — so an input that loses its
+	 * background utility for any reason does not degrade, it becomes a white
+	 * box with white text in it, and the value inside is simply gone. That is
+	 * exactly what a stale Tailwind build looks like, and it is not a state the
+	 * app should be capable of. The utilities still win where a field wants
+	 * something else; the console's prompt is `bg-transparent` and stays so.
+	 */
+	input,
+	textarea {
+		background-color: var(--bg-inset);
+		color: var(--text-primary);
+	}
 }
 
 /* Hide native number input spinners (use custom +/- controls instead) */

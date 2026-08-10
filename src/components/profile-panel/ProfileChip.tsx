@@ -23,7 +23,10 @@ const ProfileChip = ({ profile, onSwitch, onDelete }: ProfileChipProps) => (
 				onClick={onDelete}
 				title={`Delete ${profile.name}`}
 				aria-label={`Delete ${profile.name}`}
-				className='pl-0.5 pr-1.5 py-1 text-zetta-text-muted hover:text-zetta-danger transition-colors'
+				// Red at rest, not only on hover: what it does is worth saying
+			// before the pointer arrives. Held back to 70% so a row of chips
+			// does not read as a row of warnings.
+			className='pl-0.5 pr-1.5 py-1 text-zetta-danger/70 hover:text-zetta-danger transition-colors'
 			>
 				<TrashIcon className='h-3 w-3' />
 			</button>
