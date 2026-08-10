@@ -52,7 +52,7 @@ const LINE_COLORS: Record<TerminalLine['type'], string> = {
 export const useTerminalModal = ({
 	isOpen,
 	onCommand,
-	onHelp: _onHelp,
+	onHelp,
 	sessionSummary,
 	onSummaryRead
 }: UseTerminalModalProps) => {
@@ -206,18 +206,44 @@ export const useTerminalModal = ({
 		e.preventDefault();
 		if (!input.trim() || isExecuting) return;
 
-		setHistory(prev => [
-			...prev,
-			{ type: 'input', content: `$ ${input.trim()}` }
-		]);
-		setCommandHistory(prev => [...prev, input.trim()]);
+		const command = input.trim();
+
+		setHistory(prev => [...prev, { type: 'input', content: `$ ${command}` }]);
+		setCommandHistory(prev => [...prev, command]);
 		setHistoryIndex(-1);
 		setInput('');
+
+		/**
+		 * `help` is a dialog of its own.
+		 *
+		 * It used to print the engine's entire command list into the console,
+		 * which made the list and the console one surface: there was no way to
+		 * dismiss the list except by closing the terminal it had been printed
+		 * into, and no way to keep the list open while typing the command it
+		 * described. The list has existed as its own modal the whole time —
+		 * navigable with the arrow keys, closed with ESC — and this hook simply
+		 * took `onHelp` and threw it away.
+		 *
+		 * Two dialogs, two states: ESC closes whichever is on top, which the
+		 * modal shell already tracks, so the console is still there underneath.
+		 */
+		if (command === 'help') {
+			onHelp();
+			setHistory(prev => [
+				...prev,
+				{
+					type: 'output',
+					content:
+						'Opened the command list. ESC closes it and leaves the console open.'
+				}
+			]);
+			return;
+		}
 
 		setIsExecuting(true);
 
 		try {
-			const result = await onCommand(input.trim());
+			const result = await onCommand(command);
 			if (result) {
 				const isError = result.startsWith('Error:');
 				setHistory(prev => [

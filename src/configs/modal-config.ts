@@ -1,3 +1,12 @@
+/**
+ * What the command list shows.
+ *
+ * This is the list `help` opens, so it has to be the whole command set rather
+ * than a sample of it — it used to be a subset written before half of these
+ * existed, and it was never opened by anything, so nobody noticed it had gone
+ * out of date. The grouping follows the README's, so the two read the same way
+ * round.
+ */
 export const commandGroups: CommandGroup[] = [
 	{
 		title: 'Session Control',
@@ -13,7 +22,11 @@ export const commandGroups: CommandGroup[] = [
 			},
 			{ cmd: 'pause', description: 'Pause current session' },
 			{ cmd: 'resume', description: 'Resume paused session' },
-			{ cmd: 'status', description: 'Show current session status' }
+			{ cmd: 'status', description: 'Show current session status' },
+			{
+				cmd: 'sessions [1-20]',
+				description: 'Set or view sessions per cycle'
+			}
 		]
 	},
 	{
@@ -21,23 +34,36 @@ export const commandGroups: CommandGroup[] = [
 		commands: [
 			{
 				cmd: 'timer [duration]',
-				description: 'Set focus duration (e.g., timer 1m, timer 30s)'
+				description: 'Set focus duration (e.g. timer 50m, timer 30s)'
 			},
 			{
 				cmd: 'break [duration]',
-				description: 'Set break duration (e.g., break 30s, break 5m)'
+				description: 'Set break duration (e.g. break 10m, break 30s)'
 			},
-			{ cmd: 'loop [count]', description: 'Set loop count (1-100)' },
-			{ cmd: 'override clear', description: 'Clear session override' }
+			{
+				cmd: 'loop [count]',
+				description: 'Run a cycle of this many sessions'
+			},
+			{
+				cmd: 'override clear',
+				description: 'Drop the override, back to profile defaults'
+			}
 		]
 	},
 	{
-		title: 'Profile Management',
+		title: 'Profiles',
 		commands: [
-			{ cmd: 'profile [name]', description: 'Switch to a profile' },
+			{ cmd: 'profile [id]', description: 'Switch to a profile' },
 			{
 				cmd: 'profile list',
 				description: 'List all available profiles'
+			},
+			{ cmd: 'profile create', description: 'Create a custom profile' },
+			{ cmd: 'profile edit [id]', description: 'Edit a custom profile' },
+			{ cmd: 'profile duplicate', description: 'Copy a profile' },
+			{
+				cmd: 'profile delete [id]',
+				description: 'Delete a custom profile'
 			},
 			{
 				cmd: 'season [name]',
@@ -46,56 +72,66 @@ export const commandGroups: CommandGroup[] = [
 		]
 	},
 	{
-		title: 'Configuration',
+		title: 'Discipline',
 		commands: [
 			{
-				cmd: 'config show',
-				description: 'Show current configuration'
+				cmd: 'strict on',
+				description: 'No pausing or stopping until the session completes'
 			},
+			{ cmd: 'strict off', description: 'Disable Strict Mode (when idle)' },
+			{
+				cmd: 'task set "name"',
+				description: 'Bind an intention to the session'
+			}
+		]
+	},
+	{
+		title: 'Sound',
+		commands: [
+			{ cmd: 'sound play', description: 'Play ambient sound' },
+			{ cmd: 'sound stop', description: 'Stop ambient sound' },
+			{ cmd: 'sound volume [0-100]', description: 'Set volume level' },
+			{ cmd: 'sound mute', description: 'Toggle mute' },
+			{
+				cmd: 'alarm on/off',
+				description: 'Tones at session, break and cycle end'
+			}
+		]
+	},
+	{
+		title: 'Appearance',
+		commands: [
+			{ cmd: 'ambience on/off', description: 'Show or hide the particles' },
+			{ cmd: 'theme [mode]', description: 'Set theme (dark, light, system)' }
+		]
+	},
+	{
+		title: 'Configuration',
+		commands: [
+			{ cmd: 'config show', description: 'Show current configuration' },
 			{ cmd: 'stats', description: 'Show detailed statistics' }
 		]
 	},
 	{
-		title: 'Sound Control',
-		commands: [
-			{ cmd: 'sound play', description: 'Play ambient sound' },
-			{ cmd: 'sound stop', description: 'Stop ambient sound' },
-			{
-				cmd: 'sound volume [0-100]',
-				description: 'Set volume level'
-			},
-			{ cmd: 'sound mute', description: 'Toggle mute' }
-		]
-	},
-	{
-		title: 'Visual Settings',
-		commands: [
-			{
-				cmd: 'ambience on/off',
-				description: 'Toggle ambient visuals'
-			},
-			{ cmd: 'ambience', description: 'Show current ambience status' }
-		]
-	},
-	{
-		title: 'Developer',
-		commands: [
-			{ cmd: 'devmode on/off', description: 'Toggle developer mode' }
-		]
-	},
-	{
-		title: 'System Information',
+		title: 'Diagnostics',
 		commands: [
 			{ cmd: 'system', description: 'Show system information' },
 			{ cmd: 'memory', description: 'Show memory usage' },
-			{ cmd: 'cpu', description: 'Show CPU usage' }
+			{ cmd: 'cpu', description: 'Show CPU usage' },
+			{
+				cmd: 'usage',
+				description: 'App usage stats (CPU, memory, uptime)'
+			},
+			{ cmd: 'engine state', description: 'Engine state inspection' },
+			{ cmd: 'engine reset', description: 'Reset the engine' },
+			{ cmd: 'devmode on/off', description: 'Developer diagnostics' }
 		]
 	},
 	{
 		title: 'Terminal',
 		commands: [
-			{ cmd: 'clear', description: 'Clear terminal' },
-			{ cmd: 'help', description: 'Show this help message' }
+			{ cmd: 'clear', description: 'Clear the terminal' },
+			{ cmd: 'help', description: 'Open this list' }
 		]
 	}
 ];
