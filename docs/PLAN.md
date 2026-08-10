@@ -57,7 +57,17 @@ GitHub release page, and the open-source page on the website — which is a
 different repository, so these are captured once, here, and copied there rather
 than taken twice.
 
-They live in `docs/screenshots/`, named for what they show.
+They live in `docs/screenshots/`, named for what they show. **The spec moved to
+[`docs/screenshots/README.md`](screenshots/README.md)** — a table of filename,
+contents and where each one lands, which is the shape `zetta-com` settled on and
+the thing that makes retaking them mechanical rather than a re-derivation. What
+is left below is the reasoning behind it.
+
+The current ten are one release behind: the statistics panel gained a seven-day
+strip and the settings drawer was rebuilt, so `dashboard-*` and `settings-*`
+need retaking. The week strip also needs a week — it draws real days and draws
+empty ones empty, so those two are worth taking after a few days of ordinary
+use rather than before.
 
 **The set.** Five states, each in both themes, `-dark` and `-light`. Every shot
 is the whole window rather than a cropped panel: the four panels together are
@@ -233,10 +243,18 @@ handing over. The first build can go out by hand.
       by hand, so the matrix can be exercised without spending a tag to find
       out that a runner image moved. `fail-fast` is off: a draft with two of
       three installers is worth having while the third is fixed.
-- [x] **No Intel macOS job**, for the reason below. `macos-latest` is arm64 and
-      builds `--target universal-apple-darwin` with both Rust targets
-      installed, which covers Intel without asking for a retired image.
-- [x] Linux job installs `libasound2-dev` alongside `webkit2gtk`.
+- [x] **No Intel macOS job.** The plan said universal-on-arm64; the workflow
+      ships Apple silicon only, which is a change worth writing down. Both
+      avoid the retired image. Universal doubles the download for every Mac
+      user to serve the shrinking half, in an app whose pitch includes a 4.9 MB
+      installer — so it is the documented escape hatch rather than the default.
+      One line in `release.yml` switches it back.
+- [x] Linux job installs `libasound2-dev` alongside `webkit2gtk`, plus
+      `libxdo-dev` for the global shortcuts and `libayatana-appindicator3-dev`
+      for the tray. Taken from `zetta-com`, which has already found out on a
+      bare runner which of these a Tauri bundle actually needs. Both workflows
+      use the same list, so CI fails for the same missing package the release
+      build would.
 - [x] **A pull-request workflow** — `ci.yml`, on every PR and on main. Split
       into a Rust job and a frontend job so a formatting mistake fails in
       seconds rather than after a full dependency tree, and it runs

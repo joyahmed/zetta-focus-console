@@ -123,7 +123,8 @@ stripped-down version of the dark one.
 </table>
 
 Every screenshot has a twin in the other theme in
-[`docs/screenshots/`](docs/screenshots).
+[`docs/screenshots/`](docs/screenshots), which also says what each one is
+supposed to show.
 
 ---
 
