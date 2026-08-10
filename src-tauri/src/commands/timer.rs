@@ -847,7 +847,7 @@ fn override_command(args: &[&str], app_state: &mut AppState) -> String {
         }
         _ => {
             match app_state.session_override {
-                // Minutes, like everywhere else the override is printed. This
+                // Seconds, like everywhere else the override is printed. This
                 // and `status` were the two places the switch to minutes
                 // missed, so a `timer 50m` set in one line came back as
                 // "Focus: 3000s" when it was asked about in another.
@@ -1661,4 +1661,485 @@ fn engine_memory_mb() -> f32 {
     sys.process(pid)
         .map(|process| process.memory() as f32 / 1_048_576.0)
         .unwrap_or(0.0)
+}
+
+// ============================================================================
+// TESTS
+// ============================================================================
+
+/// The session cycle, which is the part of this app most worth pinning down.
+///
+/// `cargo test` used to run nothing at all, and every bug the cycle has had was
+/// found by using the app: the loop count that was parsed and never applied,
+/// the compound `timer 50m break 10m loop 3` that kept only its first clause,
+/// the counter that went back to 1/4 whenever a break was stopped. Those are
+/// all pure transitions on `AppState`, which makes them the cheapest thing in
+/// the project to hold still.
+///
+/// Nothing below goes through `tick_timer` or `process_command`: the first
+/// would need a real second to pass, and the second a real audio device. The
+/// engine's own functions take `&mut AppState` and nothing else, so they are
+/// called directly — no Tauri app handle, no `SoundManager`, and no writes to
+/// the preferences file on disk.
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A profile with durations short enough to read in an assertion: two
+    /// minutes of focus, one of short break, three of long, three per cycle.
+    fn state() -> AppState {
+        let mut app_state = AppState::new();
+        app_state.active_profile.focus_duration = 120;
+        app_state.active_profile.short_break_duration = 60;
+        app_state.active_profile.long_break_duration = 180;
+        app_state.active_profile.sessions_per_cycle = 3;
+        app_state.timer.total_sessions = 3;
+        app_state.timer.remaining_seconds = 120;
+        app_state.timer.total_seconds = 120;
+        app_state
+    }
+
+    // ------------------------------------------------------------------
+    // Overrides
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn the_headline_command_sets_all_three_clauses() {
+        let mut app_state = state();
+
+        let message = timer_override_command(&["50m", "break", "10m", "loop", "3"], &mut app_state);
+
+        let over = app_state.session_override.as_ref().unwrap();
+        assert_eq!(over.focus_duration, Some(3000));
+        assert_eq!(over.break_duration, Some(600));
+        assert_eq!(over.loop_count, Some(3));
+        assert!(message.contains("Focus: 50m"), "{message}");
+        assert!(message.contains("Break: 10m"), "{message}");
+        assert!(message.contains("Sessions: 3"), "{message}");
+    }
+
+    #[test]
+    fn any_of_the_three_can_lead() {
+        let mut app_state = state();
+
+        break_override_command(&["10m", "loop", "3"], &mut app_state);
+
+        let over = app_state.session_override.as_ref().unwrap();
+        assert_eq!(
+            over.focus_duration, None,
+            "the focus duration should have been left alone"
+        );
+        assert_eq!(over.break_duration, Some(600));
+        assert_eq!(over.loop_count, Some(3));
+    }
+
+    #[test]
+    fn clauses_accumulate_across_commands() {
+        let mut app_state = state();
+
+        timer_override_command(&["50m"], &mut app_state);
+        loop_override_command(&["4"], &mut app_state);
+
+        let over = app_state.session_override.as_ref().unwrap();
+        assert_eq!(over.focus_duration, Some(3000));
+        assert_eq!(over.loop_count, Some(4));
+    }
+
+    #[test]
+    fn a_trailing_word_that_is_not_a_field_is_an_error() {
+        let mut app_state = state();
+
+        let message = timer_override_command(&["50m", "sessions", "3"], &mut app_state);
+
+        assert!(message.starts_with("Error:"), "{message}");
+        assert!(app_state.session_override.is_none());
+    }
+
+    #[test]
+    fn a_clause_with_no_value_is_an_error() {
+        let mut app_state = state();
+
+        let message = timer_override_command(&["50m", "break"], &mut app_state);
+
+        assert!(message.starts_with("Error:"), "{message}");
+        assert!(message.contains("break duration"), "{message}");
+    }
+
+    #[test]
+    fn out_of_range_values_are_refused() {
+        let mut app_state = state();
+
+        assert!(timer_override_command(&["200m"], &mut app_state).starts_with("Error:"));
+        assert!(break_override_command(&["90m"], &mut app_state).starts_with("Error:"));
+        assert!(loop_override_command(&["0"], &mut app_state).starts_with("Error:"));
+        assert!(app_state.session_override.is_none());
+    }
+
+    #[test]
+    fn an_override_cannot_be_set_mid_session() {
+        let mut app_state = state();
+        start_command(&mut app_state);
+
+        let message = timer_override_command(&["50m"], &mut app_state);
+
+        assert_eq!(message, "Stop current session before applying override.");
+        assert!(app_state.session_override.is_none());
+    }
+
+    #[test]
+    fn durations_are_reported_the_way_they_were_typed() {
+        assert_eq!(humanize_seconds(3000), "50m");
+        assert_eq!(humanize_seconds(90), "1m 30s");
+        assert_eq!(humanize_seconds(45), "45s");
+    }
+
+    #[test]
+    fn asking_about_the_override_answers_in_minutes_too() {
+        let mut app_state = state();
+        timer_override_command(&["50m", "break", "10m"], &mut app_state);
+
+        let message = override_command(&[], &mut app_state);
+
+        assert!(message.contains("Focus: 50m"), "{message}");
+        assert!(message.contains("Break: 10m"), "{message}");
+        assert!(!message.contains("3000s"), "{message}");
+    }
+
+    // ------------------------------------------------------------------
+    // Starting
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn start_uses_the_profile_when_nothing_overrides_it() {
+        let mut app_state = state();
+
+        start_command(&mut app_state);
+
+        assert_eq!(app_state.timer.status, TimerStatus::Running);
+        assert_eq!(app_state.timer.session_type, SessionType::Focus);
+        assert_eq!(app_state.timer.remaining_seconds, 120);
+        assert_eq!(app_state.timer.total_seconds, 120);
+        assert_eq!(app_state.timer.current_session, 1);
+        assert_eq!(app_state.timer.total_sessions, 3);
+    }
+
+    #[test]
+    fn start_applies_the_override() {
+        let mut app_state = state();
+        timer_override_command(&["50m", "loop", "5"], &mut app_state);
+
+        let message = start_command(&mut app_state);
+
+        assert_eq!(app_state.timer.remaining_seconds, 3000);
+        assert_eq!(app_state.timer.total_sessions, 5);
+        assert!(message.contains("50m focus"), "{message}");
+        assert!(message.contains("5 sessions"), "{message}");
+    }
+
+    #[test]
+    fn starting_again_mid_cycle_keeps_the_session_number() {
+        let mut app_state = state();
+        start_command(&mut app_state);
+        advance_from_finished(&mut app_state); // focus -> short break
+        advance_from_finished(&mut app_state); // short break -> idle at session 2
+
+        start_command(&mut app_state);
+
+        assert_eq!(app_state.timer.current_session, 2);
+    }
+
+    #[test]
+    fn start_refuses_to_restart_a_running_session() {
+        let mut app_state = state();
+        start_command(&mut app_state);
+        app_state.timer.remaining_seconds = 42;
+
+        let message = start_command(&mut app_state);
+
+        assert!(message.starts_with("Session already running"), "{message}");
+        assert_eq!(app_state.timer.remaining_seconds, 42, "the clock was reset");
+    }
+
+    // ------------------------------------------------------------------
+    // The cycle
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn a_finished_focus_run_rolls_into_its_short_break() {
+        let mut app_state = state();
+        start_command(&mut app_state);
+
+        let alarm = advance_from_finished(&mut app_state);
+
+        assert_eq!(alarm, ALARM_SESSION_END);
+        assert_eq!(app_state.timer.session_type, SessionType::ShortBreak);
+        assert_eq!(
+            app_state.timer.status,
+            TimerStatus::Running,
+            "breaks start themselves"
+        );
+        assert_eq!(app_state.timer.remaining_seconds, 60);
+        assert_eq!(
+            app_state.timer.current_session, 1,
+            "the break belongs to the session it followed"
+        );
+    }
+
+    #[test]
+    fn a_finished_short_break_waits_at_the_next_session() {
+        let mut app_state = state();
+        start_command(&mut app_state);
+        advance_from_finished(&mut app_state);
+
+        let alarm = advance_from_finished(&mut app_state);
+
+        assert_eq!(alarm, ALARM_BREAK_END);
+        assert_eq!(app_state.timer.session_type, SessionType::Focus);
+        assert_eq!(
+            app_state.timer.status,
+            TimerStatus::Idle,
+            "coming back to the desk is a decision"
+        );
+        assert_eq!(app_state.timer.current_session, 2);
+        assert_eq!(app_state.timer.remaining_seconds, 120);
+    }
+
+    #[test]
+    fn the_last_focus_run_of_the_cycle_earns_the_long_break() {
+        let mut app_state = state();
+        start_command(&mut app_state);
+        app_state.timer.current_session = 3; // the last of three
+
+        advance_from_finished(&mut app_state);
+
+        assert_eq!(app_state.timer.session_type, SessionType::LongBreak);
+        assert_eq!(app_state.timer.remaining_seconds, 180);
+    }
+
+    #[test]
+    fn the_long_break_ends_the_cycle_and_retires_the_override() {
+        let mut app_state = state();
+        timer_override_command(&["50m", "loop", "3"], &mut app_state);
+        start_command(&mut app_state);
+        app_state.timer.current_session = 3;
+        advance_from_finished(&mut app_state); // -> long break
+
+        let alarm = advance_from_finished(&mut app_state);
+
+        assert_eq!(alarm, ALARM_CYCLE_END);
+        assert!(
+            app_state.session_override.is_none(),
+            "the override outlived the cycle it belonged to"
+        );
+        assert_eq!(app_state.timer.status, TimerStatus::Idle);
+        assert_eq!(app_state.timer.current_session, 1);
+        assert_eq!(
+            app_state.timer.total_sessions, 3,
+            "back to the profile's cycle"
+        );
+        assert_eq!(
+            app_state.timer.remaining_seconds, 120,
+            "back to the profile's duration"
+        );
+    }
+
+    #[test]
+    fn a_whole_three_session_cycle_ends_where_it_started() {
+        let mut app_state = state();
+
+        // focus, break, focus, break, focus, long break.
+        for _ in 0..6 {
+            if app_state.timer.status == TimerStatus::Idle {
+                start_command(&mut app_state);
+            }
+            advance_from_finished(&mut app_state);
+        }
+
+        assert_eq!(app_state.timer.status, TimerStatus::Idle);
+        assert_eq!(app_state.timer.session_type, SessionType::Focus);
+        assert_eq!(app_state.timer.current_session, 1);
+    }
+
+    #[test]
+    fn a_break_override_applies_to_both_kinds_of_break() {
+        let mut app_state = state();
+        break_override_command(&["3m", "loop", "2"], &mut app_state);
+
+        assert_eq!(effective_break_seconds(&app_state, false), 180);
+        assert_eq!(effective_break_seconds(&app_state, true), 180);
+    }
+
+    // ------------------------------------------------------------------
+    // Ad-hoc runs
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn a_duration_without_a_loop_count_is_a_one_off() {
+        let mut app_state = state();
+        timer_override_command(&["20m"], &mut app_state);
+
+        start_command(&mut app_state);
+
+        assert!(is_adhoc_run(&app_state));
+        assert_eq!(
+            app_state.timer.total_sessions, 1,
+            "no cycle was asked for, so none should be borrowed"
+        );
+    }
+
+    #[test]
+    fn a_one_off_ends_without_a_break_and_takes_its_override_with_it() {
+        let mut app_state = state();
+        timer_override_command(&["20m"], &mut app_state);
+        start_command(&mut app_state);
+
+        let alarm = advance_from_finished(&mut app_state);
+
+        assert_eq!(alarm, ALARM_SESSION_END);
+        assert_eq!(
+            app_state.timer.session_type,
+            SessionType::Focus,
+            "nothing follows a one-off"
+        );
+        assert_eq!(app_state.timer.status, TimerStatus::Idle);
+        assert!(app_state.session_override.is_none());
+        assert_eq!(
+            app_state.timer.remaining_seconds, 120,
+            "the profile's duration is back"
+        );
+        assert_eq!(app_state.timer.total_sessions, 3);
+    }
+
+    #[test]
+    fn adding_a_loop_count_turns_a_one_off_into_a_cycle() {
+        let mut app_state = state();
+        timer_override_command(&["20m", "loop", "3"], &mut app_state);
+
+        start_command(&mut app_state);
+
+        assert!(!is_adhoc_run(&app_state));
+        assert_eq!(app_state.timer.total_sessions, 3);
+
+        advance_from_finished(&mut app_state);
+        assert_eq!(app_state.timer.session_type, SessionType::ShortBreak);
+    }
+
+    // ------------------------------------------------------------------
+    // Stopping
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn stopping_a_focus_run_abandons_the_cycle_but_keeps_the_override() {
+        let mut app_state = state();
+        timer_override_command(&["50m", "loop", "3"], &mut app_state);
+        start_command(&mut app_state);
+        app_state.timer.current_session = 2;
+
+        let message = stop_command(&mut app_state);
+
+        assert_eq!(app_state.timer.status, TimerStatus::Idle);
+        assert_eq!(app_state.timer.current_session, 1);
+        assert!(app_state.session_override.is_some());
+        assert!(message.contains("Override preserved"), "{message}");
+        // Both halves, or the ring draws a progress the session cannot have.
+        assert_eq!(app_state.timer.remaining_seconds, 3000);
+        assert_eq!(app_state.timer.total_seconds, 3000);
+    }
+
+    #[test]
+    fn stopping_a_break_moves_the_cycle_on_rather_than_ending_it() {
+        let mut app_state = state();
+        start_command(&mut app_state);
+        advance_from_finished(&mut app_state); // -> short break
+
+        let message = stop_command(&mut app_state);
+
+        assert_eq!(
+            app_state.timer.current_session, 2,
+            "stopping a break used to send the counter back to 1"
+        );
+        assert_eq!(app_state.timer.session_type, SessionType::Focus);
+        assert!(message.contains("Session 2/3 is up next"), "{message}");
+    }
+
+    #[test]
+    fn stopping_a_long_break_closes_the_cycle() {
+        let mut app_state = state();
+        start_command(&mut app_state);
+        app_state.timer.current_session = 3;
+        advance_from_finished(&mut app_state); // -> long break
+
+        let message = stop_command(&mut app_state);
+
+        assert_eq!(message, "Break ended. Cycle complete.");
+        assert_eq!(app_state.timer.current_session, 1);
+    }
+
+    #[test]
+    fn stopping_an_idle_timer_is_an_error() {
+        let mut app_state = state();
+
+        assert!(stop_command(&mut app_state).starts_with("Error:"));
+    }
+
+    // ------------------------------------------------------------------
+    // Pause, resume and strict mode
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn pause_and_resume_round_trip() {
+        let mut app_state = state();
+        start_command(&mut app_state);
+
+        pause_command(&mut app_state);
+        assert_eq!(app_state.timer.status, TimerStatus::Paused);
+
+        resume_command(&mut app_state);
+        assert_eq!(app_state.timer.status, TimerStatus::Running);
+    }
+
+    #[test]
+    fn strict_mode_disables_pause_and_stop() {
+        let mut app_state = state();
+        strict_command(&["on"], &mut app_state);
+        start_command(&mut app_state);
+
+        assert!(pause_command(&mut app_state).starts_with("Error:"));
+        assert!(stop_command(&mut app_state).starts_with("Error:"));
+        assert_eq!(app_state.timer.status, TimerStatus::Running);
+    }
+
+    #[test]
+    fn strict_mode_cannot_be_armed_mid_session_or_dropped_during_one() {
+        let mut app_state = state();
+        start_command(&mut app_state);
+
+        assert!(strict_command(&["on"], &mut app_state).starts_with("Error:"));
+        assert!(!app_state.strict_mode.is_active);
+
+        app_state.strict_mode.is_active = true;
+        assert!(strict_command(&["off"], &mut app_state).starts_with("Error:"));
+        assert!(app_state.strict_mode.is_active);
+    }
+
+    // ------------------------------------------------------------------
+    // Terminal history
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn history_lists_and_clears() {
+        let mut app_state = state();
+        app_state.terminal_history = vec!["start".into(), "status".into()];
+
+        let listing = history_command(&[], &mut app_state);
+        assert!(listing.contains("start"), "{listing}");
+        assert!(listing.contains("status"), "{listing}");
+
+        history_command(&["clear"], &mut app_state);
+        assert!(app_state.terminal_history.is_empty());
+        assert_eq!(
+            history_command(&[], &mut app_state),
+            "No command history yet."
+        );
+    }
 }
